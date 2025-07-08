@@ -1,5 +1,6 @@
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
+import ContactPage from "./contact/page";
 export default function HomeLayout({
   children,
 }: {
@@ -10,7 +11,7 @@ export default function HomeLayout({
       <body>
         <Header />
         {children}
-        <Footer />
+        <ContactPage />
       </body>{" "}
       {/* ✅ wrap children inside <body> */}
     </html>

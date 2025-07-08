@@ -1,8 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Rubik, Roboto } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+// Load the fonts
+
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-rubik",
+});
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-roboto",
+});
 
 export const metadata: Metadata = {
   title: "School Management",
@@ -15,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={` ${rubik.variable} ${roboto.variable}`}>
+      <body className="font-dmsans">{children}</body>
     </html>
   );
 }

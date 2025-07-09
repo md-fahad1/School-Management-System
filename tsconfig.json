@@ -30,7 +30,8 @@
     "src/components/Menu.jsx",
     "src/app/(dashboard)/list/subjects/page.jsx",
     "src/app/(dashboard)/list/students/page.jsx",
-    "src/app/(dashboard)/list/students/[id]/page.jsx"
+    "src/app/(dashboard)/list/students/[id]/page.jsx",
+    "src/components/BigCalender.jsx"
   ],
   "exclude": ["node_modules"]
 }

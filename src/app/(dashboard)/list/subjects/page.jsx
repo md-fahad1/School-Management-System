@@ -1,15 +1,10 @@
+import React from "react";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { role, subjectsData } from "@/lib/data";
 import Image from "next/image";
-
-type Subject = {
-  id: number;
-  name: string;
-  teachers: string[];
-};
 
 const columns = [
   {
@@ -28,7 +23,7 @@ const columns = [
 ];
 
 const SubjectListPage = () => {
-  const renderRow = (item: Subject) => (
+  const renderRow = (item) => (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"

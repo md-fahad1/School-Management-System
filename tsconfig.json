@@ -27,7 +27,10 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/components/Navbar.jsx",
-    "src/components/Menu.jsx"
+    "src/components/Menu.jsx",
+    "src/app/(dashboard)/list/subjects/page.jsx",
+    "src/app/(dashboard)/list/students/page.jsx",
+    "src/app/(dashboard)/list/students/[id]/page.jsx"
   ],
   "exclude": ["node_modules"]
 }

@@ -5,6 +5,9 @@
   --bg: #ffffff;
   --text: #333333;
 }
+.bg-pink-white-pink {
+  background: linear-gradient(to right, #fff5f4, #ffffff, #fff5f4);
+}
 
 @tailwind base;
 @tailwind components;

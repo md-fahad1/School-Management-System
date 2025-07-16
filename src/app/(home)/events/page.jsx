@@ -27,12 +27,12 @@ const features = [
 
 const EventPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--secondary)] to-[var(--accent)] px-4 py-12 flex flex-col items-center">
+    <div className="min-h-screen bg-pink-white-pink px-4 py-12 flex flex-col items-center">
       {/* Main Card */}
       <div className="bg-white shadow-2xl rounded-3xl p-10 sm:p-14 max-w-4xl w-full text-center">
         {/* Header */}
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-[var(--primary)] mb-4">
-          Welcome to School Management System
+        <h1 className="text-3xl sm:text-5xl font-bold text-[var(--primary)] mb-4">
+          School Events
         </h1>
         <p className="text-gray-700 mb-8 max-w-2xl mx-auto text-base sm:text-lg">
           Manage students, classes, attendance, and more — all in one place.
@@ -59,11 +59,6 @@ const EventPage = () => {
           ))}
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="mt-16 text-gray-600 text-sm text-center">
-        © 2024 School Management System. All rights reserved.
-      </footer>
     </div>
   );
 };

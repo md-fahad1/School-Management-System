@@ -40,7 +40,7 @@ const SignIn = () => {
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <h2 className="text-3xl font-bold text-center text-pink-600 mb-6">
-            School Management Login
+            DreamEdu Login
           </h2>
 
           <form className="space-y-5" onSubmit={handleSubmit}>

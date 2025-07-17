@@ -4,8 +4,8 @@ import Link from "next/link";
 
 const Hero = () => {
   return (
-    <section className=" pt-14 pb-20 bg-pink-white-pink">
-      <div className="max-w-8xl mx-auto px-20 mt-10 grid md:grid-cols-2 items-center gap-60">
+    <section className=" pt-14  mb-4 md:pb-20 bg-pink-white-pink">
+      <div className="max-w-8xl mx-auto px-4 md:px-20 mt-16 md:mt-10 grid md:grid-cols-2 items-center md:gap-60">
         {/* Left Content */}
         <div className="space-y-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 leading-snug">

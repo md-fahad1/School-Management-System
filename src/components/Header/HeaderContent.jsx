@@ -69,7 +69,7 @@ const HeaderContent = () => {
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex w-full items-center justify-between">
+          <div className="hidden md:flex  ml-24 w-full items-center justify-between">
             {/* Navigation Menu */}
             <nav className="flex gap-6 text-gray-700 font-medium ml-8">
               <Link href="/">Home</Link>

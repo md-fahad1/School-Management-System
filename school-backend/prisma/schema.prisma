@@ -44,11 +44,44 @@ model User {
   student Student?
   parent  Parent?
 
-  sentMessages     Message[]      @relation("SentMessages")
+   sentMessages     Message[]      @relation("SentMessages")
   receivedMessages Message[]      @relation("ReceivedMessages")
   announcements    Announcement[] @relation("AnnouncementAuthor")
+  refreshTokens    RefreshToken[]
+  auditLogs        AuditLog[]
 
   @@map("users")
+}
+model RefreshToken {
+  id                  String    @id @default(uuid())
+  tokenHash           String    @unique
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt           DateTime
+  revoked             Boolean   @default(false)
+  revokedAt           DateTime?
+  replacedByTokenHash String?
+  createdByIp         String?
+  userAgent           String?
+  createdAt           DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  success   Boolean
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@map("audit_logs")
 }
 
 model Admin {

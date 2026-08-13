@@ -1,0 +1,491 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Announcement {
+  authorId: ID
+  classId: ID
+  className: String
+  date: DateTime!
+  description: String!
+  id: ID!
+  title: String!
+}
+
+type Assignment {
+  className: String
+  dueDate: DateTime!
+  id: ID!
+  lessonId: ID!
+  startDate: DateTime!
+  subjectName: String
+  teacherName: String
+  title: String!
+}
+
+type Attendance {
+  date: DateTime!
+  id: ID!
+  lessonId: ID!
+  present: Boolean!
+  studentId: ID!
+}
+
+type AuthPayload {
+  accessToken: String!
+  id: String!
+  role: Role!
+  username: String!
+}
+
+input BulkMarkAttendanceInput {
+  date: String!
+  entries: [MarkAttendanceEntry!]!
+  lessonId: ID!
+}
+
+type Class {
+  capacity: Int!
+  gradeId: ID!
+  gradeLevel: Float
+  id: ID!
+  name: String!
+  supervisorId: ID
+  supervisorName: String
+}
+
+input CreateAnnouncementInput {
+  classId: ID
+  description: String!
+  title: String!
+}
+
+input CreateAssignmentInput {
+  dueDate: String!
+  lessonId: ID!
+  startDate: String!
+  title: String!
+}
+
+input CreateAttendanceInput {
+  date: String!
+  lessonId: ID!
+  present: Boolean!
+  studentId: ID!
+}
+
+input CreateClassInput {
+  capacity: Int!
+  gradeId: ID!
+  name: String!
+  supervisorId: ID
+}
+
+input CreateEventInput {
+  classId: ID
+  description: String!
+  endTime: String!
+  startTime: String!
+  title: String!
+}
+
+input CreateExamInput {
+  endTime: String!
+  lessonId: ID!
+  startTime: String!
+  title: String!
+}
+
+input CreateGradeInput {
+  level: Int!
+}
+
+input CreateLessonInput {
+  classId: ID!
+  day: Day!
+  endTime: String!
+  name: String!
+  startTime: String!
+  subjectId: ID!
+  teacherId: ID!
+}
+
+input CreateParentInput {
+  address: String
+  email: String!
+  name: String!
+  password: String!
+  phone: String
+  surname: String!
+  username: String!
+}
+
+input CreateResultInput {
+  assignmentId: ID
+  examId: ID
+  score: Int!
+  studentId: ID!
+}
+
+input CreateStudentInput {
+  address: String
+  classId: ID!
+  email: String!
+  gradeId: ID!
+  name: String!
+  parentId: ID!
+  password: String!
+  phone: String
+  surname: String!
+  username: String!
+}
+
+input CreateSubjectInput {
+  name: String!
+  teacherIds: [String!]
+}
+
+input CreateTeacherInput {
+  address: String
+  email: String!
+  name: String!
+  password: String!
+  phone: String
+  subjectIds: [String!]
+  surname: String!
+  username: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+enum Day {
+  FRIDAY
+  MONDAY
+  SATURDAY
+  THURSDAY
+  TUESDAY
+  WEDNESDAY
+}
+
+type Event {
+  classId: ID
+  className: String
+  description: String!
+  endTime: DateTime!
+  id: ID!
+  startTime: DateTime!
+  title: String!
+}
+
+type Exam {
+  className: String
+  endTime: DateTime!
+  id: ID!
+  lessonId: ID!
+  startTime: DateTime!
+  subjectName: String
+  teacherName: String
+  title: String!
+}
+
+type Grade {
+  id: ID!
+  level: Int!
+}
+
+type Lesson {
+  classId: ID!
+  className: String
+  day: Day!
+  endTime: DateTime!
+  id: ID!
+  name: String!
+  startTime: DateTime!
+  subjectId: ID!
+  subjectName: String
+  teacherId: ID!
+  teacherName: String
+}
+
+input LoginInput {
+  password: String!
+  username: String!
+}
+
+input MarkAttendanceEntry {
+  present: Boolean!
+  studentId: ID!
+}
+
+type Message {
+  content: String!
+  id: ID!
+  read: Boolean!
+  receiverId: ID!
+  senderId: ID!
+  sentAt: DateTime!
+}
+
+type Mutation {
+  bulkMarkAttendance(input: BulkMarkAttendanceInput!): [Attendance!]!
+  createAnnouncement(input: CreateAnnouncementInput!): Announcement!
+  createAssignment(input: CreateAssignmentInput!): Assignment!
+  createAttendance(input: CreateAttendanceInput!): Attendance!
+  createClass(input: CreateClassInput!): Class!
+  createEvent(input: CreateEventInput!): Event!
+  createExam(input: CreateExamInput!): Exam!
+  createGrade(input: CreateGradeInput!): Grade!
+  createLesson(input: CreateLessonInput!): Lesson!
+  createParent(input: CreateParentInput!): Parent!
+  createResult(input: CreateResultInput!): Result!
+  createStudent(input: CreateStudentInput!): Student!
+  createSubject(input: CreateSubjectInput!): Subject!
+  createTeacher(input: CreateTeacherInput!): Teacher!
+  login(input: LoginInput!): AuthPayload!
+  markMessageRead(id: ID!): Message!
+  register(input: RegisterInput!): AuthPayload!
+  removeAnnouncement(id: ID!): Boolean!
+  removeAssignment(id: ID!): Boolean!
+  removeAttendance(id: ID!): Boolean!
+  removeClass(id: ID!): Boolean!
+  removeEvent(id: ID!): Boolean!
+  removeExam(id: ID!): Boolean!
+  removeGrade(id: ID!): Boolean!
+  removeLesson(id: ID!): Boolean!
+  removeMessage(id: ID!): Boolean!
+  removeParent(id: ID!): Boolean!
+  removeResult(id: ID!): Boolean!
+  removeStudent(id: ID!): Boolean!
+  removeSubject(id: ID!): Boolean!
+  removeTeacher(id: ID!): Boolean!
+  sendMessage(input: SendMessageInput!): Message!
+  updateAnnouncement(id: ID!, input: UpdateAnnouncementInput!): Announcement!
+  updateAssignment(id: ID!, input: UpdateAssignmentInput!): Assignment!
+  updateAttendance(id: ID!, input: UpdateAttendanceInput!): Attendance!
+  updateClass(id: ID!, input: UpdateClassInput!): Class!
+  updateEvent(id: ID!, input: UpdateEventInput!): Event!
+  updateExam(id: ID!, input: UpdateExamInput!): Exam!
+  updateGrade(id: ID!, input: UpdateGradeInput!): Grade!
+  updateLesson(id: ID!, input: UpdateLessonInput!): Lesson!
+  updateParent(id: ID!, input: UpdateParentInput!): Parent!
+  updateResult(id: ID!, input: UpdateResultInput!): Result!
+  updateStudent(id: ID!, input: UpdateStudentInput!): Student!
+  updateSubject(id: ID!, input: UpdateSubjectInput!): Subject!
+  updateTeacher(id: ID!, input: UpdateTeacherInput!): Teacher!
+}
+
+type Parent {
+  address: String
+  email: String
+  id: ID!
+  name: String!
+  phone: String
+  students: [String!]
+  surname: String!
+}
+
+type Query {
+  announcement(id: ID!): Announcement!
+  announcements(skip: Float, take: Float): [Announcement!]!
+  assignment(id: ID!): Assignment!
+  assignments(skip: Float, take: Float): [Assignment!]!
+  attendance(id: ID!): Attendance!
+  attendances(skip: Float, take: Float): [Attendance!]!
+  class(id: ID!): Class!
+  classes(search: String, skip: Float, take: Float): [Class!]!
+  conversation(skip: Float, take: Float, userId: ID!): [Message!]!
+  event(id: ID!): Event!
+  events(skip: Float, take: Float): [Event!]!
+  exam(id: ID!): Exam!
+  exams(skip: Float, take: Float): [Exam!]!
+  grade(id: ID!): Grade!
+  grades: [Grade!]!
+  inbox(skip: Float, take: Float): [Message!]!
+  lesson(id: ID!): Lesson!
+  lessons(skip: Float, take: Float): [Lesson!]!
+  parent(id: ID!): Parent!
+  parents(search: String, skip: Float, take: Float): [Parent!]!
+  result(id: ID!): Result!
+  results(skip: Float, take: Float): [Result!]!
+  student(id: ID!): Student!
+  students(search: String, skip: Float, take: Float): [Student!]!
+  subject(id: ID!): Subject!
+  subjects(search: String, skip: Float, take: Float): [Subject!]!
+  teacher(id: ID!): Teacher!
+  teachers(search: String, skip: Float, take: Float): [Teacher!]!
+}
+
+input RegisterInput {
+  email: String!
+  name: String!
+  password: String!
+  role: Role!
+  surname: String!
+  username: String!
+}
+
+type Result {
+  assignmentId: ID
+  className: String
+  date: DateTime
+  examId: ID
+  id: ID!
+  score: Int!
+  studentId: ID!
+  studentName: String
+  subjectName: String
+  teacherName: String
+  type: String
+}
+
+enum Role {
+  ADMIN
+  PARENT
+  STUDENT
+  TEACHER
+}
+
+input SendMessageInput {
+  content: String!
+  receiverId: ID!
+}
+
+type Student {
+  address: String
+  classId: ID!
+  className: String
+  email: String
+  gradeId: ID!
+  gradeLevel: Float
+  id: ID!
+  img: String
+  name: String!
+  parentId: ID!
+  parentName: String
+  phone: String
+  surname: String!
+}
+
+type Subject {
+  id: ID!
+  name: String!
+  teachers: [String!]
+}
+
+type Teacher {
+  address: String
+  bloodType: String
+  classes: [String!]
+  email: String
+  id: ID!
+  img: String
+  name: String!
+  phone: String
+  subjects: [String!]
+  surname: String!
+}
+
+input UpdateAnnouncementInput {
+  classId: ID
+  description: String
+  title: String
+}
+
+input UpdateAssignmentInput {
+  dueDate: String
+  lessonId: ID
+  startDate: String
+  title: String
+}
+
+input UpdateAttendanceInput {
+  date: String
+  lessonId: ID
+  present: Boolean
+  studentId: ID
+}
+
+input UpdateClassInput {
+  capacity: Int
+  gradeId: ID
+  name: String
+  supervisorId: ID
+}
+
+input UpdateEventInput {
+  classId: ID
+  description: String
+  endTime: String
+  startTime: String
+  title: String
+}
+
+input UpdateExamInput {
+  endTime: String
+  lessonId: ID
+  startTime: String
+  title: String
+}
+
+input UpdateGradeInput {
+  level: Int
+}
+
+input UpdateLessonInput {
+  classId: ID
+  day: Day
+  endTime: String
+  name: String
+  startTime: String
+  subjectId: ID
+  teacherId: ID
+}
+
+input UpdateParentInput {
+  address: String
+  email: String
+  name: String
+  password: String
+  phone: String
+  surname: String
+  username: String
+}
+
+input UpdateResultInput {
+  assignmentId: ID
+  examId: ID
+  score: Int
+  studentId: ID
+}
+
+input UpdateStudentInput {
+  address: String
+  classId: ID
+  email: String
+  gradeId: ID
+  name: String
+  parentId: ID
+  password: String
+  phone: String
+  surname: String
+  username: String
+}
+
+input UpdateSubjectInput {
+  name: String
+  teacherIds: [String!]
+}
+
+input UpdateTeacherInput {
+  address: String
+  email: String
+  name: String
+  password: String
+  phone: String
+  subjectIds: [String!]
+  surname: String
+  username: String
+}

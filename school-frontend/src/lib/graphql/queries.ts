@@ -6,6 +6,7 @@ export const LOGIN = gql`
   mutation Login($input: LoginInput!) {
     login(input: $input) {
       accessToken
+      refreshToken
       id
       username
       role
@@ -21,6 +22,24 @@ export const REGISTER = gql`
       username
       role
     }
+  }
+`;
+
+export const REFRESH_TOKEN = gql`
+  mutation RefreshToken($input: RefreshTokenInput!) {
+    refreshToken(input: $input) {
+      accessToken
+      refreshToken
+      id
+      username
+      role
+    }
+  }
+`;
+
+export const LOGOUT = gql`
+  mutation Logout($input: LogoutInput!) {
+    logout(input: $input)
   }
 `;
 

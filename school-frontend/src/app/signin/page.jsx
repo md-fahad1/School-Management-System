@@ -29,17 +29,21 @@ const SignInForm = () => {
     setLoading(true);
 
     try {
-      const client = getClientGqlClient();
+      const client = await getClientGqlClient();
       const data = await client.request(LOGIN, { input: { username, password } });
 
-      const { accessToken, id, username: uname, role } = data.login;
+      const { accessToken, refreshToken, id, username: uname, role } = data.login;
 
       // Cookies (not localStorage) so Server Components can read the
-      // session too via next/headers — see src/lib/graphql/server-client.ts
-      Cookies.set("token", accessToken, { expires: 7 });
-      Cookies.set("userId", id, { expires: 7 });
-      Cookies.set("username", uname, { expires: 7 });
-      Cookies.set("role", role.toLowerCase(), { expires: 7 });
+      // session too via next/headers — see src/lib/graphql/server-client.ts.
+      // Access token cookie is short-lived to match its actual JWT
+      // lifetime; refreshToken/role/etc last as long as the refresh
+      // token itself, since those are what auto-refresh depends on.
+      Cookies.set("token", accessToken, { expires: 1 });
+      Cookies.set("refreshToken", refreshToken, { expires: 30 });
+      Cookies.set("userId", id, { expires: 30 });
+      Cookies.set("username", uname, { expires: 30 });
+      Cookies.set("role", role.toLowerCase(), { expires: 30 });
 
       dispatch(setCredentials({ token: accessToken, id, username: uname, role }));
 

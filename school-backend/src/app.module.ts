@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { join } from 'path';
 
 import { PrismaModule } from './prisma/prisma.module';
+import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
+import { GqlThrottlerGuard } from './common/guards/gql-throttler.guard';
 import { SubjectsModule } from './subjects/subjects.module';
 import { TeachersModule } from './teachers/teachers.module';
 import { StudentsModule } from './students/students.module';
@@ -21,19 +25,30 @@ import { EventsModule } from './events/events.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { MessagesModule } from './messages/messages.module';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        // Global default: generous enough not to bother normal usage,
+        // tight enough to stop a runaway script. Sensitive mutations
+        // (login/register/refreshToken) override this with @Throttle()
+        // in auth.resolver.ts for much tighter limits.
+        { ttl: 60_000, limit: 60 },
+      ],
+    }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: true,
-      // req is passed into context so guards/decorators (JWT user,
-      // @CurrentUser) can reach it uniformly across every resolver.
-      context: ({ req }) => ({ req }),
+      // Both req and res are needed now — GqlThrottlerGuard reads req
+      // for the client IP and writes rate-limit headers onto res.
+      context: ({ req, res }) => ({ req, res }),
     }),
     PrismaModule,
+    RedisModule,
     AuthModule,
     SubjectsModule,
     TeachersModule,
@@ -49,6 +64,12 @@ import { MessagesModule } from './messages/messages.module';
     EventsModule,
     AnnouncementsModule,
     MessagesModule,
+  ],
+   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GqlThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

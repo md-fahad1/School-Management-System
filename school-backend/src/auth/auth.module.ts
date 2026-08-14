@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { LoginAttemptsService } from './login-attempts.service';
 
 @Module({
   imports: [
@@ -12,13 +13,15 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+     useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN') ?? '7d' },
+        // Overridden per-call in AuthService.issueTokenPair(), but kept
+        // here as the module-level default.
+        signOptions: { expiresIn: config.get<string>('ACCESS_TOKEN_EXPIRES_IN') ?? '15m' },
       }),
     }),
   ],
-  providers: [AuthService, AuthResolver, JwtStrategy],
+  providers: [AuthService, AuthResolver, JwtStrategy,LoginAttemptsService],
   exports: [AuthService],
 })
 export class AuthModule {}

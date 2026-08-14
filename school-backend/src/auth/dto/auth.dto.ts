@@ -49,6 +49,9 @@ export class AuthPayload {
   accessToken!: string;
 
   @Field()
+  refreshToken!: string;
+
+  @Field()
   id!: string;
 
   @Field()
@@ -56,4 +59,18 @@ export class AuthPayload {
 
   @Field(() => Role)
   role!: Role;
+}
+
+@InputType()
+export class RefreshTokenInput {
+  @Field()
+  @IsString()
+  refreshToken!: string;
+}
+
+@InputType()
+export class LogoutInput {
+  @Field()
+  @IsString()
+  refreshToken!: string;
 }

@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { getClientGqlClient } from "@/lib/graphql/client";
+import { LOGOUT } from "@/lib/graphql/queries";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 
@@ -17,8 +19,24 @@ const Navbar = () => {
   const displayName = user?.username ?? Cookies.get("username") ?? "Guest";
   const displayRole = user?.role ?? Cookies.get("role") ?? "";
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = Cookies.get("refreshToken");
+
+    // Best-effort: revoke the session server-side (kills the refresh
+    // token + blacklists the current access token). If this fails
+    // (network down, already expired, etc.) we still clear the local
+    // session below — a logout should never get "stuck".
+    if (refreshToken) {
+      try {
+        const client = await getClientGqlClient();
+        await client.request(LOGOUT, { input: { refreshToken } });
+      } catch (err) {
+        console.error("Server-side logout failed, clearing local session anyway:", err);
+      }
+    }
+
     Cookies.remove("token");
+    Cookies.remove("refreshToken");
     Cookies.remove("role");
     Cookies.remove("userId");
     Cookies.remove("username");

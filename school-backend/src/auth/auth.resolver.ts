@@ -45,7 +45,7 @@ export class AuthResolver {
     @Args('input') input: LogoutInput,
     @CurrentUser() user: { jti: string; exp: number },
   ) {
-    return this.authService.logout(input.refreshToken, user.jti, user.exp);
+    return this.authService.logout(input.refreshToken, user.jti, String(user.exp));
   }
 
   @Mutation(() => Boolean)

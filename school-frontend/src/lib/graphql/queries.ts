@@ -43,6 +43,30 @@ export const LOGOUT = gql`
   }
 `;
 
+export const REQUEST_PASSWORD_RESET = gql`
+  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+    requestPasswordReset(input: $input)
+  }
+`;
+
+export const RESET_PASSWORD = gql`
+  mutation ResetPassword($input: ResetPasswordInput!) {
+    resetPassword(input: $input)
+  }
+`;
+
+export const VERIFY_EMAIL = gql`
+  mutation VerifyEmail($input: VerifyEmailInput!) {
+    verifyEmail(input: $input)
+  }
+`;
+
+export const RESEND_VERIFICATION_EMAIL = gql`
+  mutation ResendVerificationEmail($input: ResendVerificationInput!) {
+    resendVerificationEmail(input: $input)
+  }
+`;
+
 /* ---------- Subjects ---------- */
 
 export const GET_SUBJECTS = gql`

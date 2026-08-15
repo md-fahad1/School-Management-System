@@ -117,6 +117,11 @@ const SignInForm = () => {
                   required
                 />
               </div>
+              <div className="text-right mt-1">
+                <Link href="/forgot-password" className="text-xs text-pink-600 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}

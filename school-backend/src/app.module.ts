@@ -24,6 +24,8 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { EventsModule } from './events/events.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { MessagesModule } from './messages/messages.module';
+import { AuditModule } from './audit/audit.module';
+import { EmailModule } from './email/email.module';
 
 
 @Module({
@@ -50,6 +52,8 @@ import { MessagesModule } from './messages/messages.module';
     PrismaModule,
     RedisModule,
     AuthModule,
+    AuditModule,
+    EmailModule,
     SubjectsModule,
     TeachersModule,
     StudentsModule,

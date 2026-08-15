@@ -31,6 +31,17 @@ type Attendance {
   studentId: ID!
 }
 
+type AuditLog {
+  action: String!
+  createdAt: DateTime!
+  id: ID!
+  ip: String
+  metadata: String
+  success: Boolean!
+  userAgent: String
+  userId: ID
+}
+
 type AuthPayload {
   accessToken: String!
   id: String!
@@ -269,6 +280,9 @@ type Mutation {
   removeStudent(id: ID!): Boolean!
   removeSubject(id: ID!): Boolean!
   removeTeacher(id: ID!): Boolean!
+  requestPasswordReset(input: RequestPasswordResetInput!): Boolean!
+  resendVerificationEmail(input: ResendVerificationInput!): Boolean!
+  resetPassword(input: ResetPasswordInput!): Boolean!
   sendMessage(input: SendMessageInput!): Message!
   updateAnnouncement(id: ID!, input: UpdateAnnouncementInput!): Announcement!
   updateAssignment(id: ID!, input: UpdateAssignmentInput!): Assignment!
@@ -283,6 +297,7 @@ type Mutation {
   updateStudent(id: ID!, input: UpdateStudentInput!): Student!
   updateSubject(id: ID!, input: UpdateSubjectInput!): Subject!
   updateTeacher(id: ID!, input: UpdateTeacherInput!): Teacher!
+  verifyEmail(input: VerifyEmailInput!): Boolean!
 }
 
 type Parent {
@@ -302,6 +317,7 @@ type Query {
   assignments(skip: Float, take: Float): [Assignment!]!
   attendance(id: ID!): Attendance!
   attendances(skip: Float, take: Float): [Attendance!]!
+  auditLogs(action: String, skip: Float, take: Float, userId: ID): [AuditLog!]!
   class(id: ID!): Class!
   classes(search: String, skip: Float, take: Float): [Class!]!
   conversation(skip: Float, take: Float, userId: ID!): [Message!]!
@@ -337,6 +353,19 @@ input RegisterInput {
   role: Role!
   surname: String!
   username: String!
+}
+
+input RequestPasswordResetInput {
+  email: String!
+}
+
+input ResendVerificationInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  newPassword: String!
+  token: String!
 }
 
 type Result {
@@ -500,4 +529,8 @@ input UpdateTeacherInput {
   subjectIds: [String!]
   surname: String
   username: String
+}
+
+input VerifyEmailInput {
+  token: String!
 }

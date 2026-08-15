@@ -6,6 +6,9 @@ import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { LoginAttemptsService } from './login-attempts.service';
+import { EmailVerificationService } from './email-verification.service';
+import { AuditService, AuditAction } from '../audit/audit.service';
+import { assertPasswordComplexity } from '../common/utils/password.util';
 import { LoginInput, RegisterInput, AuthPayload } from './dto/auth.dto';
 import { Role } from '@prisma/client';
 
@@ -24,6 +27,8 @@ export class AuthService {
     private config: ConfigService,
     private redis: RedisService,
     private loginAttempts: LoginAttemptsService,
+    private audit: AuditService,
+    private emailVerification: EmailVerificationService,
   ) {}
 
   async register(input: RegisterInput, meta: RequestMeta = {}): Promise<AuthPayload> {
@@ -40,9 +45,18 @@ export class AuthService {
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ username: input.username }, { email: input.email }] },
     });
-    if (existing) throw new BadRequestException('Username or email already in use');
+    if (existing) {
+      await this.audit.log({
+        action: AuditAction.REGISTER_DUPLICATE,
+        success: false,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        metadata: { username: input.username, email: input.email },
+      });
+      throw new BadRequestException('Username or email already in use');
+    }
 
-    this.assertPasswordComplexity(input.password);
+    assertPasswordComplexity(input.password);
     const hashed = await bcrypt.hash(input.password, 10);
 
     const user = await this.prisma.user.create({
@@ -63,12 +77,35 @@ export class AuthService {
       },
     });
 
+    await this.audit.log({
+      userId: user.id,
+      action: AuditAction.REGISTER,
+      success: true,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+      metadata: { role: user.role },
+    });
+
+    // Fire-and-forget: don't let a slow/failed email send delay or
+    // break account creation. EmailService already swallows its own
+    // errors, so this is safe to leave unawaited-for-failure purposes,
+    // but we do await the call itself so the token row is guaranteed
+    // to exist before the response returns.
+    await this.emailVerification.sendVerification(user.id, user.email);
+
     return this.issueTokenPair(user.id, user.username, user.role, meta);
   }
 
- async login(input: LoginInput, meta: RequestMeta = {}): Promise<AuthPayload> {
+  async login(input: LoginInput, meta: RequestMeta = {}): Promise<AuthPayload> {
     const lockedFor = await this.loginAttempts.getLockoutRemaining(input.username);
     if (lockedFor !== null) {
+      await this.audit.log({
+        action: AuditAction.LOGIN_LOCKED_OUT,
+        success: false,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        metadata: { username: input.username, remainingSeconds: lockedFor },
+      });
       throw new HttpException(
         `Account temporarily locked due to repeated failed login attempts. Try again in ${Math.ceil(lockedFor / 60)} minute(s).`,
         HttpStatus.TOO_MANY_REQUESTS,
@@ -79,15 +116,39 @@ export class AuthService {
     if (!user) {
       // Still record a failure for a nonexistent username — an attacker
       // shouldn't be able to distinguish "wrong password" from "no such
-      // user" via lockout behavior (that would leak which usernames exist).
+      // user" via lockout or audit-visible behavior (that would leak
+      // which usernames exist).
       await this.loginAttempts.recordFailure(input.username);
+      await this.audit.log({
+        action: AuditAction.LOGIN_FAILURE,
+        success: false,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        metadata: { username: input.username, reason: 'no such user' },
+      });
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const valid = await bcrypt.compare(input.password, user.password);
     if (!valid) {
       const justLocked = await this.loginAttempts.recordFailure(input.username);
+      await this.audit.log({
+        userId: user.id,
+        action: AuditAction.LOGIN_FAILURE,
+        success: false,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        metadata: { username: input.username, reason: 'wrong password' },
+      });
       if (justLocked !== null) {
+        await this.audit.log({
+          userId: user.id,
+          action: AuditAction.LOGIN_LOCKED_OUT,
+          success: false,
+          ip: meta.ip,
+          userAgent: meta.userAgent,
+          metadata: { username: input.username, lockedForSeconds: justLocked },
+        });
         throw new HttpException(
           `Too many failed attempts. Account locked for ${Math.ceil(justLocked / 60)} minute(s).`,
           HttpStatus.TOO_MANY_REQUESTS,
@@ -97,6 +158,13 @@ export class AuthService {
     }
 
     await this.loginAttempts.recordSuccess(input.username);
+    await this.audit.log({
+      userId: user.id,
+      action: AuditAction.LOGIN_SUCCESS,
+      success: true,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
     return this.issueTokenPair(user.id, user.username, user.role, meta);
   }
 
@@ -114,10 +182,27 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!stored) throw new UnauthorizedException('Invalid refresh token');
+    if (!stored) {
+      await this.audit.log({
+        action: AuditAction.REFRESH_FAILURE,
+        success: false,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        metadata: { reason: 'token not found' },
+      });
+      throw new UnauthorizedException('Invalid refresh token');
+    }
 
     if (stored.revoked) {
       // Reuse of a rotated-out token. Nuke the whole session family.
+      await this.audit.log({
+        userId: stored.userId,
+        action: AuditAction.REFRESH_REUSE_DETECTED,
+        success: false,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        metadata: { refreshTokenId: stored.id },
+      });
       await this.revokeAllForUser(stored.userId);
       throw new UnauthorizedException(
         'Refresh token reuse detected. All sessions have been revoked — please log in again.',
@@ -125,6 +210,14 @@ export class AuthService {
     }
 
     if (stored.expiresAt < new Date()) {
+      await this.audit.log({
+        userId: stored.userId,
+        action: AuditAction.REFRESH_FAILURE,
+        success: false,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        metadata: { reason: 'token expired' },
+      });
       throw new UnauthorizedException('Refresh token expired');
     }
 
@@ -139,11 +232,25 @@ export class AuthService {
       data: { revoked: true, revokedAt: new Date(), replacedByTokenHash: newHash },
     });
 
+    await this.audit.log({
+      userId: user.id,
+      action: AuditAction.REFRESH_SUCCESS,
+      success: true,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
     return newTokens;
   }
 
   /** Revokes one session (the refresh token) and blacklists its current access token. */
-  async logout(rawRefreshToken: string, accessJti?: string, accessExpSeconds?: number) {
+  async logout(
+    rawRefreshToken: string,
+    userId?: string,
+    accessJti?: string,
+    accessExpSeconds?: number,
+    meta: RequestMeta = {},
+  ) {
     const tokenHash = this.hashToken(rawRefreshToken);
     await this.prisma.refreshToken.updateMany({
       where: { tokenHash, revoked: false },
@@ -155,15 +262,32 @@ export class AuthService {
       await this.redis.set(`bl:${accessJti}`, '1', ttl);
     }
 
+    await this.audit.log({
+      userId,
+      action: AuditAction.LOGOUT,
+      success: true,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
     return true;
   }
 
   /** Revokes every refresh token for a user — "log out everywhere". */
-  async revokeAllForUser(userId: string) {
+  async revokeAllForUser(userId: string, meta: RequestMeta = {}) {
     await this.prisma.refreshToken.updateMany({
       where: { userId, revoked: false },
       data: { revoked: true, revokedAt: new Date() },
     });
+
+    await this.audit.log({
+      userId,
+      action: AuditAction.LOGOUT_ALL_DEVICES,
+      success: true,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
     return true;
   }
 
@@ -196,15 +320,5 @@ export class AuthService {
 
   private hashToken(raw: string): string {
     return crypto.createHash('sha256').update(raw).digest('hex');
-  }
-
-  private assertPasswordComplexity(password: string) {
-    // Belt-and-suspenders on top of the DTO's @MinLength(6) — require
-    // at least one letter and one number so "111111" doesn't pass.
-    const hasLetter = /[a-zA-Z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    if (!hasLetter || !hasNumber) {
-      throw new BadRequestException('Password must contain at least one letter and one number');
-    }
   }
 }

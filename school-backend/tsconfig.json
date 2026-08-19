@@ -11,7 +11,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": "./",
-    "incremental": true,
+    "incremental": false,
     "skipLibCheck": true,
     "strictNullChecks": true,
     "noImplicitAny": false,
@@ -22,5 +22,13 @@
       "@/*": ["src/*"]
     }
   },
-  "exclude": ["node_modules", "dist", "test", "./prisma/**/*"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "prisma"
+  ]
 }

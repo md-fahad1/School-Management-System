@@ -18,6 +18,7 @@ export const REGISTER = gql`
   mutation Register($input: RegisterInput!) {
     register(input: $input) {
       accessToken
+      refreshToken
       id
       username
       role
@@ -75,6 +76,33 @@ export const GET_SUBJECTS = gql`
       id
       name
       teachers
+    }
+  }
+`;
+
+export const CREATE_SUBJECT = gql`
+  mutation CreateSubject($input: CreateSubjectInput!) {
+    createSubject(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+export const UPDATE_SUBJECT = gql`
+  mutation UpdateSubject($id: ID!, $input: UpdateSubjectInput!) {
+    updateSubject(id: $id, input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+export const GET_TEACHER_OPTIONS = gql`
+  query TeacherOptions {
+    teachers(take: 200) {
+      id
+      name
     }
   }
 `;
@@ -166,6 +194,24 @@ export const GET_PARENTS = gql`
 `;
 
 /* ---------- Classes ---------- */
+
+export const GET_GRADES = gql`
+  query Grades {
+    grades {
+      id
+      level
+    }
+  }
+`;
+
+export const GET_PARENT_OPTIONS = gql`
+  query ParentOptions {
+    parents(take: 200) {
+      id
+      name
+    }
+  }
+`;
 
 export const GET_CLASSES = gql`
   query Classes($search: String, $skip: Float, $take: Float) {
@@ -312,3 +358,5 @@ export const SEND_MESSAGE = gql`
     }
   }
 `;
+
+

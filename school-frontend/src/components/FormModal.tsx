@@ -3,24 +3,35 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { getClientGqlClient } from "@/lib/graphql/client";
 
 // USE LAZY LOADING
-
-// import TeacherForm from "./forms/TeacherForm";
-// import StudentForm from "./forms/StudentForm";
-
 const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 const StudentForm = dynamic(() => import("./forms/StudentForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
-  [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
+  [key: string]: (type: "create" | "update", data: any, onSuccess: () => void) => JSX.Element;
 } = {
-  teacher: (type, data) => <TeacherForm type={type} data={data} />,
-  student: (type, data) => <StudentForm type={type} data={data} />
+  teacher: (type, data, onSuccess) => <TeacherForm type={type} data={data} onSuccess={onSuccess} />,
+  student: (type, data, onSuccess) => <StudentForm type={type} data={data} onSuccess={onSuccess} />,
+  subject: (type, data, onSuccess) => <SubjectForm type={type} data={data} onSuccess={onSuccess} />,
+};
+// One remove mutation per table, all following the same
+// `remove<Entity>(id: ID!): Boolean` shape the backend already exposes.
+// Add a line here as each module gets wired up — that's the only
+// change needed to make delete work for a new table.
+const REMOVE_MUTATIONS: { [key: string]: string } = {
+  subject: `mutation($id: ID!) { removeSubject(id: $id) }`,
+  teacher: `mutation($id: ID!) { removeTeacher(id: $id) }`,
+  student: `mutation($id: ID!) { removeStudent(id: $id) }`,
 };
 
 const FormModal = ({
@@ -46,6 +57,7 @@ const FormModal = ({
   data?: any;
   id?: number | string;
 }) => {
+  const router = useRouter();
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
   const bgColor =
     type === "create"
@@ -55,19 +67,61 @@ const FormModal = ({
       : "bg-lamaPurple";
 
   const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  const handleDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDeleteError("");
+
+    const mutation = REMOVE_MUTATIONS[table];
+    if (!mutation || !id) {
+      setDeleteError(`Delete isn't wired up for "${table}" yet.`);
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const client = await getClientGqlClient();
+      await client.request(mutation, { id });
+      setOpen(false);
+      // List pages are Server Components that fetch on each request —
+      // this re-runs that fetch so the deleted row disappears without
+      // a full page reload.
+      router.refresh();
+    } catch (err: any) {
+      setDeleteError(
+        err?.response?.errors?.[0]?.message ?? "Failed to delete. Please try again."
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const Form = () => {
     return type === "delete" && id ? (
-      <form action="" className="p-4 flex flex-col gap-4">
+      <form onSubmit={handleDelete} className="p-4 flex flex-col gap-4">
         <span className="text-center font-medium">
           All data will be lost. Are you sure you want to delete this {table}?
         </span>
-        <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
-          Delete
+        {deleteError && (
+          <span className="text-center text-sm text-red-500">{deleteError}</span>
+        )}
+        <button
+          type="submit"
+          disabled={deleting}
+          className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center disabled:opacity-60"
+        >
+          {deleting ? "Deleting..." : "Delete"}
         </button>
       </form>
-    ) : type === "create" || type === "update" ? (
-      forms[table](type, data)
+       ) : type === "create" || type === "update" ? (
+      forms[table]
+        ? forms[table](type, data, () => {
+            setOpen(false);
+            router.refresh();
+          })
+        : "Form not found!"
     ) : (
       "Form not found!"
     );

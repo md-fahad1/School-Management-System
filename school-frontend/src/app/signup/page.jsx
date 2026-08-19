@@ -1,64 +1,58 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, Lock, User, Calendar, Image as ImageIcon } from "lucide-react";
+import { Mail, Lock, User } from "lucide-react";
 import Link from "next/link";
-import axios from "axios";
-
-const SignUpSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  dateOfBirth: z.string().min(1, "Date of Birth is required"),
-  bloodGroup: z.string().min(1, "Blood Group is required"),
-  userType: z.string().min(1, "User Type is required"),
-  profilePicture: z.any(),
-});
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { getClientGqlClient } from "@/lib/graphql/client";
+import { REGISTER } from "@/lib/graphql/queries";
+import { useAppDispatch } from "@/redux/hooks";
+import { setCredentials } from "@/redux/slices/authSlice";
 
 const SignUp = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(SignUpSchema),
-  });
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    name: "",
+    surname: "",
+    role: "TEACHER",
+  });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (data) => {
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const formData = new FormData();
+      const client = await getClientGqlClient();
+      const data = await client.request(REGISTER, { input: form });
 
-      formData.append("FirstName", data.name);
-      formData.append("Email", data.email);
-      formData.append("Password", data.password);
-      formData.append("DateOfBirth", data.dateOfBirth);
-      formData.append("BloodGroup", data.bloodGroup);
-      formData.append("UserType", data.userType);
-      if (data.profilePicture?.[0]) {
-        formData.append("ProfilePicture", data.profilePicture[0]);
-      }
+      const { accessToken, refreshToken, id, username, role } = data.register;
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_ENDPOINT}/auth/signUp`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+      Cookies.set("token", accessToken, { expires: 1 });
+      Cookies.set("refreshToken", refreshToken, { expires: 30 });
+      Cookies.set("userId", id, { expires: 30 });
+      Cookies.set("username", username, { expires: 30 });
+      Cookies.set("role", role.toLowerCase(), { expires: 30 });
+
+      dispatch(setCredentials({ token: accessToken, id, username, role }));
+
+      router.push(`/${role.toLowerCase()}`);
+    } catch (err) {
+      setError(
+        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
       );
-
-      console.log("SignUp Success:", response.data);
-      alert("Account created successfully!");
-    } catch (error) {
-      console.error("SignUp Error:", error);
-      alert("Something went wrong!");
     } finally {
       setLoading(false);
     }
@@ -68,11 +62,7 @@ const SignUp = () => {
     <div className="min-h-screen grid md:grid-cols-2 bg-white">
       <div className="hidden md:flex items-center justify-center bg-pink-50">
         <div className="max-w-md p-6 text-center">
-          <img
-            src="/img/img3.svg"
-            alt="Illustration"
-            className="w-full h-auto"
-          />
+          <img src="/img/img3.svg" alt="Illustration" className="w-full h-auto" />
           <h2 className="text-2xl font-bold mt-6">
             Welcome to <span className="text-pink-500">DreamsEdu</span> Courses.
           </h2>
@@ -88,136 +78,112 @@ const SignUp = () => {
           <h2 className="text-3xl font-bold text-center text-pink-600 mb-6">
             Create an Account
           </h2>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
+
+          {/* Student accounts are created by an admin, not self-signup,
+              since they require a class/grade/parent assignment. */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block mb-1 text-gray-700 text-sm">First Name</label>
+                <div className="flex items-center border rounded px-3 py-2 bg-gray-50">
+                  <User className="text-gray-400 mr-2" size={16} />
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="First name"
+                    className="w-full bg-transparent outline-none text-sm"
+                    value={form.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block mb-1 text-gray-700 text-sm">Last Name</label>
+                <div className="flex items-center border rounded px-3 py-2 bg-gray-50">
+                  <input
+                    type="text"
+                    name="surname"
+                    placeholder="Last name"
+                    className="w-full bg-transparent outline-none text-sm"
+                    value={form.surname}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
             <div>
-              <label className="block mb-1 text-gray-700">Full Name</label>
+              <label className="block mb-1 text-gray-700 text-sm">Username</label>
               <div className="flex items-center border rounded px-3 py-2 bg-gray-50">
-                <User className="text-gray-400 mr-2" size={18} />
+                <User className="text-gray-400 mr-2" size={16} />
                 <input
                   type="text"
-                  placeholder="Enter your name"
-                  className="w-full bg-transparent outline-none"
-                  {...register("name")}
+                  name="username"
+                  placeholder="Choose a username"
+                  className="w-full bg-transparent outline-none text-sm"
+                  value={form.username}
+                  onChange={handleChange}
+                  required
                 />
               </div>
-              {errors.name && (
-                <p className="text-red-500 text-sm">{errors.name.message}</p>
-              )}
             </div>
 
             <div>
-              <label className="block mb-1 text-gray-700">Email</label>
+              <label className="block mb-1 text-gray-700 text-sm">Email</label>
               <div className="flex items-center border rounded px-3 py-2 bg-gray-50">
-                <Mail className="text-gray-400 mr-2" size={18} />
+                <Mail className="text-gray-400 mr-2" size={16} />
                 <input
                   type="email"
+                  name="email"
                   placeholder="Enter your email"
-                  className="w-full bg-transparent outline-none"
-                  {...register("email")}
+                  className="w-full bg-transparent outline-none text-sm"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
                 />
               </div>
-              {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email.message}</p>
-              )}
             </div>
 
             <div>
-              <label className="block mb-1 text-gray-700">Password</label>
+              <label className="block mb-1 text-gray-700 text-sm">Password</label>
               <div className="flex items-center border rounded px-3 py-2 bg-gray-50">
-                <Lock className="text-gray-400 mr-2" size={18} />
+                <Lock className="text-gray-400 mr-2" size={16} />
                 <input
                   type="password"
-                  placeholder="Enter your password"
-                  className="w-full bg-transparent outline-none"
-                  {...register("password")}
+                  name="password"
+                  placeholder="At least 6 characters, letters + numbers"
+                  className="w-full bg-transparent outline-none text-sm"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
                 />
               </div>
-              {errors.password && (
-                <p className="text-red-500 text-sm">
-                  {errors.password.message}
-                </p>
-              )}
             </div>
 
             <div>
-              <label className="block mb-1 text-gray-700">Date of Birth</label>
-              <div className="flex items-center border rounded px-3 py-2 bg-gray-50">
-                <Calendar className="text-gray-400 mr-2" size={18} />
-                <input
-                  type="date"
-                  className="w-full bg-transparent outline-none"
-                  {...register("dateOfBirth")}
-                />
-              </div>
-              {errors.dateOfBirth && (
-                <p className="text-red-500 text-sm">
-                  {errors.dateOfBirth.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block mb-1 text-gray-700">Blood Group</label>
+              <label className="block mb-1 text-gray-700 text-sm">I am a...</label>
               <select
-                className="w-full px-3 py-2 bg-gray-50 border rounded outline-none"
-                {...register("bloodGroup")}
+                name="role"
+                className="w-full px-3 py-2 bg-gray-50 border rounded outline-none text-sm"
+                value={form.role}
+                onChange={handleChange}
               >
-                <option value="">Select</option>
-                <option value="1">A+</option>
-                <option value="2">A-</option>
-                <option value="3">B+</option>
-                <option value="4">B-</option>
-                <option value="5">AB+</option>
-                <option value="6">AB-</option>
-                <option value="7">O+</option>
-                <option value="8">O-</option>
+                <option value="TEACHER">Teacher</option>
+                <option value="PARENT">Parent</option>
+                <option value="ADMIN">Admin</option>
               </select>
-              {errors.bloodGroup && (
-                <p className="text-red-500 text-sm">
-                  {errors.bloodGroup.message}
-                </p>
-              )}
             </div>
 
-            <div>
-              <label className="block mb-1 text-gray-700">User Type</label>
-              <select
-                className="w-full px-3 py-2 bg-gray-50 border rounded outline-none"
-                {...register("userType")}
-              >
-                <option value="">Select</option>
-                <option value="1">Admin</option>
-                <option value="2">User</option>
-                <option value="3">Manager</option>
-              </select>
-              {errors.userType && (
-                <p className="text-red-500 text-sm">
-                  {errors.userType.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block mb-1 text-gray-700">
-                Profile Picture
-              </label>
-              <div className="flex items-center border rounded px-3 py-2 bg-gray-50">
-                <ImageIcon className="text-gray-400 mr-2" size={18} />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="w-full bg-transparent outline-none"
-                  {...register("profilePicture")}
-                />
-              </div>
-            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
 
             <button
               type="submit"
-              className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 transition"
+              className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 transition disabled:opacity-60"
               disabled={loading}
             >
-              {loading ? "Signing Up..." : "Sign Up"}
+              {loading ? "Creating account..." : "Sign Up"}
             </button>
           </form>
 

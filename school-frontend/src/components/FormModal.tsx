@@ -16,6 +16,15 @@ const StudentForm = dynamic(() => import("./forms/StudentForm"), {
 const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const ClassForm = dynamic(() => import("./forms/ClassForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ParentForm = dynamic(() => import("./forms/ParentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const LessonForm = dynamic(() => import("./forms/LessonForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (type: "create" | "update", data: any, onSuccess: () => void) => JSX.Element;
@@ -23,7 +32,11 @@ const forms: {
   teacher: (type, data, onSuccess) => <TeacherForm type={type} data={data} onSuccess={onSuccess} />,
   student: (type, data, onSuccess) => <StudentForm type={type} data={data} onSuccess={onSuccess} />,
   subject: (type, data, onSuccess) => <SubjectForm type={type} data={data} onSuccess={onSuccess} />,
+  class: (type, data, onSuccess) => <ClassForm type={type} data={data} onSuccess={onSuccess} />,
+  parent: (type, data, onSuccess) => <ParentForm type={type} data={data} onSuccess={onSuccess} />,
+  lesson: (type, data, onSuccess) => <LessonForm type={type} data={data} onSuccess={onSuccess} />,
 };
+
 // One remove mutation per table, all following the same
 // `remove<Entity>(id: ID!): Boolean` shape the backend already exposes.
 // Add a line here as each module gets wired up — that's the only
@@ -32,6 +45,9 @@ const REMOVE_MUTATIONS: { [key: string]: string } = {
   subject: `mutation($id: ID!) { removeSubject(id: $id) }`,
   teacher: `mutation($id: ID!) { removeTeacher(id: $id) }`,
   student: `mutation($id: ID!) { removeStudent(id: $id) }`,
+  class: `mutation($id: ID!) { removeClass(id: $id) }`,
+  parent: `mutation($id: ID!) { removeParent(id: $id) }`,
+  lesson: `mutation($id: ID!) { removeLesson(id: $id) }`,
 };
 
 const FormModal = ({
@@ -115,7 +131,7 @@ const FormModal = ({
           {deleting ? "Deleting..." : "Delete"}
         </button>
       </form>
-       ) : type === "create" || type === "update" ? (
+    ) : type === "create" || type === "update" ? (
       forms[table]
         ? forms[table](type, data, () => {
             setOpen(false);

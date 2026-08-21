@@ -1,25 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "graphql-request";
-import { GET_CLASSES, GET_GRADES, GET_PARENT_OPTIONS } from "@/lib/graphql/queries";
 
-const CREATE_STUDENT = gql`
-  mutation CreateStudent($input: CreateStudentInput!) {
-    createStudent(input: $input) {
+const CREATE_PARENT = gql`
+  mutation CreateParent($input: CreateParentInput!) {
+    createParent(input: $input) {
       id
     }
   }
 `;
 
-const UPDATE_STUDENT = gql`
-  mutation UpdateStudent($id: ID!, $input: UpdateStudentInput!) {
-    updateStudent(id: $id, input: $input) {
+const UPDATE_PARENT = gql`
+  mutation UpdateParent($id: ID!, $input: UpdateParentInput!) {
+    updateParent(id: $id, input: $input) {
       id
     }
   }
@@ -37,9 +36,6 @@ const createSchema = z.object({
   surname: z.string().min(1, { message: "Last name is required" }),
   phone: z.string().optional(),
   address: z.string().optional(),
-  classId: z.string().min(1, { message: "Class is required" }),
-  gradeId: z.string().min(1, { message: "Grade is required" }),
-  parentId: z.string().min(1, { message: "Parent is required" }),
 });
 
 const updateSchema = z.object({
@@ -47,12 +43,9 @@ const updateSchema = z.object({
   surname: z.string().min(1, { message: "Last name is required" }),
   phone: z.string().optional(),
   address: z.string().optional(),
-  classId: z.string().min(1, { message: "Class is required" }),
-  gradeId: z.string().min(1, { message: "Grade is required" }),
-  parentId: z.string().min(1, { message: "Parent is required" }),
 });
 
-const StudentForm = ({
+const ParentForm = ({
   type,
   data,
   onSuccess,
@@ -81,29 +74,8 @@ const StudentForm = ({
         : undefined,
   });
 
-  const [classOptions, setClassOptions] = useState<{ id: string; name: string }[]>([]);
-  const [gradeOptions, setGradeOptions] = useState<{ id: string; level: number }[]>([]);
-  const [parentOptions, setParentOptions] = useState<{ id: string; name: string }[]>([]);
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const client = await getClientGqlClient();
-        const [classes, grades, parents] = await Promise.all([
-          client.request<{ classes: { id: string; name: string }[] }>(GET_CLASSES, { take: 200 }),
-          client.request<{ grades: { id: string; level: number }[] }>(GET_GRADES),
-          client.request<{ parents: { id: string; name: string }[] }>(GET_PARENT_OPTIONS),
-        ]);
-        setClassOptions(classes.classes);
-        setGradeOptions(grades.grades);
-        setParentOptions(parents.parents);
-      } catch (err) {
-        console.error("Failed to load dropdown options:", err);
-      }
-    })();
-  }, []);
 
   const onSubmit = handleSubmit(async (formData) => {
     setSubmitError("");
@@ -111,9 +83,9 @@ const StudentForm = ({
     try {
       const client = await getClientGqlClient();
       if (type === "create") {
-        await client.request(CREATE_STUDENT, { input: formData });
+        await client.request(CREATE_PARENT, { input: formData });
       } else {
-        await client.request(UPDATE_STUDENT, { id: data.id, input: formData });
+        await client.request(UPDATE_PARENT, { id: data.id, input: formData });
       }
       onSuccess();
     } catch (err: any) {
@@ -128,7 +100,7 @@ const StudentForm = ({
   return (
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">
-        {type === "create" ? "Create a new student" : "Update student"}
+        {type === "create" ? "Create a new parent" : "Update parent"}
       </h1>
 
       {type === "create" && (
@@ -167,63 +139,6 @@ const StudentForm = ({
         <InputField label="Address" name="address" register={register} error={errors.address} />
       </div>
 
-      <span className="text-xs text-gray-400 font-medium">Enrollment</span>
-      <div className="flex justify-between flex-wrap gap-4">
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Class</label>
-          <select
-            {...register("classId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-          >
-            <option value="">Select a class</option>
-            {classOptions.map((c) => (
-              <option value={c.id} key={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          {errors.classId?.message && (
-            <p className="text-xs text-red-400">{errors.classId.message.toString()}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Grade</label>
-          <select
-            {...register("gradeId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-          >
-            <option value="">Select a grade</option>
-            {gradeOptions.map((g) => (
-              <option value={g.id} key={g.id}>
-                Grade {g.level}
-              </option>
-            ))}
-          </select>
-          {errors.gradeId?.message && (
-            <p className="text-xs text-red-400">{errors.gradeId.message.toString()}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Parent</label>
-          <select
-            {...register("parentId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-          >
-            <option value="">Select a parent</option>
-            {parentOptions.map((p) => (
-              <option value={p.id} key={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          {errors.parentId?.message && (
-            <p className="text-xs text-red-400">{errors.parentId.message.toString()}</p>
-          )}
-        </div>
-      </div>
-
       {submitError && <span className="text-red-500 text-sm">{submitError}</span>}
 
       <button
@@ -237,4 +152,4 @@ const StudentForm = ({
   );
 };
 
-export default StudentForm;
+export default ParentForm;

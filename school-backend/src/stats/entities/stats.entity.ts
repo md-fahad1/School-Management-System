@@ -6,29 +6,29 @@ export class DashboardCounts {
   studentCount!: number;
 
   @Field(() => Int)
-  teacherCount: number;
+  teacherCount!: number;
 
   @Field(() => Int)
-  parentCount: number;
+  parentCount!: number;
 
   @Field(() => Int)
-  adminCount: number;
+  adminCount!: number;
 
   @Field(() => Int)
-  boysCount: number;
+  boysCount!: number;
 
   @Field(() => Int)
-  girlsCount: number;
+  girlsCount!: number;
 }
 
 @ObjectType()
 export class DailyAttendance {
   @Field()
-  day: string; // "Mon", "Tue", etc.
+  day!: string; // "Mon", "Tue", etc.
 
   @Field(() => Int)
-  present: number;
+  present!: number;
 
   @Field(() => Int)
-  absent: number;
+  absent!: number;
 }

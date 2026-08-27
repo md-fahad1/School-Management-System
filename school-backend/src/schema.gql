@@ -24,11 +24,15 @@ type Assignment {
 }
 
 type Attendance {
+  className: String
   date: DateTime!
   id: ID!
   lessonId: ID!
   present: Boolean!
   studentId: ID!
+  studentName: String
+  subjectName: String
+  teacherName: String
 }
 
 type AuditLog {
@@ -168,6 +172,21 @@ input CreateTeacherInput {
   username: String!
 }
 
+type DailyAttendance {
+  absent: Int!
+  day: String!
+  present: Int!
+}
+
+type DashboardCounts {
+  adminCount: Int!
+  boysCount: Int!
+  girlsCount: Int!
+  parentCount: Int!
+  studentCount: Int!
+  teacherCount: Int!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -241,7 +260,9 @@ type Message {
   id: ID!
   read: Boolean!
   receiverId: ID!
+  receiverName: String
   senderId: ID!
+  senderName: String
   sentAt: DateTime!
 }
 
@@ -321,6 +342,7 @@ type Query {
   class(id: ID!): Class!
   classes(search: String, skip: Float, take: Float): [Class!]!
   conversation(skip: Float, take: Float, userId: ID!): [Message!]!
+  dashboardCounts: DashboardCounts!
   event(id: ID!): Event!
   events(skip: Float, take: Float): [Event!]!
   exam(id: ID!): Exam!
@@ -340,6 +362,8 @@ type Query {
   subjects(search: String, skip: Float, take: Float): [Subject!]!
   teacher(id: ID!): Teacher!
   teachers(search: String, skip: Float, take: Float): [Teacher!]!
+  users(search: String): [UserSummary!]!
+  weeklyAttendance: [DailyAttendance!]!
 }
 
 input RefreshTokenInput {
@@ -529,6 +553,12 @@ input UpdateTeacherInput {
   subjectIds: [String!]
   surname: String
   username: String
+}
+
+type UserSummary {
+  id: ID!
+  roleName: String!
+  username: String!
 }
 
 input VerifyEmailInput {

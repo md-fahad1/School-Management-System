@@ -67,7 +67,28 @@ export const RESEND_VERIFICATION_EMAIL = gql`
     resendVerificationEmail(input: $input)
   }
 `;
+export const GET_DASHBOARD_COUNTS = gql`
+  query DashboardCounts {
+    dashboardCounts {
+      studentCount
+      teacherCount
+      parentCount
+      adminCount
+      boysCount
+      girlsCount
+    }
+  }
+`;
 
+export const GET_WEEKLY_ATTENDANCE = gql`
+  query WeeklyAttendance {
+    weeklyAttendance {
+      day
+      present
+      absent
+    }
+  }
+`;
 /* ---------- Subjects ---------- */
 
 export const GET_SUBJECTS = gql`

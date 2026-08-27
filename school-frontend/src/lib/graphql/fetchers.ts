@@ -5,6 +5,7 @@ import {
   GET_ASSIGNMENTS,
   GET_ATTENDANCES,
   GET_CLASSES,
+  GET_DASHBOARD_COUNTS,
   GET_EVENTS,
   GET_EXAMS,
   GET_LESSONS,
@@ -13,6 +14,7 @@ import {
   GET_STUDENTS,
   GET_SUBJECTS,
   GET_TEACHERS,
+  GET_WEEKLY_ATTENDANCE,
 } from "./queries";
 
 /** Formats an ISO date string the same way the original dummy data did: "2025-01-01". */
@@ -25,7 +27,45 @@ function fmtTime(value?: string | null) {
   if (!value) return "-";
   return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
+export async function getDashboardCounts() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{
+      dashboardCounts: {
+        studentCount: number;
+        teacherCount: number;
+        parentCount: number;
+        adminCount: number;
+        boysCount: number;
+        girlsCount: number;
+      };
+    }>(GET_DASHBOARD_COUNTS, {});
+    return data.dashboardCounts;
+  } catch (err) {
+    console.error("getDashboardCounts failed:", err);
+    return {
+      studentCount: 0,
+      teacherCount: 0,
+      parentCount: 0,
+      adminCount: 0,
+      boysCount: 0,
+      girlsCount: 0,
+    };
+  }
+}
 
+export async function getWeeklyAttendance() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{
+      weeklyAttendance: { day: string; present: number; absent: number }[];
+    }>(GET_WEEKLY_ATTENDANCE, {});
+    return data.weeklyAttendance;
+  } catch (err) {
+    console.error("getWeeklyAttendance failed:", err);
+    return [];
+  }
+}
 // Every fetcher swallows GraphQL/network errors and returns an empty
 // list rather than throwing, so a page still renders (with an empty
 // table) if the backend is unreachable, instead of crashing the whole

@@ -204,6 +204,10 @@ export async function getAttendances() {
       present: a.present,
       studentId: a.studentId,
       lessonId: a.lessonId,
+      student: a.studentName ?? "-",
+      subject: a.subjectName ?? "-",
+      class: a.className ?? "-",
+      teacher: a.teacherName ?? "-",
     }));
   } catch (err) {
     console.error("getAttendances failed:", err);
@@ -244,3 +248,4 @@ export async function getAnnouncements() {
     return [];
   }
 }
+

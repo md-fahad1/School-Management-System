@@ -16,13 +16,22 @@ interface RequestUser {
 export class AttendanceService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(user: RequestUser, skip = 0, take = 20) {
+   async findAll(user: RequestUser, skip = 0, take = 20) {
     const where = await this.visibilityFilter(user);
-    return this.prisma.attendance.findMany({ where, skip, take, orderBy: { date: 'desc' } });
+    return this.prisma.attendance.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { date: 'desc' },
+      include: { student: true, lesson: { include: { subject: true, class: true, teacher: true } } },
+    });
   }
 
   async findOne(id: string) {
-    const attendance = await this.prisma.attendance.findUnique({ where: { id } });
+    const attendance = await this.prisma.attendance.findUnique({
+      where: { id },
+      include: { student: true, lesson: { include: { subject: true, class: true, teacher: true } } },
+    });
     if (!attendance) throw new NotFoundException(`Attendance record ${id} not found`);
     return attendance;
   }

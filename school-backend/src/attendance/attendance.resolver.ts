@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID, ResolveField, Parent } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { AttendanceService } from './attendance.service';
@@ -52,10 +52,31 @@ export class AttendanceResolver {
   ) {
     return this.attendanceService.update(id, input);
   }
-
-  @Mutation(() => Boolean)
+    @Mutation(() => Boolean)
   @Roles(Role.ADMIN, Role.TEACHER)
   removeAttendance(@Args('id', { type: () => ID }) id: string) {
     return this.attendanceService.remove(id);
+  }
+
+  @ResolveField('studentName', () => String, { nullable: true })
+  studentName(@Parent() attendance: any) {
+    const s = attendance.student;
+    return s ? `${s.name} ${s.surname}` : undefined;
+  }
+
+  @ResolveField('subjectName', () => String, { nullable: true })
+  subjectName(@Parent() attendance: any) {
+    return attendance.lesson?.subject?.name;
+  }
+
+  @ResolveField('className', () => String, { nullable: true })
+  className(@Parent() attendance: any) {
+    return attendance.lesson?.class?.name;
+  }
+
+  @ResolveField('teacherName', () => String, { nullable: true })
+  teacherName(@Parent() attendance: any) {
+    const t = attendance.lesson?.teacher;
+    return t ? `${t.name} ${t.surname}` : undefined;
   }
 }

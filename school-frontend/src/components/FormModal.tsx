@@ -25,6 +25,24 @@ const ParentForm = dynamic(() => import("./forms/ParentForm"), {
 const LessonForm = dynamic(() => import("./forms/LessonForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const EventForm = dynamic(() => import("./forms/EventForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ExamForm = dynamic(() => import("./forms/ExamForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const AssignmentForm = dynamic(() => import("./forms/AssignmentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ResultForm = dynamic(() => import("./forms/ResultForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (type: "create" | "update", data: any, onSuccess: () => void) => JSX.Element;
@@ -35,8 +53,13 @@ const forms: {
   class: (type, data, onSuccess) => <ClassForm type={type} data={data} onSuccess={onSuccess} />,
   parent: (type, data, onSuccess) => <ParentForm type={type} data={data} onSuccess={onSuccess} />,
   lesson: (type, data, onSuccess) => <LessonForm type={type} data={data} onSuccess={onSuccess} />,
+    event: (type, data, onSuccess) => <EventForm type={type} data={data} onSuccess={onSuccess} />,
+  announcement: (type, data, onSuccess) => <AnnouncementForm type={type} data={data} onSuccess={onSuccess} />,
+  exam: (type, data, onSuccess) => <ExamForm type={type} data={data} onSuccess={onSuccess} />,
+  assignment: (type, data, onSuccess) => <AssignmentForm type={type} data={data} onSuccess={onSuccess} />,
+  result: (type, data, onSuccess) => <ResultForm type={type} data={data} onSuccess={onSuccess} />,
+  attendance: (type, data, onSuccess) => <AttendanceForm type={type} data={data} onSuccess={onSuccess} />,
 };
-
 // One remove mutation per table, all following the same
 // `remove<Entity>(id: ID!): Boolean` shape the backend already exposes.
 // Add a line here as each module gets wired up — that's the only
@@ -48,8 +71,13 @@ const REMOVE_MUTATIONS: { [key: string]: string } = {
   class: `mutation($id: ID!) { removeClass(id: $id) }`,
   parent: `mutation($id: ID!) { removeParent(id: $id) }`,
   lesson: `mutation($id: ID!) { removeLesson(id: $id) }`,
+    event: `mutation($id: ID!) { removeEvent(id: $id) }`,
+    announcement: `mutation($id: ID!) { removeAnnouncement(id: $id) }`,
+  exam: `mutation($id: ID!) { removeExam(id: $id) }`,
+  assignment: `mutation($id: ID!) { removeAssignment(id: $id) }`,
+  result: `mutation($id: ID!) { removeResult(id: $id) }`,
+  attendance: `mutation($id: ID!) { removeAttendance(id: $id) }`,
 };
-
 const FormModal = ({
   table,
   type,

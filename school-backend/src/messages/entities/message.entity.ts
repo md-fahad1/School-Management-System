@@ -3,20 +3,26 @@ import { ObjectType, Field, ID } from '@nestjs/graphql';
 @ObjectType()
 export class Message {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field()
-  content: string;
+  content!: string;
 
   @Field()
-  sentAt: Date;
+  sentAt!: Date;
 
   @Field()
-  read: boolean;
+  read!: boolean;
+
+    @Field(() => ID)
+  senderId!: string;
 
   @Field(() => ID)
-  senderId: string;
+  receiverId!: string;
 
-  @Field(() => ID)
-  receiverId: string;
+  @Field({ nullable: true })
+  senderName?: string;
+
+  @Field({ nullable: true })
+  receiverName?: string;
 }

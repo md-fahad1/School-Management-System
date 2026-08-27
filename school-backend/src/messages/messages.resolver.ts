@@ -1,11 +1,10 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID, ResolveField, Parent } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { Message } from './entities/message.entity';
 import { SendMessageInput } from './dto/message.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-
 @Resolver(() => Message)
 @UseGuards(GqlJwtAuthGuard)
 export class MessagesResolver {
@@ -39,9 +38,18 @@ export class MessagesResolver {
   markMessageRead(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
     return this.messagesService.markRead(id, user.id);
   }
-
   @Mutation(() => Boolean)
   removeMessage(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
     return this.messagesService.remove(id, user.id);
+  }
+
+  @ResolveField('senderName', () => String, { nullable: true })
+  senderName(@Parent() message: any) {
+    return message.sender?.username;
+  }
+
+  @ResolveField('receiverName', () => String, { nullable: true })
+  receiverName(@Parent() message: any) {
+    return message.receiver?.username;
   }
 }

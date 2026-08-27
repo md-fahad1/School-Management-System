@@ -5,7 +5,6 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { join } from 'path';
-
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
@@ -26,19 +25,12 @@ import { AnnouncementsModule } from './announcements/announcements.module';
 import { MessagesModule } from './messages/messages.module';
 import { AuditModule } from './audit/audit.module';
 import { EmailModule } from './email/email.module';
-
-
+import { UsersModule } from './users/users.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot({
-      throttlers: [
-        // Global default: generous enough not to bother normal usage,
-        // tight enough to stop a runaway script. Sensitive mutations
-        // (login/register/refreshToken) override this with @Throttle()
-        // in auth.resolver.ts for much tighter limits.
-        { ttl: 60_000, limit: 60 },
-      ],
+      throttlers: [{ ttl: 60_000, limit: 60 },],
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -68,6 +60,7 @@ import { EmailModule } from './email/email.module';
     EventsModule,
     AnnouncementsModule,
     MessagesModule,
+    UsersModule
   ],
    providers: [
     {

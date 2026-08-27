@@ -297,10 +297,14 @@ export const GET_ATTENDANCES = gql`
   query Attendances($skip: Float, $take: Float) {
     attendances(skip: $skip, take: $take) {
       id
-      date
+      dateFormModal.tsx
       present
       studentId
       lessonId
+      studentName
+      subjectName
+      className
+      teacherName
     }
   }
 `;
@@ -335,7 +339,6 @@ export const GET_ANNOUNCEMENTS = gql`
 `;
 
 /* ---------- Messages ---------- */
-
 export const GET_INBOX = gql`
   query Inbox($skip: Float, $take: Float) {
     inbox(skip: $skip, take: $take) {
@@ -345,6 +348,42 @@ export const GET_INBOX = gql`
       read
       senderId
       receiverId
+      senderName
+      receiverName
+    }
+  }
+`;
+
+export const GET_CONVERSATION = gql`
+  query Conversation($userId: ID!, $skip: Float, $take: Float) {
+    conversation(userId: $userId, skip: $skip, take: $take) {
+      id
+      content
+      sentAt
+      read
+      senderId
+      receiverId
+      senderName
+      receiverName
+    }
+  }
+`;
+
+export const GET_USERS = gql`
+  query Users($search: String) {
+    users(search: $search) {
+      id
+      username
+      roleName
+    }
+  }
+`;
+
+export const MARK_MESSAGE_READ = gql`
+  mutation MarkMessageRead($id: ID!) {
+    markMessageRead(id: $id) {
+      id
+      read
     }
   }
 `;
@@ -358,5 +397,3 @@ export const SEND_MESSAGE = gql`
     }
   }
 `;
-
-

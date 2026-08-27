@@ -3,17 +3,29 @@ import { ObjectType, Field, ID } from '@nestjs/graphql';
 @ObjectType()
 export class Attendance {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field()
-  date: Date;
+  date!: Date;
 
   @Field()
-  present: boolean;
+  present!: boolean;
+
+ @Field(() => ID)
+  studentId!: string;
 
   @Field(() => ID)
-  studentId: string;
+  lessonId!: string;
 
-  @Field(() => ID)
-  lessonId: string;
+  @Field({ nullable: true })
+  studentName?: string;
+
+  @Field({ nullable: true })
+  subjectName?: string;
+
+  @Field({ nullable: true })
+  className?: string;
+
+  @Field({ nullable: true })
+  teacherName?: string;
 }

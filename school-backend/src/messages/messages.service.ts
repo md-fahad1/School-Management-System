@@ -6,13 +6,14 @@ import { SendMessageInput } from './dto/message.dto';
 export class MessagesService {
   constructor(private prisma: PrismaService) {}
 
-  // Everything a user is party to (sent or received), newest first.
+   // Everything a user is party to (sent or received), newest first.
   inbox(userId: string, skip = 0, take = 20) {
     return this.prisma.message.findMany({
       where: { OR: [{ senderId: userId }, { receiverId: userId }] },
       skip,
       take,
       orderBy: { sentAt: 'desc' },
+      include: { sender: true, receiver: true },
     });
   }
 
@@ -28,6 +29,7 @@ export class MessagesService {
       skip,
       take,
       orderBy: { sentAt: 'asc' },
+      include: { sender: true, receiver: true },
     });
   }
 

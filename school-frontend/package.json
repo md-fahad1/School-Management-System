@@ -13,7 +13,11 @@
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.1.1",
     "@mui/material": "^7.2.0",
+    "@reduxjs/toolkit": "^2.2.7",
     "axios": "^1.10.0",
+    "graphql": "^16.9.0",
+    "graphql-request": "^6.1.0",
+    "js-cookie": "^3.0.5",
     "lucide-react": "^0.525.0",
     "next": "14.2.5",
     "react": "^18",
@@ -22,16 +26,14 @@
     "react-dom": "^18",
     "react-hook-form": "^7.59.0",
     "react-icons": "^5.5.0",
-    "recharts": "^2.12.7",
-    "swiper": "^11.2.10",
-    "zod": "^3.25.71",
-    "graphql-request": "^6.1.0",
-    "graphql": "^16.9.0",
-    "@reduxjs/toolkit": "^2.2.7",
     "react-redux": "^9.1.2",
-    "js-cookie": "^3.0.5"
+    "recharts": "^2.12.7",
+    "server-only": "^0.0.1",
+    "swiper": "^11.2.10",
+    "zod": "^3.25.71"
   },
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-big-calendar": "^1.16.2",
@@ -40,7 +42,6 @@
     "eslint-config-next": "14.2.5",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5",
-    "@types/js-cookie": "^3.0.6"
+    "typescript": "^5"
   }
 }

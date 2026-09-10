@@ -1,15 +1,16 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { Sex } from '../../common/enums/sex.enum';
 
 @ObjectType()
 export class Student {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field()
-  name: string;
+  name!: string;
 
   @Field()
-  surname: string;
+  surname!: string;
 
   @Field({ nullable: true })
   phone?: string;
@@ -20,14 +21,23 @@ export class Student {
   @Field({ nullable: true })
   img?: string;
 
-  @Field(() => ID)
-  classId: string;
+  @Field({ nullable: true })
+  bloodType?: string;
+
+  @Field(() => Sex, { nullable: true })
+  sex?: Sex;
+
+  @Field({ nullable: true })
+  birthday?: Date;
 
   @Field(() => ID)
-  gradeId: string;
+  classId!: string;
 
   @Field(() => ID)
-  parentId: string;
+  gradeId!: string;
+
+  @Field(() => ID)
+  parentId!: string;
 
   @Field({ nullable: true })
   email?: string;
@@ -40,4 +50,7 @@ export class Student {
 
   @Field({ nullable: true })
   parentName?: string;
+
+  @Field(() => ID, { nullable: true })
+  userId?: string;
 }

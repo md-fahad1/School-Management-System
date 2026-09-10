@@ -42,8 +42,6 @@ export class TeachersService {
 
     const hashed = await bcrypt.hash(input.password, 10);
 
-    // User + Teacher profile created together so a teacher record
-    // never exists without a matching login account.
     const user = await this.prisma.user.create({
       data: {
         username: input.username,
@@ -56,6 +54,10 @@ export class TeachersService {
             surname: input.surname,
             phone: input.phone,
             address: input.address,
+            img: input.img,
+            bloodType: input.bloodType,
+            sex: input.sex,
+            birthday: input.birthday ? new Date(input.birthday) : undefined,
             subjects: input.subjectIds
               ? { connect: input.subjectIds.map((id) => ({ id })) }
               : undefined,
@@ -77,6 +79,10 @@ export class TeachersService {
         surname: input.surname,
         phone: input.phone,
         address: input.address,
+        img: input.img,
+        bloodType: input.bloodType,
+        sex: input.sex,
+        birthday: input.birthday ? new Date(input.birthday) : undefined,
         subjects: input.subjectIds
           ? { set: input.subjectIds.map((id) => ({ id })) }
           : undefined,
@@ -86,7 +92,6 @@ export class TeachersService {
 
   async remove(id: string) {
     const teacher = await this.findOne(id);
-    // Cascades to delete the User row too (onDelete: Cascade on Teacher.user).
     await this.prisma.user.delete({ where: { id: teacher.userId } });
     return true;
   }

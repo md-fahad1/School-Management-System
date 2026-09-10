@@ -43,6 +43,9 @@ const ResultForm = dynamic(() => import("./forms/ResultForm"), {
 const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const BookForm = dynamic(() => import("./forms/BookForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (type: "create" | "update", data: any, onSuccess: () => void) => JSX.Element;
@@ -59,6 +62,7 @@ const forms: {
   assignment: (type, data, onSuccess) => <AssignmentForm type={type} data={data} onSuccess={onSuccess} />,
   result: (type, data, onSuccess) => <ResultForm type={type} data={data} onSuccess={onSuccess} />,
   attendance: (type, data, onSuccess) => <AttendanceForm type={type} data={data} onSuccess={onSuccess} />,
+  book: (type, data, onSuccess) => <BookForm type={type} data={data} onSuccess={onSuccess} />,
 };
 // One remove mutation per table, all following the same
 // `remove<Entity>(id: ID!): Boolean` shape the backend already exposes.
@@ -77,6 +81,7 @@ const REMOVE_MUTATIONS: { [key: string]: string } = {
   assignment: `mutation($id: ID!) { removeAssignment(id: $id) }`,
   result: `mutation($id: ID!) { removeResult(id: $id) }`,
   attendance: `mutation($id: ID!) { removeAttendance(id: $id) }`,
+  book: `mutation($id: ID!) { removeBook(id: $id) }`,
 };
 const FormModal = ({
   table,
@@ -96,7 +101,8 @@ const FormModal = ({
     | "result"
     | "attendance"
     | "event"
-    | "announcement";
+    | "announcement"
+    | "book";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;

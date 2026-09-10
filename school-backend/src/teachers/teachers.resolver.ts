@@ -61,4 +61,10 @@ export class TeachersResolver {
   classes(@Parent() teacher: any) {
     return teacher.classes?.map((c: any) => c.name) ?? [];
   }
+
+    @ResolveField('userId', () => String, { nullable: true })
+  userId(@Parent() teacher: any) {
+    return teacher.userId;
+  }
+
 }

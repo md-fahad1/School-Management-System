@@ -54,6 +54,36 @@ type AuthPayload {
   username: String!
 }
 
+type Book {
+  author: String!
+  availableCopies: Int!
+  bookTitle: String!
+  borrowerName: String!
+  category: String
+  coverImage: String
+  createdAt: DateTime!
+  id: ID!
+  isbn: String!
+  title: String!
+  totalCopies: Int!
+  updatedAt: DateTime!
+}
+
+type BookLoan {
+  book: Book
+  bookId: ID!
+  bookTitle: String
+  borrowedAt: DateTime!
+  borrowerId: ID!
+  borrowerName: String
+  dueDate: DateTime!
+  fineAmount: Float
+  id: ID!
+  issuedById: ID!
+  returnedAt: DateTime
+  status: LoanStatus!
+}
+
 input BulkMarkAttendanceInput {
   date: String!
   entries: [MarkAttendanceEntry!]!
@@ -88,6 +118,15 @@ input CreateAttendanceInput {
   lessonId: ID!
   present: Boolean!
   studentId: ID!
+}
+
+input CreateBookInput {
+  author: String!
+  category: String
+  coverImage: String
+  isbn: String!
+  title: String!
+  totalCopies: Int! = 1
 }
 
 input CreateClassInput {
@@ -145,13 +184,17 @@ input CreateResultInput {
 
 input CreateStudentInput {
   address: String
+  birthday: String
+  bloodType: String
   classId: ID!
   email: String!
   gradeId: ID!
+  img: String
   name: String!
   parentId: ID!
   password: String!
   phone: String
+  sex: Sex
   surname: String!
   username: String!
 }
@@ -163,10 +206,14 @@ input CreateSubjectInput {
 
 input CreateTeacherInput {
   address: String
+  birthday: String
+  bloodType: String
   email: String!
+  img: String
   name: String!
   password: String!
   phone: String
+  sex: Sex
   subjectIds: [String!]
   surname: String!
   username: String!
@@ -227,6 +274,12 @@ type Grade {
   level: Int!
 }
 
+input IssueBookInput {
+  bookId: ID!
+  borrowerId: ID!
+  dueDate: String!
+}
+
 type Lesson {
   classId: ID!
   className: String
@@ -239,6 +292,13 @@ type Lesson {
   subjectName: String
   teacherId: ID!
   teacherName: String
+}
+
+enum LoanStatus {
+  BORROWED
+  LOST
+  OVERDUE
+  RETURNED
 }
 
 input LoginInput {
@@ -271,6 +331,7 @@ type Mutation {
   createAnnouncement(input: CreateAnnouncementInput!): Announcement!
   createAssignment(input: CreateAssignmentInput!): Assignment!
   createAttendance(input: CreateAttendanceInput!): Attendance!
+  createBook(input: CreateBookInput!): Book!
   createClass(input: CreateClassInput!): Class!
   createEvent(input: CreateEventInput!): Event!
   createExam(input: CreateExamInput!): Exam!
@@ -281,6 +342,7 @@ type Mutation {
   createStudent(input: CreateStudentInput!): Student!
   createSubject(input: CreateSubjectInput!): Subject!
   createTeacher(input: CreateTeacherInput!): Teacher!
+  issueBook(input: IssueBookInput!): BookLoan!
   login(input: LoginInput!): AuthPayload!
   logout(input: LogoutInput!): Boolean!
   logoutAllDevices: Boolean!
@@ -290,6 +352,7 @@ type Mutation {
   removeAnnouncement(id: ID!): Boolean!
   removeAssignment(id: ID!): Boolean!
   removeAttendance(id: ID!): Boolean!
+  removeBook(id: ID!): Boolean!
   removeClass(id: ID!): Boolean!
   removeEvent(id: ID!): Boolean!
   removeExam(id: ID!): Boolean!
@@ -304,10 +367,12 @@ type Mutation {
   requestPasswordReset(input: RequestPasswordResetInput!): Boolean!
   resendVerificationEmail(input: ResendVerificationInput!): Boolean!
   resetPassword(input: ResetPasswordInput!): Boolean!
+  returnBook(input: ReturnBookInput!): BookLoan!
   sendMessage(input: SendMessageInput!): Message!
   updateAnnouncement(id: ID!, input: UpdateAnnouncementInput!): Announcement!
   updateAssignment(id: ID!, input: UpdateAssignmentInput!): Assignment!
   updateAttendance(id: ID!, input: UpdateAttendanceInput!): Attendance!
+  updateBook(id: ID!, input: UpdateBookInput!): Book!
   updateClass(id: ID!, input: UpdateClassInput!): Class!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
   updateExam(id: ID!, input: UpdateExamInput!): Exam!
@@ -339,6 +404,9 @@ type Query {
   attendance(id: ID!): Attendance!
   attendances(skip: Float, take: Float): [Attendance!]!
   auditLogs(action: String, skip: Float, take: Float, userId: ID): [AuditLog!]!
+  book(id: ID!): Book!
+  bookLoans(skip: Int, status: LoanStatus, take: Int): [BookLoan!]!
+  books(search: String, skip: Int, take: Int): [Book!]!
   class(id: ID!): Class!
   classes(search: String, skip: Float, take: Float): [Class!]!
   conversation(skip: Float, take: Float, userId: ID!): [Message!]!
@@ -406,6 +474,10 @@ type Result {
   type: String
 }
 
+input ReturnBookInput {
+  loanId: ID!
+}
+
 enum Role {
   ADMIN
   PARENT
@@ -418,8 +490,15 @@ input SendMessageInput {
   receiverId: ID!
 }
 
+enum Sex {
+  FEMALE
+  MALE
+}
+
 type Student {
   address: String
+  birthday: DateTime
+  bloodType: String
   classId: ID!
   className: String
   email: String
@@ -431,7 +510,9 @@ type Student {
   parentId: ID!
   parentName: String
   phone: String
+  sex: Sex
   surname: String!
+  userId: ID
 }
 
 type Subject {
@@ -442,6 +523,7 @@ type Subject {
 
 type Teacher {
   address: String
+  birthday: DateTime
   bloodType: String
   classes: [String!]
   email: String
@@ -449,8 +531,10 @@ type Teacher {
   img: String
   name: String!
   phone: String
+  sex: Sex
   subjects: [String!]
   surname: String!
+  userId: ID
 }
 
 input UpdateAnnouncementInput {
@@ -471,6 +555,15 @@ input UpdateAttendanceInput {
   lessonId: ID
   present: Boolean
   studentId: ID
+}
+
+input UpdateBookInput {
+  author: String
+  category: String
+  coverImage: String
+  isbn: String
+  title: String
+  totalCopies: Int = 1
 }
 
 input UpdateClassInput {
@@ -528,13 +621,17 @@ input UpdateResultInput {
 
 input UpdateStudentInput {
   address: String
+  birthday: String
+  bloodType: String
   classId: ID
   email: String
   gradeId: ID
+  img: String
   name: String
   parentId: ID
   password: String
   phone: String
+  sex: Sex
   surname: String
   username: String
 }
@@ -546,10 +643,14 @@ input UpdateSubjectInput {
 
 input UpdateTeacherInput {
   address: String
+  birthday: String
+  bloodType: String
   email: String
+  img: String
   name: String
   password: String
   phone: String
+  sex: Sex
   subjectIds: [String!]
   surname: String
   username: String

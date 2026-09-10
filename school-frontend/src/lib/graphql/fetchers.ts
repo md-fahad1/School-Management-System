@@ -4,6 +4,8 @@ import {
   GET_ANNOUNCEMENTS,
   GET_ASSIGNMENTS,
   GET_ATTENDANCES,
+  GET_BOOKS,
+  GET_BOOK_LOANS,
   GET_CLASSES,
   GET_DASHBOARD_COUNTS,
   GET_EVENTS,
@@ -15,6 +17,9 @@ import {
   GET_SUBJECTS,
   GET_TEACHERS,
   GET_WEEKLY_ATTENDANCE,
+  GET_SCHEDULE,
+  GET_STUDENT,
+  GET_TEACHER,
 } from "./queries";
 
 /** Formats an ISO date string the same way the original dummy data did: "2025-01-01". */
@@ -143,6 +148,46 @@ export async function getParents(search?: string) {
     }));
   } catch (err) {
     console.error("getParents failed:", err);
+    return [];
+  }
+}
+export async function getBooks(search?: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ books: any[] }>(GET_BOOKS, { search });
+    return data.books.map((b) => ({
+      id: b.id,
+      title: b.title,
+      author: b.author,
+      isbn: b.isbn,
+      category: b.category ?? "-",
+      totalCopies: b.totalCopies,
+      availableCopies: b.availableCopies,
+    }));
+  } catch (err) {
+    console.error("getBooks failed:", err);
+    return [];
+  }
+}
+
+export async function getBookLoans(status?: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ bookLoans: any[] }>(GET_BOOK_LOANS, { status });
+    return data.bookLoans.map((l) => ({
+      id: l.id,
+      status: l.status,
+      borrowedAt: fmtDate(l.borrowedAt),
+      dueDate: fmtDate(l.dueDate),
+      returnedAt: l.returnedAt ? fmtDate(l.returnedAt) : "-",
+      fineAmount: l.fineAmount ?? 0,
+      bookId: l.bookId,
+      borrowerId: l.borrowerId,
+      bookTitle: l.bookTitle ?? "-",
+      borrowerName: l.borrowerName ?? "-",
+    }));
+  } catch (err) {
+    console.error("getBookLoans failed:", err);
     return [];
   }
 }
@@ -289,3 +334,88 @@ export async function getAnnouncements() {
   }
 }
 
+export async function getTeacher(id: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ teacher: any }>(GET_TEACHER, { id });
+    const t = data.teacher;
+    return {
+      id: t.id,
+      name: `${t.name} ${t.surname}`,
+      email: t.email,
+      photo: t.img || "/avatar.png",
+      phone: t.phone ?? "-",
+      address: t.address ?? "-",
+      bloodType: t.bloodType ?? "-",
+      sex: t.sex ?? null,
+      birthday: fmtDate(t.birthday),
+      subjects: t.subjects ?? [],
+      classes: t.classes ?? [],
+    };
+  } catch (err) {
+    console.error("getTeacher failed:", err);
+    return null;
+  }
+}
+
+export async function getStudent(id: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ student: any }>(GET_STUDENT, { id });
+    const s = data.student;
+    return {
+      id: s.id,
+      name: `${s.name} ${s.surname}`,
+      email: s.email,
+      photo: s.img || "/avatar.png",
+      phone: s.phone ?? "-",
+      address: s.address ?? "-",
+      bloodType: s.bloodType ?? "-",
+      sex: s.sex ?? null,
+      birthday: fmtDate(s.birthday),
+      classId: s.classId,
+      className: s.className ?? "-",
+      gradeLevel: s.gradeLevel ?? "-",
+      parentName: s.parentName ?? "-",
+    };
+  } catch (err) {
+    console.error("getStudent failed:", err);
+    return null;
+  }
+}
+
+/** All lessons for one teacher, shaped for BigCalendar's {title, start, end}. */
+export async function getTeacherSchedule(teacherId: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ lessons: any[] }>(GET_SCHEDULE, {});
+    return data.lessons
+      .filter((l) => l.teacherId === teacherId)
+      .map((l) => ({
+        title: `${l.subjectName ?? l.name}`,
+        start: new Date(l.startTime),
+        end: new Date(l.endTime),
+      }));
+  } catch (err) {
+    console.error("getTeacherSchedule failed:", err);
+    return [];
+  }
+}
+
+/** All lessons for one class, shaped for BigCalendar's {title, start, end}. */
+export async function getClassSchedule(classId: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ lessons: any[] }>(GET_SCHEDULE, {});
+    return data.lessons
+      .filter((l) => l.classId === classId)
+      .map((l) => ({
+        title: `${l.subjectName ?? l.name}`,
+        start: new Date(l.startTime),
+        end: new Date(l.endTime),
+      }));
+  } catch (err) {
+    console.error("getClassSchedule failed:", err);
+    return [];
+  }
+}

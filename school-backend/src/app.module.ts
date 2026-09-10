@@ -27,6 +27,7 @@ import { AuditModule } from './audit/audit.module';
 import { EmailModule } from './email/email.module';
 import { UsersModule } from './users/users.module';
 import { StatsModule } from './stats/stats.module';
+import { LibraryModule } from './library/library.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -62,7 +63,8 @@ import { StatsModule } from './stats/stats.module';
     AnnouncementsModule,
     MessagesModule,
     UsersModule,
-    StatsModule
+    StatsModule,
+    LibraryModule
   ],
    providers: [
     {

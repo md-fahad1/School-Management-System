@@ -156,12 +156,14 @@ export const GET_TEACHER = gql`
       phone
       address
       img
+      bloodType
+      sex
+      birthday
       subjects
       classes
     }
   }
 `;
-
 /* ---------- Students ---------- */
 
 export const GET_STUDENTS = gql`
@@ -191,6 +193,10 @@ export const GET_STUDENT = gql`
       phone
       address
       img
+      bloodType
+      sex
+      birthday
+      classId
       className
       gradeLevel
       parentName
@@ -415,6 +421,118 @@ export const SEND_MESSAGE = gql`
       id
       content
       sentAt
+    }
+  }
+`;
+
+/* ---------- Library ---------- */
+
+export const GET_BOOKS = gql`
+  query Books($search: String, $skip: Float, $take: Float) {
+    books(search: $search, skip: $skip, take: $take) {
+      id
+      title
+      author
+      isbn
+      category
+      totalCopies
+      availableCopies
+    }
+  }
+`;
+
+export const CREATE_BOOK = gql`
+  mutation CreateBook($input: CreateBookInput!) {
+    createBook(input: $input) {
+      id
+      title
+    }
+  }
+`;
+
+export const UPDATE_BOOK = gql`
+  mutation UpdateBook($id: ID!, $input: UpdateBookInput!) {
+    updateBook(id: $id, input: $input) {
+      id
+      title
+    }
+  }
+`;
+
+export const GET_BOOK_LOANS = gql`
+  query BookLoans($skip: Float, $take: Float, $status: LoanStatus) {
+    bookLoans(skip: $skip, take: $take, status: $status) {
+      id
+      status
+      borrowedAt
+      dueDate
+      returnedAt
+      fineAmount
+      bookId
+      borrowerId
+      bookTitle
+      borrowerName
+    }
+  }
+`;
+
+export const ISSUE_BOOK = gql`
+  mutation IssueBook($input: IssueBookInput!) {
+    issueBook(input: $input) {
+      id
+      bookTitle
+      borrowerName
+      dueDate
+    }
+  }
+`;
+
+export const RETURN_BOOK = gql`
+  mutation ReturnBook($input: ReturnBookInput!) {
+    returnBook(input: $input) {
+      id
+      status
+      fineAmount
+    }
+  }
+`;
+
+// Used by IssueBookForm's borrower picker — combines students and
+// teachers into one { id, name, role } list client-side.
+export const GET_BORROWER_OPTIONS = gql`
+  query BorrowerOptions {
+    students(take: 500) {
+      userId
+      name
+      surname
+    }
+    teachers(take: 500) {
+      userId
+      name
+      surname
+    }
+  }
+`;
+export const GET_SCHEDULE = gql`
+  query Schedule {
+    lessons(take: 500) {
+      id
+      name
+      day
+      startTime
+      endTime
+      subjectName
+      teacherId
+      classId
+    }
+  }
+`;
+export const GET_BOOK_OPTIONS = gql`
+  query BookOptions {
+    books(take: 500) {
+      id
+      title
+      availableCopies
     }
   }
 `;

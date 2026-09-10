@@ -27,7 +27,34 @@ enum Day {
   FRIDAY
   SATURDAY
 }
+enum LoanStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+  LOST
+}
 
+enum FeeFrequency {
+  MONTHLY
+  TERM
+  YEARLY
+  ONE_TIME
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  MOBILE_BANKING
+}
 // Base auth/user record. Each role has a linked profile table for
 // role-specific fields, keeping the auth table lean.
 model User {
@@ -48,10 +75,13 @@ model User {
    sentMessages     Message[]      @relation("SentMessages")
   receivedMessages Message[]      @relation("ReceivedMessages")
   announcements    Announcement[] @relation("AnnouncementAuthor")
+    paymentsReceived Payment[] @relation("PaymentsReceived")
   refreshTokens    RefreshToken[]
   auditLogs        AuditLog[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+    borrowedBooks BookLoan[] @relation("BorrowedBooks")
+  issuedBooks   BookLoan[] @relation("IssuedBooks")
 
 
   @@map("users")
@@ -173,6 +203,7 @@ model Student {
 
   attendances Attendance[]
   results     Result[]
+  invoices Invoice[]
 
   @@map("students")
 }
@@ -198,6 +229,7 @@ model Grade {
 
   students Student[]
   classes  Class[]
+  feeStructures FeeStructure[]
 
   @@map("grades")
 }
@@ -353,4 +385,97 @@ model Message {
   receiver   User   @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
   @@map("messages")
+}
+
+
+model Book {
+  id              String   @id @default(uuid())
+  title           String
+  author          String
+  isbn            String   @unique
+  category        String?
+  coverImage      String?
+  totalCopies     Int      @default(1)
+  availableCopies Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  loans BookLoan[]
+
+  @@map("books")
+}
+
+model BookLoan {
+  id         String     @id @default(uuid())
+  status     LoanStatus @default(BORROWED)
+  borrowedAt DateTime   @default(now())
+  dueDate    DateTime
+  returnedAt DateTime?
+  fineAmount Float?
+
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id])
+
+  borrowerId String
+  borrower   User   @relation("BorrowedBooks", fields: [borrowerId], references: [id])
+
+  issuedById String
+  issuedBy   User   @relation("IssuedBooks", fields: [issuedById], references: [id])
+
+  @@map("book_loans")
+}
+model FeeStructure {
+  id        String       @id @default(uuid())
+  name      String
+  amount    Float
+  frequency FeeFrequency @default(TERM)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  gradeId String
+  grade   Grade  @relation(fields: [gradeId], references: [id])
+
+  invoices Invoice[]
+
+  @@unique([name, gradeId])
+  @@map("fee_structures")
+}
+
+model Invoice {
+  id         String        @id @default(uuid())
+  period     String        // e.g. "September 2026" or "Term 1 2026"
+  amount     Float
+  amountPaid Float         @default(0)
+  dueDate    DateTime
+  status     PaymentStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+
+  feeStructureId String?
+  feeStructure   FeeStructure? @relation(fields: [feeStructureId], references: [id])
+
+  payments Payment[]
+
+  @@index([studentId, status])
+  @@map("invoices")
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  amount    Float
+  method    PaymentMethod @default(CASH)
+  paidAt    DateTime      @default(now())
+  reference String?
+  notes     String?
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+
+  receivedById String
+  receivedBy   User   @relation("PaymentsReceived", fields: [receivedById], references: [id])
+
+  @@map("payments")
 }

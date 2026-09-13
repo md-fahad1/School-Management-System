@@ -1,9 +1,9 @@
 :root {
-  --primary: #00b894;
-  --secondary: #74b9ff;
-  --accent: #f78fb3;
-  --bg: #ffffff;
-  --text: #333333;
+  --primary: #6c4cf1;
+  --secondary: #b9a6ff;
+  --accent: #ff8fc7;
+  --bg: #f6f3ff;
+  --text: #29253d;
 }
 .bg-pink-white-pink {
   background: linear-gradient(to right, #fff5f4, #ffffff, #fff5f4);

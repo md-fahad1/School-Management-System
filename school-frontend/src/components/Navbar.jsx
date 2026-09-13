@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { getClientGqlClient } from "@/lib/graphql/client";
@@ -13,11 +14,16 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
 
-  // Redux state is empty on first paint before the session-rehydration
-  // effect runs, so fall back to the cookie (set at login) for the
-  // very first render to avoid a "flash" of no user.
-  const displayName = user?.username ?? Cookies.get("username") ?? "Guest";
-  const displayRole = user?.role ?? Cookies.get("role") ?? "";
+  // Both server and the very first client render must produce identical
+  // markup — so this starts empty (never reads cookies/redux during
+  // render) and only fills in after mount, once we're safely client-side.
+  const [displayName, setDisplayName] = useState("");
+  const [displayRole, setDisplayRole] = useState("");
+
+  useEffect(() => {
+    setDisplayName(user?.username ?? Cookies.get("username") ?? "Guest");
+    setDisplayRole(user?.role ?? Cookies.get("role") ?? "");
+  }, [user]);
 
   const handleLogout = async () => {
     const refreshToken = Cookies.get("refreshToken");
@@ -45,9 +51,9 @@ const Navbar = () => {
   };
 
   return (
-    <div className="flex items-center justify-between p-4">
+    <div className="flex items-center justify-between p-4 bg-white">
       {/* SEARCH BAR */}
-      <div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2">
+      <div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-lamaPurple focus-within:ring-brandPurple px-2">
         <Image src="/search.png" alt="" width={14} height={14} />
         <input
           type="text"
@@ -57,12 +63,12 @@ const Navbar = () => {
       </div>
       {/* ICONS AND USER */}
       <div className="flex items-center gap-6 justify-end w-full">
-        <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
+        <div className="bg-lamaSkyLight rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
           <Image src="/message.png" alt="" width={20} height={20} />
         </div>
-        <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative">
+        <div className="bg-lamaPurpleLight rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative">
           <Image src="/announcement.png" alt="" width={20} height={20} />
-          <div className="absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-purple-500 text-white rounded-full text-xs">
+          <div className="absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-brandPurple text-white rounded-full text-xs">
             1
           </div>
         </div>
@@ -77,11 +83,11 @@ const Navbar = () => {
           alt=""
           width={36}
           height={36}
-          className="rounded-full"
+          className="rounded-full ring-2 ring-lamaPurple"
         />
         <button
           onClick={handleLogout}
-          className="text-xs text-gray-500 hover:text-red-500 transition"
+          className="text-xs text-gray-500 hover:text-brandPurple transition"
           title="Log out"
         >
           Logout

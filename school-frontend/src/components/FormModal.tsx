@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { getClientGqlClient } from "@/lib/graphql/client";
 
 // USE LAZY LOADING
@@ -46,6 +46,9 @@ const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
 const BookForm = dynamic(() => import("./forms/BookForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const FeeStructureForm = dynamic(() => import("./forms/FeeStructureForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (type: "create" | "update", data: any, onSuccess: () => void) => JSX.Element;
@@ -56,13 +59,14 @@ const forms: {
   class: (type, data, onSuccess) => <ClassForm type={type} data={data} onSuccess={onSuccess} />,
   parent: (type, data, onSuccess) => <ParentForm type={type} data={data} onSuccess={onSuccess} />,
   lesson: (type, data, onSuccess) => <LessonForm type={type} data={data} onSuccess={onSuccess} />,
-    event: (type, data, onSuccess) => <EventForm type={type} data={data} onSuccess={onSuccess} />,
+  event: (type, data, onSuccess) => <EventForm type={type} data={data} onSuccess={onSuccess} />,
   announcement: (type, data, onSuccess) => <AnnouncementForm type={type} data={data} onSuccess={onSuccess} />,
   exam: (type, data, onSuccess) => <ExamForm type={type} data={data} onSuccess={onSuccess} />,
   assignment: (type, data, onSuccess) => <AssignmentForm type={type} data={data} onSuccess={onSuccess} />,
   result: (type, data, onSuccess) => <ResultForm type={type} data={data} onSuccess={onSuccess} />,
   attendance: (type, data, onSuccess) => <AttendanceForm type={type} data={data} onSuccess={onSuccess} />,
   book: (type, data, onSuccess) => <BookForm type={type} data={data} onSuccess={onSuccess} />,
+  feeStructure: (type, data, onSuccess) => <FeeStructureForm type={type} data={data} onSuccess={onSuccess} />,
 };
 // One remove mutation per table, all following the same
 // `remove<Entity>(id: ID!): Boolean` shape the backend already exposes.
@@ -75,14 +79,24 @@ const REMOVE_MUTATIONS: { [key: string]: string } = {
   class: `mutation($id: ID!) { removeClass(id: $id) }`,
   parent: `mutation($id: ID!) { removeParent(id: $id) }`,
   lesson: `mutation($id: ID!) { removeLesson(id: $id) }`,
-    event: `mutation($id: ID!) { removeEvent(id: $id) }`,
-    announcement: `mutation($id: ID!) { removeAnnouncement(id: $id) }`,
+  event: `mutation($id: ID!) { removeEvent(id: $id) }`,
+  announcement: `mutation($id: ID!) { removeAnnouncement(id: $id) }`,
   exam: `mutation($id: ID!) { removeExam(id: $id) }`,
   assignment: `mutation($id: ID!) { removeAssignment(id: $id) }`,
   result: `mutation($id: ID!) { removeResult(id: $id) }`,
   attendance: `mutation($id: ID!) { removeAttendance(id: $id) }`,
   book: `mutation($id: ID!) { removeBook(id: $id) }`,
+  feeStructure: `mutation($id: ID!) { removeFeeStructure(id: $id) }`,
 };
+
+// One icon + color per action, used for the trigger button instead of
+// the old /create.png, /update.png, /delete.png images.
+const actionMeta = {
+  create: { Icon: Plus, bg: "bg-brandPurple", iconColor: "text-white" },
+  update: { Icon: Pencil, bg: "bg-lamaSky", iconColor: "text-brandInk" },
+  delete: { Icon: Trash2, bg: "bg-lamaYellow", iconColor: "text-red-600" },
+} as const;
+
 const FormModal = ({
   table,
   type,
@@ -102,19 +116,16 @@ const FormModal = ({
     | "attendance"
     | "event"
     | "announcement"
-    | "book";
+    | "book"
+    | "feeStructure";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
 }) => {
   const router = useRouter();
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
-  const bgColor =
-    type === "create"
-      ? "bg-lamaYellow"
-      : type === "update"
-      ? "bg-lamaSky"
-      : "bg-lamaPurple";
+  const iconSize = type === "create" ? 16 : 14;
+  const { Icon, bg, iconColor } = actionMeta[type];
 
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -160,8 +171,9 @@ const FormModal = ({
         <button
           type="submit"
           disabled={deleting}
-          className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center disabled:opacity-60"
+          className="bg-red-600 text-white py-2 px-4 rounded-md border-none w-max self-center disabled:opacity-60 flex items-center gap-2"
         >
+          <Trash2 size={16} />
           {deleting ? "Deleting..." : "Delete"}
         </button>
       </form>
@@ -180,20 +192,21 @@ const FormModal = ({
   return (
     <>
       <button
-        className={`${size} flex items-center justify-center rounded-full ${bgColor}`}
+        className={`${size} flex items-center justify-center rounded-full ${bg} ${iconColor} hover:opacity-80 transition`}
         onClick={() => setOpen(true)}
+        title={type}
       >
-        <Image src={`/${type}.png`} alt="" width={16} height={16} />
+        <Icon size={iconSize} />
       </button>
       {open && (
         <div className="w-screen h-screen absolute left-0 top-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
           <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
             <Form />
             <div
-              className="absolute top-4 right-4 cursor-pointer"
+              className="absolute top-4 right-4 cursor-pointer text-gray-500 hover:text-brandInk"
               onClick={() => setOpen(false)}
             >
-              <Image src="/close.png" alt="" width={14} height={14} />
+              <X size={18} />
             </div>
           </div>
         </div>

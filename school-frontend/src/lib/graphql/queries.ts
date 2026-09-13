@@ -536,3 +536,121 @@ export const GET_BOOK_OPTIONS = gql`
     }
   }
 `;
+/* ---------- Fees ---------- */
+
+export const GET_FEE_STRUCTURES = gql`
+  query FeeStructures($gradeId: ID) {
+    feeStructures(gradeId: $gradeId) {
+      id
+      name
+      amount
+      frequency
+      gradeId
+    }
+  }
+`;
+
+export const CREATE_FEE_STRUCTURE = gql`
+  mutation CreateFeeStructure($input: CreateFeeStructureInput!) {
+    createFeeStructure(input: $input) {
+      id
+    }
+  }
+`;
+
+export const UPDATE_FEE_STRUCTURE = gql`
+  mutation UpdateFeeStructure($id: ID!, $input: UpdateFeeStructureInput!) {
+    updateFeeStructure(id: $id, input: $input) {
+      id
+    }
+  }
+`;
+
+export const GET_FEE_STRUCTURE_OPTIONS = gql`
+  query FeeStructureOptions($gradeId: ID) {
+    feeStructures(gradeId: $gradeId) {
+      id
+      name
+      amount
+      gradeId
+    }
+  }
+`;
+
+export const GET_INVOICES = gql`
+  query Invoices($skip: Float, $take: Float, $status: PaymentStatus, $studentId: ID) {
+    invoices(skip: $skip, take: $take, status: $status, studentId: $studentId) {
+      id
+      period
+      amount
+      amountPaid
+      balance
+      dueDate
+      status
+      studentId
+      studentName
+    }
+  }
+`;
+
+export const GENERATE_INVOICE = gql`
+  mutation GenerateInvoice($input: GenerateInvoiceInput!) {
+    generateInvoice(input: $input) {
+      id
+    }
+  }
+`;
+
+export const GENERATE_BULK_INVOICES = gql`
+  mutation GenerateBulkInvoices($input: GenerateBulkInvoicesInput!) {
+    generateBulkInvoices(input: $input)
+  }
+`;
+
+export const RECORD_PAYMENT = gql`
+  mutation RecordPayment($input: RecordPaymentInput!) {
+    recordPayment(input: $input) {
+      id
+      amount
+    }
+  }
+`;
+
+export const GET_DEFAULTERS = gql`
+  query Defaulters($gradeId: ID) {
+    defaulters(gradeId: $gradeId) {
+      id
+      period
+      amount
+      amountPaid
+      balance
+      dueDate
+      status
+      studentName
+    }
+  }
+`;
+
+export const GET_FEE_SUMMARY = gql`
+  query FeeCollectionSummary($period: String) {
+    feeCollectionSummary(period: $period) {
+      totalInvoiced
+      totalCollected
+      totalPending
+      invoiceCount
+      paidCount
+      overdueCount
+    }
+  }
+`;
+
+export const GET_STUDENT_OPTIONS = gql`
+  query StudentOptions {
+    students(take: 1000) {
+      id
+      name
+      surname
+      className
+    }
+  }
+`;

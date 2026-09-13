@@ -20,6 +20,10 @@ import {
   GET_SCHEDULE,
   GET_STUDENT,
   GET_TEACHER,
+    GET_FEE_STRUCTURES,
+  GET_INVOICES,
+  GET_DEFAULTERS,
+  GET_FEE_SUMMARY,
 } from "./queries";
 
 /** Formats an ISO date string the same way the original dummy data did: "2025-01-01". */
@@ -417,5 +421,73 @@ export async function getClassSchedule(classId: string) {
   } catch (err) {
     console.error("getClassSchedule failed:", err);
     return [];
+  }
+}
+export async function getFeeStructures(gradeId?: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ feeStructures: any[] }>(GET_FEE_STRUCTURES, { gradeId });
+    return data.feeStructures.map((f) => ({
+      id: f.id,
+      name: f.name,
+      amount: f.amount,
+      frequency: f.frequency,
+      gradeId: f.gradeId,
+    }));
+  } catch (err) {
+    console.error("getFeeStructures failed:", err);
+    return [];
+  }
+}
+
+export async function getInvoices(status?: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ invoices: any[] }>(GET_INVOICES, { status, take: 100 });
+    return data.invoices.map((i) => ({
+      id: i.id,
+      period: i.period,
+      amount: i.amount,
+      amountPaid: i.amountPaid,
+      balance: i.balance,
+      dueDate: fmtDate(i.dueDate),
+      status: i.status,
+      studentId: i.studentId,
+      studentName: i.studentName ?? "-",
+    }));
+  } catch (err) {
+    console.error("getInvoices failed:", err);
+    return [];
+  }
+}
+
+export async function getDefaulters() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ defaulters: any[] }>(GET_DEFAULTERS, {});
+    return data.defaulters.map((i) => ({
+      id: i.id,
+      period: i.period,
+      amount: i.amount,
+      amountPaid: i.amountPaid,
+      balance: i.balance,
+      dueDate: fmtDate(i.dueDate),
+      status: i.status,
+      studentName: i.studentName ?? "-",
+    }));
+  } catch (err) {
+    console.error("getDefaulters failed:", err);
+    return [];
+  }
+}
+
+export async function getFeeSummary() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ feeCollectionSummary: any }>(GET_FEE_SUMMARY, {});
+    return data.feeCollectionSummary;
+  } catch (err) {
+    console.error("getFeeSummary failed:", err);
+    return { totalInvoiced: 0, totalCollected: 0, totalPending: 0, invoiceCount: 0, paidCount: 0, overdueCount: 0 };
   }
 }

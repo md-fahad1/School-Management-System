@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { RETURN_BOOK } from "@/lib/graphql/queries";
 
@@ -27,8 +28,9 @@ const ReturnBookButton = ({ loanId }: { loanId: string }) => {
     <button
       onClick={handleReturn}
       disabled={loading}
-      className="text-xs bg-lamaSky px-3 py-1 rounded-md disabled:opacity-60"
+      className="text-xs bg-lamaSky px-3 py-1 rounded-md disabled:opacity-60 flex items-center gap-1"
     >
+      <Check size={12} />
       {loading ? "Returning..." : "Return"}
     </button>
   );

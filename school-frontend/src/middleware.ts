@@ -15,15 +15,18 @@ const PROTECTED_PREFIXES = [
   "/list",
 ];
 
-// Only these four correspond to real backend roles (see Role enum in
-// the NestJS schema) — role-mismatch redirects only apply to these.
-// The extra demo dashboards (librarian/accountant/...) just require
-// *some* valid session, not a specific role.
+// These correspond to real backend roles (see Role enum in the
+// NestJS schema) — role-mismatch redirects apply to all of them.
+// transport-staf still has no backend Role yet, so it's left out —
+// that route only requires *some* valid session, not a specific role.
 const ROLE_HOME: Record<string, string> = {
   admin: "/admin",
   teacher: "/teacher",
   student: "/student",
   parent: "/parent",
+  librarian: "/librarian",
+  accountant: "/accountant",
+  principal: "/principal",
 };
 
 const AUTH_PAGES = ["/signin", "/signup"];

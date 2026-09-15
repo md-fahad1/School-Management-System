@@ -18,7 +18,7 @@ const SignInForm = () => {
   // Backend logs in by username, not email — the form still labels
   // the field "Email Address" to match the original design, and
   // accepts the account's username there.
-  const [username, setUsername] = useState("");
+    const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ const SignInForm = () => {
 
     try {
       const client = await getClientGqlClient();
-      const data = await client.request(LOGIN, { input: { username, password } });
+      const data = await client.request(LOGIN, { input: { identifier, password } });
 
       const { accessToken, refreshToken, id, username: uname, role } = data.login;
 
@@ -90,15 +90,15 @@ const SignInForm = () => {
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block mb-1 text-gray-700">Email Address</label>
+             <label className="block mb-1 text-gray-700">Email / Phone / Username</label>
               <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500">
                 <Mail className="text-gray-400 mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Enter your username"
+                  placeholder="Enter email, phone or username"
                   className="w-full bg-transparent outline-none"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
                 />
               </div>

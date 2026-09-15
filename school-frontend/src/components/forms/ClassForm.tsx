@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
-import { gql } from "graphql-request";
+import { gql } from "@/lib/graphql/gql";
 import { GET_GRADES, GET_TEACHER_OPTIONS } from "@/lib/graphql/queries";
 
 const CREATE_CLASS = gql`

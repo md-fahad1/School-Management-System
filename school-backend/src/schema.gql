@@ -12,11 +12,21 @@ type Announcement {
   title: String!
 }
 
+input ApplyLeaveInput {
+  applicantId: ID
+  endDate: String!
+  leaveType: LeaveType!
+  reason: String!
+  startDate: String!
+}
+
 type Assignment {
   className: String
   dueDate: DateTime!
+  fullMarks: Int!
   id: ID!
   lessonId: ID!
+  passMarks: Int!
   startDate: DateTime!
   subjectName: String
   teacherName: String
@@ -90,6 +100,26 @@ input BulkMarkAttendanceInput {
   lessonId: ID!
 }
 
+input BulkMarkStaffAttendanceEntry {
+  status: HrAttendanceStatus!
+  userId: ID!
+}
+
+input BulkMarkStaffAttendanceInput {
+  date: String!
+  entries: [BulkMarkStaffAttendanceEntry!]!
+}
+
+input BulkMarkTeacherAttendanceEntry {
+  status: HrAttendanceStatus!
+  teacherId: ID!
+}
+
+input BulkMarkTeacherAttendanceInput {
+  date: String!
+  entries: [BulkMarkTeacherAttendanceEntry!]!
+}
+
 type Class {
   capacity: Int!
   gradeId: ID!
@@ -108,7 +138,9 @@ input CreateAnnouncementInput {
 
 input CreateAssignmentInput {
   dueDate: String!
+  fullMarks: Int
   lessonId: ID!
+  passMarks: Int
   startDate: String!
   title: String!
 }
@@ -146,7 +178,9 @@ input CreateEventInput {
 
 input CreateExamInput {
   endTime: String!
+  fullMarks: Int
   lessonId: ID!
+  passMarks: Int
   startTime: String!
   title: String!
 }
@@ -255,6 +289,12 @@ enum Day {
   WEDNESDAY
 }
 
+input DecideLeaveInput {
+  id: ID!
+  remarks: String
+  status: LeaveStatus!
+}
+
 type Event {
   classId: ID
   className: String
@@ -268,8 +308,10 @@ type Event {
 type Exam {
   className: String
   endTime: DateTime!
+  fullMarks: Int!
   id: ID!
   lessonId: ID!
+  passMarks: Int!
   startTime: DateTime!
   subjectName: String
   teacherName: String
@@ -322,6 +364,14 @@ type Grade {
   level: Int!
 }
 
+enum HrAttendanceStatus {
+  ABSENT
+  EARLY_LEAVE
+  LATE
+  ON_LEAVE
+  PRESENT
+}
+
 type Invoice {
   amount: Float!
   amountPaid: Float!
@@ -342,6 +392,39 @@ input IssueBookInput {
   bookId: ID!
   borrowerId: ID!
   dueDate: String!
+}
+
+type Leave {
+  applicantId: ID!
+  applicantName: String
+  applicantRole: String
+  appliedAt: DateTime!
+  approvedById: ID
+  approvedByName: String
+  decidedAt: DateTime
+  endDate: DateTime!
+  id: ID!
+  leaveType: LeaveType!
+  reason: String!
+  remarks: String
+  startDate: DateTime!
+  status: LeaveStatus!
+}
+
+enum LeaveStatus {
+  APPROVED
+  CANCELLED
+  PENDING
+  REJECTED
+}
+
+enum LeaveType {
+  CASUAL
+  EARNED
+  MATERNITY
+  OTHER
+  PATERNITY
+  SICK
 }
 
 type Lesson {
@@ -366,8 +449,8 @@ enum LoanStatus {
 }
 
 input LoginInput {
+  identifier: String!
   password: String!
-  username: String!
 }
 
 input LogoutInput {
@@ -377,6 +460,24 @@ input LogoutInput {
 input MarkAttendanceEntry {
   present: Boolean!
   studentId: ID!
+}
+
+input MarkStaffAttendanceInput {
+  checkIn: String
+  checkOut: String
+  date: String!
+  remarks: String
+  status: HrAttendanceStatus!
+  userId: ID!
+}
+
+input MarkTeacherAttendanceInput {
+  checkIn: String
+  checkOut: String
+  date: String!
+  remarks: String
+  status: HrAttendanceStatus!
+  teacherId: ID!
 }
 
 type Message {
@@ -391,7 +492,11 @@ type Message {
 }
 
 type Mutation {
+  applyLeave(input: ApplyLeaveInput!): Leave!
   bulkMarkAttendance(input: BulkMarkAttendanceInput!): [Attendance!]!
+  bulkMarkStaffAttendance(input: BulkMarkStaffAttendanceInput!): [StaffAttendance!]!
+  bulkMarkTeacherAttendance(input: BulkMarkTeacherAttendanceInput!): [TeacherAttendance!]!
+  cancelLeave(id: ID!): Leave!
   createAnnouncement(input: CreateAnnouncementInput!): Announcement!
   createAssignment(input: CreateAssignmentInput!): Assignment!
   createAttendance(input: CreateAttendanceInput!): Attendance!
@@ -404,9 +509,11 @@ type Mutation {
   createLesson(input: CreateLessonInput!): Lesson!
   createParent(input: CreateParentInput!): Parent!
   createResult(input: CreateResultInput!): Result!
+  createStaffAccount(input: RegisterInput!): AuthPayload!
   createStudent(input: CreateStudentInput!): Student!
   createSubject(input: CreateSubjectInput!): Subject!
   createTeacher(input: CreateTeacherInput!): Teacher!
+  decideLeave(input: DecideLeaveInput!): Leave!
   generateBulkInvoices(input: GenerateBulkInvoicesInput!): String!
   generateInvoice(input: GenerateInvoiceInput!): Invoice!
   issueBook(input: IssueBookInput!): BookLoan!
@@ -414,6 +521,8 @@ type Mutation {
   logout(input: LogoutInput!): Boolean!
   logoutAllDevices: Boolean!
   markMessageRead(id: ID!): Message!
+  markStaffAttendance(input: MarkStaffAttendanceInput!): StaffAttendance!
+  markTeacherAttendance(input: MarkTeacherAttendanceInput!): TeacherAttendance!
   recordPayment(input: RecordPaymentInput!): Payment!
   refreshToken(input: RefreshTokenInput!): AuthPayload!
   register(input: RegisterInput!): AuthPayload!
@@ -521,17 +630,21 @@ type Query {
   inbox(skip: Float, take: Float): [Message!]!
   invoice(id: ID!): Invoice!
   invoices(skip: Int, status: PaymentStatus, studentId: ID, take: Int): [Invoice!]!
+  leave(id: ID!): Leave!
+  leaves(skip: Float, status: LeaveStatus, take: Float): [Leave!]!
   lesson(id: ID!): Lesson!
   lessons(skip: Float, take: Float): [Lesson!]!
   parent(id: ID!): Parent!
   parents(search: String, skip: Float, take: Float): [Parent!]!
   result(id: ID!): Result!
   results(skip: Float, take: Float): [Result!]!
+  staffAttendances(date: String, skip: Float, take: Float, userId: ID): [StaffAttendance!]!
   student(id: ID!): Student!
   students(search: String, skip: Float, take: Float): [Student!]!
   subject(id: ID!): Subject!
   subjects(search: String, skip: Float, take: Float): [Subject!]!
   teacher(id: ID!): Teacher!
+  teacherAttendances(date: String, skip: Float, take: Float, teacherId: ID): [TeacherAttendance!]!
   teachers(search: String, skip: Float, take: Float): [Teacher!]!
   users(search: String): [UserSummary!]!
   weeklyAttendance: [DailyAttendance!]!
@@ -553,6 +666,7 @@ input RegisterInput {
   email: String!
   name: String!
   password: String!
+  phone: String
   role: Role!
   surname: String!
   username: String!
@@ -576,7 +690,11 @@ type Result {
   className: String
   date: DateTime
   examId: ID
+  fullMarks: Int
+  gpa: Float
+  grade: String
   id: ID!
+  percentage: Float
   score: Int!
   studentId: ID!
   studentName: String
@@ -590,8 +708,11 @@ input ReturnBookInput {
 }
 
 enum Role {
+  ACCOUNTANT
   ADMIN
+  LIBRARIAN
   PARENT
+  PRINCIPAL
   STUDENT
   TEACHER
 }
@@ -604,6 +725,18 @@ input SendMessageInput {
 enum Sex {
   FEMALE
   MALE
+}
+
+type StaffAttendance {
+  checkIn: DateTime
+  checkOut: DateTime
+  date: DateTime!
+  id: ID!
+  remarks: String
+  staffName: String
+  staffRole: String
+  status: HrAttendanceStatus!
+  userId: ID!
 }
 
 type Student {
@@ -643,9 +776,21 @@ type Teacher {
   name: String!
   phone: String
   sex: Sex
+  subjectIds: [ID!]
   subjects: [String!]
   surname: String!
   userId: ID
+}
+
+type TeacherAttendance {
+  checkIn: DateTime
+  checkOut: DateTime
+  date: DateTime!
+  id: ID!
+  remarks: String
+  status: HrAttendanceStatus!
+  teacherId: ID!
+  teacherName: String
 }
 
 input UpdateAnnouncementInput {
@@ -656,7 +801,9 @@ input UpdateAnnouncementInput {
 
 input UpdateAssignmentInput {
   dueDate: String
+  fullMarks: Int
   lessonId: ID
+  passMarks: Int
   startDate: String
   title: String
 }
@@ -694,7 +841,9 @@ input UpdateEventInput {
 
 input UpdateExamInput {
   endTime: String
+  fullMarks: Int
   lessonId: ID
+  passMarks: Int
   startTime: String
   title: String
 }

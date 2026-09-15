@@ -53,7 +53,9 @@ export class PasswordResetService {
 
     const frontendUrl = this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
-    await this.email.sendPasswordResetEmail(user.email, resetUrl);
+    this.email.sendPasswordResetEmail(user.email, resetUrl).catch((err) =>
+      console.error('Failed to send password-reset email:', err),
+    );
 
     return true;
   }

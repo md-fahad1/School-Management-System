@@ -1,4 +1,4 @@
-"use client";
+
 import { BookOpen, Briefcase, FlaskConical } from "lucide-react";
 
 const categories = [

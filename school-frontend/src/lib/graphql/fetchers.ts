@@ -24,6 +24,9 @@ import {
   GET_INVOICES,
   GET_DEFAULTERS,
   GET_FEE_SUMMARY,
+   GET_TEACHER_ATTENDANCES,
+  GET_STAFF_ATTENDANCES,
+  GET_LEAVES,
 } from "./queries";
 
 /** Formats an ISO date string the same way the original dummy data did: "2025-01-01". */
@@ -95,32 +98,25 @@ export async function getSubjects(search?: string) {
   }
 }
 
-export async function getTeachers(search?: string) {
-  try {
-    const client = getServerClient();
-    const data = await client.request<{ teachers: any[] }>(GET_TEACHERS, { search });
-    return data.teachers.map((t) => ({
-      id: t.id,
-      teacherId: t.id,
-      name: `${t.name} ${t.surname}`,
-      email: t.email,
-      photo: t.img || "/avatar.png",
-      phone: t.phone ?? "-",
-      subjects: t.subjects ?? [],
-      classes: t.classes ?? [],
-      address: t.address ?? "-",
-    }));
-  } catch (err) {
-    console.error("getTeachers failed:", err);
-    return [];
-  }
-}
 
-export async function getStudents(search?: string) {
+
+export const STUDENTS_PAGE_SIZE = 10;
+
+export async function getStudents(search?: string, page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ students: any[] }>(GET_STUDENTS, { search });
-    return data.students.map((s) => ({
+    const safePage = Math.max(1, page);
+    const skip = (safePage - 1) * STUDENTS_PAGE_SIZE;
+    const data = await client.request<{ students: any[] }>(GET_STUDENTS, {
+      search,
+      skip,
+      take: STUDENTS_PAGE_SIZE + 1,
+    });
+
+    const hasNextPage = data.students.length > STUDENTS_PAGE_SIZE;
+    const pageRows = data.students.slice(0, STUDENTS_PAGE_SIZE);
+
+    const students = pageRows.map((s) => ({
       id: s.id,
       studentId: s.id,
       name: `${s.name} ${s.surname}`,
@@ -128,13 +124,46 @@ export async function getStudents(search?: string) {
       photo: s.img || "/avatar.png",
       phone: s.phone ?? "-",
       address: s.address ?? "-",
+      classId: s.classId,
       class: s.className ?? "-",
+      gradeId: s.gradeId,
       grade: s.gradeLevel ?? "-",
+      parentId: s.parentId,
       parent: s.parentName ?? "-",
     }));
+
+    return { students, hasNextPage, page: safePage };
   } catch (err) {
     console.error("getStudents failed:", err);
-    return [];
+    return { students: [], hasNextPage: false, page: 1 };
+  }
+}
+
+export async function getStudent(id: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ student: any }>(GET_STUDENT, { id });
+    const s = data.student;
+    return {
+      id: s.id,
+      name: `${s.name} ${s.surname}`,
+      email: s.email,
+      photo: s.img || "/avatar.png",
+      phone: s.phone ?? "-",
+      address: s.address ?? "-",
+      bloodType: s.bloodType ?? "-",
+      sex: s.sex ?? null,
+      birthday: fmtDate(s.birthday),
+      classId: s.classId,
+      className: s.className ?? "-",
+      gradeId: s.gradeId,
+      gradeLevel: s.gradeLevel ?? "-",
+      parentId: s.parentId,
+      parentName: s.parentName ?? "-",
+    };
+  } catch (err) {
+    console.error("getStudent failed:", err);
+    return null;
   }
 }
 
@@ -338,6 +367,42 @@ export async function getAnnouncements() {
   }
 }
 
+export const TEACHERS_PAGE_SIZE = 10;
+
+export async function getTeachers(search?: string, page = 1) {
+  try {
+    const client = getServerClient();
+    const safePage = Math.max(1, page);
+    const skip = (safePage - 1) * TEACHERS_PAGE_SIZE;
+    const data = await client.request<{ teachers: any[] }>(GET_TEACHERS, {
+      search,
+      skip,
+      take: TEACHERS_PAGE_SIZE + 1,
+    });
+
+    const hasNextPage = data.teachers.length > TEACHERS_PAGE_SIZE;
+    const pageRows = data.teachers.slice(0, TEACHERS_PAGE_SIZE);
+
+    const teachers = pageRows.map((t) => ({
+      id: t.id,
+      teacherId: t.id,
+      name: `${t.name} ${t.surname}`,
+      email: t.email,
+      photo: t.img || "/avatar.png",
+      phone: t.phone ?? "-",
+      subjects: t.subjects ?? [],
+      subjectIds: t.subjectIds ?? [],
+      classes: t.classes ?? [],
+      address: t.address ?? "-",
+    }));
+
+    return { teachers, hasNextPage, page: safePage };
+  } catch (err) {
+    console.error("getTeachers failed:", err);
+    return { teachers: [], hasNextPage: false, page: 1 };
+  }
+}
+
 export async function getTeacher(id: string) {
   try {
     const client = getServerClient();
@@ -354,6 +419,7 @@ export async function getTeacher(id: string) {
       sex: t.sex ?? null,
       birthday: fmtDate(t.birthday),
       subjects: t.subjects ?? [],
+      subjectIds: t.subjectIds ?? [],
       classes: t.classes ?? [],
     };
   } catch (err) {
@@ -362,31 +428,7 @@ export async function getTeacher(id: string) {
   }
 }
 
-export async function getStudent(id: string) {
-  try {
-    const client = getServerClient();
-    const data = await client.request<{ student: any }>(GET_STUDENT, { id });
-    const s = data.student;
-    return {
-      id: s.id,
-      name: `${s.name} ${s.surname}`,
-      email: s.email,
-      photo: s.img || "/avatar.png",
-      phone: s.phone ?? "-",
-      address: s.address ?? "-",
-      bloodType: s.bloodType ?? "-",
-      sex: s.sex ?? null,
-      birthday: fmtDate(s.birthday),
-      classId: s.classId,
-      className: s.className ?? "-",
-      gradeLevel: s.gradeLevel ?? "-",
-      parentName: s.parentName ?? "-",
-    };
-  } catch (err) {
-    console.error("getStudent failed:", err);
-    return null;
-  }
-}
+
 
 /** All lessons for one teacher, shaped for BigCalendar's {title, start, end}. */
 export async function getTeacherSchedule(teacherId: string) {
@@ -489,5 +531,70 @@ export async function getFeeSummary() {
   } catch (err) {
     console.error("getFeeSummary failed:", err);
     return { totalInvoiced: 0, totalCollected: 0, totalPending: 0, invoiceCount: 0, paidCount: 0, overdueCount: 0 };
+  }
+}
+
+export async function getTeacherAttendances(date?: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ teacherAttendances: any[] }>(GET_TEACHER_ATTENDANCES, { date });
+    return data.teacherAttendances.map((a) => ({
+      id: a.id,
+      date: fmtDate(a.date),
+      status: a.status,
+      checkIn: a.checkIn ? fmtTime(a.checkIn) : "-",
+      checkOut: a.checkOut ? fmtTime(a.checkOut) : "-",
+      remarks: a.remarks ?? "-",
+      teacherId: a.teacherId,
+      teacher: a.teacherName ?? "-",
+    }));
+  } catch (err) {
+    console.error("getTeacherAttendances failed:", err);
+    return [];
+  }
+}
+
+export async function getStaffAttendances(date?: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ staffAttendances: any[] }>(GET_STAFF_ATTENDANCES, { date });
+    return data.staffAttendances.map((a) => ({
+      id: a.id,
+      date: fmtDate(a.date),
+      status: a.status,
+      checkIn: a.checkIn ? fmtTime(a.checkIn) : "-",
+      checkOut: a.checkOut ? fmtTime(a.checkOut) : "-",
+      remarks: a.remarks ?? "-",
+      userId: a.userId,
+      staff: a.staffName ?? "-",
+      role: a.staffRole ?? "-",
+    }));
+  } catch (err) {
+    console.error("getStaffAttendances failed:", err);
+    return [];
+  }
+}
+
+export async function getLeaves() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ leaves: any[] }>(GET_LEAVES, {});
+    return data.leaves.map((l) => ({
+      id: l.id,
+      leaveType: l.leaveType,
+      startDate: fmtDate(l.startDate),
+      endDate: fmtDate(l.endDate),
+      reason: l.reason,
+      status: l.status,
+      remarks: l.remarks ?? "-",
+      appliedAt: fmtDate(l.appliedAt),
+      applicantId: l.applicantId,
+      applicant: l.applicantName ?? "-",
+      applicantRole: l.applicantRole ?? "-",
+      approvedBy: l.approvedByName ?? "-",
+    }));
+  } catch (err) {
+    console.error("getLeaves failed:", err);
+    return [];
   }
 }

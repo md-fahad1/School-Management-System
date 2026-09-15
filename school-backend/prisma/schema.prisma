@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pg_trgm]
 }
 
 enum Role {
@@ -12,6 +14,9 @@ enum Role {
   TEACHER
   STUDENT
   PARENT
+  ACCOUNTANT
+  LIBRARIAN
+  PRINCIPAL
 }
 
 enum Sex {
@@ -55,22 +60,52 @@ enum PaymentMethod {
   BANK_TRANSFER
   MOBILE_BANKING
 }
+
+enum HrAttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EARLY_LEAVE
+  ON_LEAVE
+}
+
+enum LeaveType {
+  SICK
+  CASUAL
+  EARNED
+  MATERNITY
+  PATERNITY
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 // Base auth/user record. Each role has a linked profile table for
 // role-specific fields, keeping the auth table lean.
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
   email     String   @unique
+   phone     String?  @unique
   password  String
   emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
   role      Role
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  admin   Admin?
-  teacher Teacher?
-  student Student?
-  parent  Parent?
+  admin      Admin?
+  teacher    Teacher?
+  student    Student?
+  parent     Parent?
+  accountant Accountant?
+  librarian  Librarian?
+  principal  Principal?
 
    sentMessages     Message[]      @relation("SentMessages")
   receivedMessages Message[]      @relation("ReceivedMessages")
@@ -83,6 +118,10 @@ model User {
     borrowedBooks BookLoan[] @relation("BorrowedBooks")
   issuedBooks   BookLoan[] @relation("IssuedBooks")
 
+  staffAttendances StaffAttendance[]
+
+  leavesApplied  Leave[] @relation("LeaveApplicant")
+  leavesApproved Leave[] @relation("LeaveApprover")
 
   @@map("users")
 }
@@ -156,6 +195,35 @@ model Admin {
 
   @@map("admins")
 }
+model Accountant {
+  id      String @id @default(uuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name    String
+  surname String
+
+  @@map("accountants")
+}
+
+model Librarian {
+  id      String @id @default(uuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name    String
+  surname String
+
+  @@map("librarians")
+}
+
+model Principal {
+  id      String @id @default(uuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name    String
+  surname String
+
+  @@map("principals")
+}
 
 model Teacher {
   id        String   @id @default(uuid())
@@ -175,6 +243,9 @@ model Teacher {
   lessons   Lesson[]
   classes   Class[]    @relation("ClassSupervisor")
 
+  teacherAttendances TeacherAttendance[]
+
+  @@index([name(ops: raw("gin_trgm_ops")), surname(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("teachers")
 }
 
@@ -184,6 +255,7 @@ model Student {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   surname   String
+  roll      Int?
   phone     String?
   address   String?
   img       String?
@@ -205,6 +277,7 @@ model Student {
   results     Result[]
   invoices Invoice[]
 
+  @@index([name(ops: raw("gin_trgm_ops")), surname(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("students")
 }
 
@@ -289,6 +362,8 @@ model Lesson {
 model Exam {
   id        String   @id @default(uuid())
   title     String
+  fullMarks Int @default(100)
+  passMarks Int @default(33)
   startTime DateTime
   endTime   DateTime
 
@@ -303,6 +378,8 @@ model Exam {
 model Assignment {
   id       String   @id @default(uuid())
   title    String
+    fullMarks Int @default(100)
+  passMarks Int @default(33)
   startDate DateTime
   dueDate   DateTime
 
@@ -342,6 +419,67 @@ model Attendance {
   lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@map("attendances")
+}
+
+// Teachers' own daily attendance (separate from the student Attendance
+// model above). One row per teacher per day.
+model TeacherAttendance {
+  id        String             @id @default(uuid())
+  date      DateTime
+  status    HrAttendanceStatus
+  checkIn   DateTime?
+  checkOut  DateTime?
+  remarks   String?
+  createdAt DateTime           @default(now())
+
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, date])
+  @@map("teacher_attendances")
+}
+
+// Covers all non-teaching staff (Accountant, Librarian, Principal, and
+// any future staff role) uniformly by keying off User instead of a
+// specific role table — avoids a schema change every time a new staff
+// role is introduced.
+model StaffAttendance {
+  id        String             @id @default(uuid())
+  date      DateTime
+  status    HrAttendanceStatus
+  checkIn   DateTime?
+  checkOut  DateTime?
+  remarks   String?
+  createdAt DateTime           @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("staff_attendances")
+}
+
+// Leave requests for anyone with a User account (teacher, staff,
+// student, parent). Approver is whoever actioned it (typically Admin
+// or Principal).
+model Leave {
+  id        String      @id @default(uuid())
+  leaveType LeaveType
+  startDate DateTime
+  endDate   DateTime
+  reason    String
+  status    LeaveStatus @default(PENDING)
+  remarks   String?
+  appliedAt DateTime    @default(now())
+  decidedAt DateTime?
+
+  applicantId String
+  applicant   User   @relation("LeaveApplicant", fields: [applicantId], references: [id], onDelete: Cascade)
+
+  approvedById String?
+  approvedBy   User?   @relation("LeaveApprover", fields: [approvedById], references: [id])
+
+  @@map("leaves")
 }
 
 model Event {

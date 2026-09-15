@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={` ${rubik.variable} ${roboto.variable}`}>
-      <body className="font-dmsans">
+      <body>
         <ReduxProvider>{children}</ReduxProvider>
       </body>
     </html>

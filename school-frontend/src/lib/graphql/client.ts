@@ -1,6 +1,5 @@
 "use client";
 
-import { GraphQLClient } from "graphql-request";
 import Cookies from "js-cookie";
 import { isExpired } from "@/lib/jwt";
 import { REFRESH_TOKEN } from "./queries";
@@ -11,6 +10,38 @@ const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/graphql";
 
 const COOKIE_OPTS = { expires: 30 } as const; // days; refresh token cookie lifetime
+
+/**
+ * Minimal GraphQL client backed by the browser's native `fetch` — same
+ * shape (`.request(query, variables)`) as graphql-request's GraphQLClient
+ * so every call site stays unchanged. We avoid importing graphql-request
+ * here on purpose: it pulls in cross-fetch -> node-fetch -> whatwg-url ->
+ * tr46 (a ~250KB Unicode mapping table meant for Node.js), which has no
+ * reason to ship to the browser when `fetch` is already a global.
+ */
+class SimpleGraphQLClient {
+  constructor(
+    private url: string,
+    private headers: Record<string, string> = {},
+  ) {}
+
+  async request<T = any>(query: string, variables?: Record<string, unknown>): Promise<T> {
+    const res = await fetch(this.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...this.headers },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const json = await res.json();
+
+    if (json.errors?.length) {
+      const message = json.errors.map((e: { message: string }) => e.message).join("; ");
+      throw new Error(message);
+    }
+
+    return json.data as T;
+  }
+}
 
 /**
  * Exchanges the current refresh token for a new access+refresh pair,
@@ -27,7 +58,7 @@ export async function refreshSession(): Promise<string | null> {
   if (!refreshToken) return null;
 
   try {
-    const anonClient = new GraphQLClient(GRAPHQL_URL);
+    const anonClient = new SimpleGraphQLClient(GRAPHQL_URL);
     const data = await anonClient.request<{
       refreshToken: { accessToken: string; refreshToken: string; id: string; username: string; role: string };
     }>(REFRESH_TOKEN, { input: { refreshToken } });
@@ -66,14 +97,12 @@ export async function refreshSession(): Promise<string | null> {
  * so callers never have to think about the 15-minute access token
  * lifetime themselves.
  */
-export async function getClientGqlClient(): Promise<GraphQLClient> {
+export async function getClientGqlClient(): Promise<SimpleGraphQLClient> {
   let token = Cookies.get("token");
 
   if (!token || isExpired(token)) {
     token = (await refreshSession()) ?? undefined;
   }
 
-  return new GraphQLClient(GRAPHQL_URL, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  return new SimpleGraphQLClient(GRAPHQL_URL, token ? { Authorization: `Bearer ${token}` } : {});
 }

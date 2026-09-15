@@ -9,7 +9,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 
 @Resolver()
 @UseGuards(GqlJwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN, Role.TEACHER)
+@Roles(Role.ADMIN, Role.TEACHER, Role.PRINCIPAL)
 export class StatsResolver {
   constructor(private statsService: StatsService) {}
 

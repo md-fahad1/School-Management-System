@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
-import { gql } from "graphql-request";
+import { gql } from "@/lib/graphql/gql";
 import { GET_CLASSES, GET_GRADES, GET_PARENT_OPTIONS } from "@/lib/graphql/queries";
 
 const CREATE_STUDENT = gql`
@@ -70,15 +70,18 @@ const StudentForm = ({
     formState: { errors },
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
-    defaultValues:
-      type === "update"
-        ? {
-            name: data?.name?.split(" ")[0] ?? "",
-            surname: data?.name?.split(" ").slice(1).join(" ") ?? "",
-            phone: data?.phone === "-" ? "" : data?.phone,
-            address: data?.address === "-" ? "" : data?.address,
-          }
-        : undefined,
+   defaultValues:
+  type === "update"
+    ? {
+        name: data?.name?.split(" ")[0] ?? "",
+        surname: data?.name?.split(" ").slice(1).join(" ") ?? "",
+        phone: data?.phone === "-" ? "" : data?.phone,
+        address: data?.address === "-" ? "" : data?.address,
+        classId: data?.classId ?? "",
+        gradeId: data?.gradeId ?? "",
+        parentId: data?.parentId ?? "",
+      }
+    : undefined,
   });
 
   const [classOptions, setClassOptions] = useState<{ id: string; name: string }[]>([]);

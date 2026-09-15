@@ -9,11 +9,11 @@ const ContactPage = () => {
     message: "",
   });
 
-  const handleChange = () => {
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
     setSubmitted(true);

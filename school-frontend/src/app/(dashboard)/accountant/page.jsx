@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getFeeSummary, getDefaulters } from "@/lib/graphql/fetchers";
 import Link from "next/link";
 

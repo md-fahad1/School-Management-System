@@ -76,13 +76,13 @@ export class FeesResolver {
   }
 
   @Mutation(() => Invoice)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ACCOUNTANT)
   generateInvoice(@Args('input') input: GenerateInvoiceInput) {
     return this.feesService.generateInvoice(input);
   }
 
   @Mutation(() => String)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ACCOUNTANT)
   async generateBulkInvoices(@Args('input') input: GenerateBulkInvoicesInput) {
     const result = await this.feesService.generateBulkInvoices(input);
     return `Created ${result.created} invoice(s), skipped ${result.skipped} already-invoiced student(s)`;
@@ -91,7 +91,7 @@ export class FeesResolver {
   // ---- Payments ----
 
   @Mutation(() => Payment)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ACCOUNTANT)
   recordPayment(@Args('input') input: RecordPaymentInput, @CurrentUser() user: RequestUser) {
     return this.feesService.recordPayment(input, user.id);
   }
@@ -99,13 +99,13 @@ export class FeesResolver {
   // ---- Reports ----
 
   @Query(() => [Invoice])
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ACCOUNTANT)
   defaulters(@Args('gradeId', { type: () => ID, nullable: true }) gradeId?: string) {
     return this.feesService.defaulters(gradeId);
   }
 
   @Query(() => FeeCollectionSummary)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ACCOUNTANT)
   feeCollectionSummary(@Args('period', { nullable: true }) period?: string) {
     return this.feesService.collectionSummary(period);
   }

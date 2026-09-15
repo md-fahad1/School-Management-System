@@ -1,21 +1,27 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 
 @ObjectType()
 export class Assignment {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field()
-  title: string;
+  title!: string;
+
+  @Field(() => Int)
+  fullMarks!: number;
+
+  @Field(() => Int)
+  passMarks!: number;
 
   @Field()
-  startDate: Date;
+  startDate!: Date;
 
   @Field()
-  dueDate: Date;
+  dueDate!: Date;
 
   @Field(() => ID)
-  lessonId: string;
+  lessonId!: string;
 
   @Field({ nullable: true })
   subjectName?: string;

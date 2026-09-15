@@ -1,10 +1,21 @@
+import dynamic from "next/dynamic";
 import Announcements from "@/components/Announcements";
-import AttendanceChart from "@/components/AttendanceChart";
-import CountChart from "@/components/CountChart";
 import EventCalendar from "@/components/EventCalendar";
-import FinanceChart from "@/components/FinanceChart";
 import UserCard from "@/components/UserCard";
 import { getDashboardCounts, getWeeklyAttendance } from "@/lib/graphql/fetchers";
+
+// recharts is a heavy dependency — split these into their own chunk so
+// the dashboard shell (cards, calendar) renders immediately and the
+// charts stream in right after, instead of blocking initial JS parse.
+const AttendanceChart = dynamic(() => import("@/components/AttendanceChart"), {
+  loading: () => <div className="h-72 bg-gray-100 rounded-2xl animate-pulse" />,
+});
+const CountChart = dynamic(() => import("@/components/CountChart"), {
+  loading: () => <div className="h-72 bg-gray-100 rounded-2xl animate-pulse" />,
+});
+const FinanceChart = dynamic(() => import("@/components/FinanceChart"), {
+  loading: () => <div className="h-72 bg-gray-100 rounded-2xl animate-pulse" />,
+});
 
 const AdminPage = async () => {
   const counts = await getDashboardCounts();

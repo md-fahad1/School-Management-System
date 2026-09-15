@@ -34,7 +34,11 @@ export class EmailVerificationService {
 
     const frontendUrl = this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
     const verifyUrl = `${frontendUrl}/verify-email?token=${rawToken}`;
-    await this.email.sendVerificationEmail(email, verifyUrl);
+    // Don't block the mutation response on SMTP round-trip — fire and
+    // forget, log failures instead of surfacing them as a signup error.
+    this.email.sendVerificationEmail(email, verifyUrl).catch((err) =>
+      console.error('Failed to send verification email:', err),
+    );
 
     await this.audit.log({
       userId,

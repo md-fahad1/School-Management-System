@@ -8,7 +8,7 @@ import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-
+import { gradeFromMarks } from '../common/utils/grading.util';
 @Resolver(() => Result)
 @UseGuards(GqlJwtAuthGuard, RolesGuard)
 export class ResultsResolver {
@@ -79,5 +79,25 @@ export class ResultsResolver {
   @ResolveField('type', () => String, { nullable: true })
   type(@Parent() result: any) {
     return result.examId ? 'exam' : 'assignment';
+  }
+
+    @ResolveField('fullMarks', () => Number, { nullable: true })
+  fullMarks(@Parent() result: any) {
+    return result.exam?.fullMarks ?? result.assignment?.fullMarks;
+  }
+
+  @ResolveField('percentage', () => Number, { nullable: true })
+  percentage(@Parent() result: any) {
+    const fullMarks = result.exam?.fullMarks ?? result.assignment?.fullMarks;
+    if (!fullMarks) return undefined;
+    return Math.round((result.score / fullMarks) * 10000) / 100;
+  }
+
+
+  @ResolveField('gpa', () => Number, { nullable: true })
+  gpa(@Parent() result: any) {
+    const fullMarks = result.exam?.fullMarks ?? result.assignment?.fullMarks;
+    if (!fullMarks) return undefined;
+    return gradeFromMarks(result.score, fullMarks).gpa;
   }
 }

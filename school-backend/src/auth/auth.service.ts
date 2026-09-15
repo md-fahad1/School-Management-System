@@ -35,7 +35,8 @@ export class AuthService {
     // STUDENT accounts require a class/grade/parent link, so they're
     // created through the students module (which also creates the User
     // record in a transaction). This endpoint covers ADMIN, TEACHER,
-    // and PARENT, which have no required relations at creation time.
+    // PARENT, ACCOUNTANT, LIBRARIAN, and PRINCIPAL, which have no
+    // required relations at creation time.
     if (input.role === Role.STUDENT) {
       throw new BadRequestException(
         'Student accounts must be created via the students.create mutation',
@@ -43,7 +44,13 @@ export class AuthService {
     }
 
     const existing = await this.prisma.user.findFirst({
-      where: { OR: [{ username: input.username }, { email: input.email }] },
+      where: {
+        OR: [
+          { username: input.username },
+          { email: input.email },
+          ...(input.phone ? [{ phone: input.phone }] : []),
+        ],
+      },
     });
     if (existing) {
       await this.audit.log({
@@ -51,9 +58,9 @@ export class AuthService {
         success: false,
         ip: meta.ip,
         userAgent: meta.userAgent,
-        metadata: { username: input.username, email: input.email },
+        metadata: { username: input.username, email: input.email, phone: input.phone },
       });
-      throw new BadRequestException('Username or email already in use');
+      throw new BadRequestException('Username, email, or phone already in use');
     }
 
     assertPasswordComplexity(input.password);
@@ -61,8 +68,9 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: {
-        username: input.username,
+      username: input.username,
         email: input.email,
+        phone: input.phone,
         password: hashed,
         role: input.role,
         ...(input.role === Role.ADMIN && {
@@ -73,6 +81,15 @@ export class AuthService {
         }),
         ...(input.role === Role.PARENT && {
           parent: { create: { name: input.name, surname: input.surname } },
+        }),
+        ...(input.role === Role.ACCOUNTANT && {
+          accountant: { create: { name: input.name, surname: input.surname } },
+        }),
+        ...(input.role === Role.LIBRARIAN && {
+          librarian: { create: { name: input.name, surname: input.surname } },
+        }),
+        ...(input.role === Role.PRINCIPAL && {
+          principal: { create: { name: input.name, surname: input.surname } },
         }),
       },
     });
@@ -96,15 +113,15 @@ export class AuthService {
     return this.issueTokenPair(user.id, user.username, user.role, meta);
   }
 
-  async login(input: LoginInput, meta: RequestMeta = {}): Promise<AuthPayload> {
-    const lockedFor = await this.loginAttempts.getLockoutRemaining(input.username);
+   async login(input: LoginInput, meta: RequestMeta = {}): Promise<AuthPayload> {
+    const lockedFor = await this.loginAttempts.getLockoutRemaining(input.identifier);
     if (lockedFor !== null) {
       await this.audit.log({
         action: AuditAction.LOGIN_LOCKED_OUT,
         success: false,
         ip: meta.ip,
         userAgent: meta.userAgent,
-        metadata: { username: input.username, remainingSeconds: lockedFor },
+        metadata: { identifier: input.identifier, remainingSeconds: lockedFor },
       });
       throw new HttpException(
         `Account temporarily locked due to repeated failed login attempts. Try again in ${Math.ceil(lockedFor / 60)} minute(s).`,
@@ -112,33 +129,41 @@ export class AuthService {
       );
     }
 
-    const user = await this.prisma.user.findUnique({ where: { username: input.username } });
-    if (!user) {
-      // Still record a failure for a nonexistent username — an attacker
+    // username, email অথবা phone — যেটা দিয়েই পাঠানো হোক, একই ফিল্ডে খোঁজা হচ্ছে।
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: input.identifier },
+          { email: input.identifier },
+          { phone: input.identifier },
+        ],
+      },
+    });
+    if (!user) {      // Still record a failure for a nonexistent username — an attacker
       // shouldn't be able to distinguish "wrong password" from "no such
       // user" via lockout or audit-visible behavior (that would leak
       // which usernames exist).
-      await this.loginAttempts.recordFailure(input.username);
+       await this.loginAttempts.recordFailure(input.identifier);
       await this.audit.log({
         action: AuditAction.LOGIN_FAILURE,
         success: false,
         ip: meta.ip,
         userAgent: meta.userAgent,
-        metadata: { username: input.username, reason: 'no such user' },
+      metadata: { identifier: input.identifier, reason: 'no such user' },
       });
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const valid = await bcrypt.compare(input.password, user.password);
     if (!valid) {
-      const justLocked = await this.loginAttempts.recordFailure(input.username);
+      const justLocked = await this.loginAttempts.recordFailure(input.identifier);
       await this.audit.log({
         userId: user.id,
         action: AuditAction.LOGIN_FAILURE,
         success: false,
         ip: meta.ip,
         userAgent: meta.userAgent,
-        metadata: { username: input.username, reason: 'wrong password' },
+      metadata: { identifier: input.identifier, reason: 'wrong password' },
       });
       if (justLocked !== null) {
         await this.audit.log({
@@ -147,7 +172,7 @@ export class AuthService {
           success: false,
           ip: meta.ip,
           userAgent: meta.userAgent,
-          metadata: { username: input.username, lockedForSeconds: justLocked },
+          metadata: { identifier: input.identifier, lockedForSeconds: justLocked },
         });
         throw new HttpException(
           `Too many failed attempts. Account locked for ${Math.ceil(justLocked / 60)} minute(s).`,
@@ -157,7 +182,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    await this.loginAttempts.recordSuccess(input.username);
+    await this.loginAttempts.recordSuccess(input.identifier);
     await this.audit.log({
       userId: user.id,
       action: AuditAction.LOGIN_SUCCESS,

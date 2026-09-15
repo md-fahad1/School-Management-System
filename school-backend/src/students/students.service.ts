@@ -99,9 +99,42 @@ export class StudentsService {
     });
   }
 
-  async remove(id: string) {
-    const student = await this.findOne(id);
+ async remove(id: string) {
+  const student = await this.findOne(id);
+
+  // Invoices and book loans reference the student without a cascade rule
+  // by design — we never want deleting a profile to silently wipe out
+  // financial or library records. Surface a clear, actionable error
+  // instead of letting the raw Postgres FK-violation bubble up.
+  const [invoiceCount, bookLoanCount] = await Promise.all([
+    this.prisma.invoice.count({ where: { studentId: id } }),
+    this.prisma.bookLoan.count({ where: { borrowerId: student.userId } }),
+  ]);
+
+  const blockers: string[] = [];
+  if (invoiceCount > 0) {
+    blockers.push(`${invoiceCount} invoice${invoiceCount === 1 ? '' : 's'}`);
+  }
+  if (bookLoanCount > 0) {
+    blockers.push(`${bookLoanCount} library loan${bookLoanCount === 1 ? '' : 's'}`);
+  }
+
+  if (blockers.length > 0) {
+    throw new BadRequestException(
+      `Cannot delete this student: they have ${blockers.join(' and ')} on record. ` +
+        `Resolve or reassign those first, or deactivate the student instead of deleting them.`,
+    );
+  }
+
+  try {
     await this.prisma.user.delete({ where: { id: student.userId } });
     return true;
+  } catch (err) {
+    // Safety net for any relation we haven't accounted for above —
+    // never let a raw DB constraint error reach the client.
+    throw new BadRequestException(
+      'Cannot delete this student: they still have related records elsewhere in the system.',
+    );
   }
+}
 }

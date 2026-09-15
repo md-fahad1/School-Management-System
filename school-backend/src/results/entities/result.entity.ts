@@ -1,15 +1,15 @@
-import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int, Float } from '@nestjs/graphql';
 
 @ObjectType()
 export class Result {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field(() => Int)
-  score: number;
+  score!: number;
 
   @Field(() => ID)
-  studentId: string;
+  studentId!: string;
 
   @Field(() => ID, { nullable: true })
   examId?: string;
@@ -34,4 +34,16 @@ export class Result {
 
   @Field({ nullable: true })
   type?: string;
+
+  @Field(() => Int, { nullable: true })
+  fullMarks?: number;
+
+  @Field(() => Float, { nullable: true })
+  percentage?: number;
+
+  @Field({ nullable: true })
+  grade?: string;
+
+  @Field(() => Float, { nullable: true })
+  gpa?: number;
 }

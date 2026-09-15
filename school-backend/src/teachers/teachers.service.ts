@@ -90,9 +90,42 @@ export class TeachersService {
     });
   }
 
-  async remove(id: string) {
-    const teacher = await this.findOne(id);
+ async remove(id: string) {
+  const teacher = await this.findOne(id);
+
+  const [lessonCount, supervisedClassCount, bookLoanCount] = await Promise.all([
+    this.prisma.lesson.count({ where: { teacherId: id } }),
+    this.prisma.class.count({ where: { supervisorId: id } }),
+    this.prisma.bookLoan.count({
+      where: { OR: [{ borrowerId: teacher.userId }, { issuedById: teacher.userId }] },
+    }),
+  ]);
+
+  const blockers: string[] = [];
+  if (lessonCount > 0) {
+    blockers.push(`${lessonCount} lesson${lessonCount === 1 ? '' : 's'}`);
+  }
+  if (supervisedClassCount > 0) {
+    blockers.push(`${supervisedClassCount} supervised class${supervisedClassCount === 1 ? '' : 'es'}`);
+  }
+  if (bookLoanCount > 0) {
+    blockers.push(`${bookLoanCount} library loan${bookLoanCount === 1 ? '' : 's'}`);
+  }
+
+  if (blockers.length > 0) {
+    throw new BadRequestException(
+      `Cannot delete this teacher: they have ${blockers.join(', ')} on record. ` +
+        `Reassign those first, or deactivate the teacher instead of deleting them.`,
+    );
+  }
+
+  try {
     await this.prisma.user.delete({ where: { id: teacher.userId } });
     return true;
+  } catch (err) {
+    throw new BadRequestException(
+      'Cannot delete this teacher: they still have related records elsewhere in the system.',
+    );
   }
+}
 }

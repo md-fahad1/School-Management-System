@@ -41,4 +41,7 @@ export class Teacher {
 
   @Field(() => ID, { nullable: true })
   userId?: string;
+
+@Field(() => [ID], { nullable: true })
+subjectIds?: string[];
 }

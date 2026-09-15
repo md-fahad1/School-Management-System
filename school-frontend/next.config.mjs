@@ -1,14 +1,20 @@
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    remotePatterns: [{ hostname: "images.pexels.com" }],
+    remotePatterns: [
+      { hostname: "images.pexels.com" },
+      { hostname: "images.unsplash.com" },
+      { hostname: "placehold.co" },
+    ],
+    formats: ["image/avif", "image/webp"],
   },
-  images: {
-    domains: ["images.unsplash.com", "images.pexels.com", "placehold.co"],
-  },
-  compilerOptions: {
-    typeRoots: ["./node_modules/@types", "./src/types"],
-  },
+  poweredByHeader: false,
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

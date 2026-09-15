@@ -36,6 +36,8 @@ export class AssignmentsService {
     return this.prisma.assignment.create({
       data: {
         title: input.title,
+        fullMarks: input.fullMarks ?? 100,
+        passMarks: input.passMarks ?? 33,
         startDate: input.startDate,
         dueDate: input.dueDate,
         lessonId: input.lessonId,

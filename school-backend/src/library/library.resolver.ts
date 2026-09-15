@@ -68,13 +68,13 @@ export class LibraryResolver {
   }
 
   @Mutation(() => BookLoan)
-  @Roles(Role.ADMIN)
+ @Roles(Role.ADMIN, Role.LIBRARIAN)
   issueBook(@Args('input') input: IssueBookInput, @CurrentUser() user: RequestUser) {
     return this.libraryService.issueBook(input, user.id);
   }
 
   @Mutation(() => BookLoan)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.LIBRARIAN)
   returnBook(@Args('input') input: ReturnBookInput) {
     return this.libraryService.returnBook(input);
   }

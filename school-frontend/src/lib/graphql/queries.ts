@@ -1,4 +1,4 @@
-import { gql } from "graphql-request";
+import { gql } from "@/lib/graphql/gql";
 
 /* ---------- Auth ---------- */
 
@@ -24,8 +24,15 @@ export const REGISTER = gql`
       role
     }
   }
+`;export const CREATE_STAFF_ACCOUNT = gql`
+  mutation CreateStaffAccount($input: RegisterInput!) {
+    createStaffAccount(input: $input) {
+      id
+      username
+      role
+    }
+  }
 `;
-
 export const REFRESH_TOKEN = gql`
   mutation RefreshToken($input: RefreshTokenInput!) {
     refreshToken(input: $input) {
@@ -141,6 +148,7 @@ export const GET_TEACHERS = gql`
       address
       img
       subjects
+      subjectIds
       classes
     }
   }
@@ -160,6 +168,7 @@ export const GET_TEACHER = gql`
       sex
       birthday
       subjects
+      subjectIds
       classes
     }
   }
@@ -176,8 +185,11 @@ export const GET_STUDENTS = gql`
       phone
       address
       img
+      classId
       className
+      gradeId
       gradeLevel
+      parentId
       parentName
     }
   }
@@ -198,7 +210,9 @@ export const GET_STUDENT = gql`
       birthday
       classId
       className
+      gradeId
       gradeLevel
+      parentId
       parentName
     }
   }
@@ -651,6 +665,179 @@ export const GET_STUDENT_OPTIONS = gql`
       name
       surname
       className
+    }
+  }
+`;
+
+/* ---------- Teacher Attendance ---------- */
+
+export const GET_TEACHER_ATTENDANCES = gql`
+  query TeacherAttendances($date: String, $teacherId: ID, $skip: Float, $take: Float) {
+    teacherAttendances(date: $date, teacherId: $teacherId, skip: $skip, take: $take) {
+      id
+      date
+      status
+      checkIn
+      checkOut
+      remarks
+      teacherId
+      teacherName
+    }
+  }
+`;
+
+export const MARK_TEACHER_ATTENDANCE = gql`
+  mutation MarkTeacherAttendance($input: MarkTeacherAttendanceInput!) {
+    markTeacherAttendance(input: $input) {
+      id
+      date
+      status
+      teacherId
+      teacherName
+    }
+  }
+`;
+
+export const BULK_MARK_TEACHER_ATTENDANCE = gql`
+  mutation BulkMarkTeacherAttendance($input: BulkMarkTeacherAttendanceInput!) {
+    bulkMarkTeacherAttendance(input: $input) {
+      id
+      date
+      status
+      teacherId
+      teacherName
+    }
+  }
+`;
+
+/* ---------- Staff Attendance ---------- */
+
+export const GET_STAFF_ATTENDANCES = gql`
+  query StaffAttendances($date: String, $userId: ID, $skip: Float, $take: Float) {
+    staffAttendances(date: $date, userId: $userId, skip: $skip, take: $take) {
+      id
+      date
+      status
+      checkIn
+      checkOut
+      remarks
+      userId
+      staffName
+      staffRole
+    }
+  }
+`;
+
+export const MARK_STAFF_ATTENDANCE = gql`
+  mutation MarkStaffAttendance($input: MarkStaffAttendanceInput!) {
+    markStaffAttendance(input: $input) {
+      id
+      date
+      status
+      userId
+      staffName
+      staffRole
+    }
+  }
+`;
+
+export const BULK_MARK_STAFF_ATTENDANCE = gql`
+  mutation BulkMarkStaffAttendance($input: BulkMarkStaffAttendanceInput!) {
+    bulkMarkStaffAttendance(input: $input) {
+      id
+      date
+      status
+      userId
+      staffName
+      staffRole
+    }
+  }
+`;
+
+/* ---------- Leave ---------- */
+
+export const GET_LEAVES = gql`
+  query Leaves($status: LeaveStatus, $skip: Float, $take: Float) {
+    leaves(status: $status, skip: $skip, take: $take) {
+      id
+      leaveType
+      startDate
+      endDate
+      reason
+      status
+      remarks
+      appliedAt
+      decidedAt
+      applicantId
+      applicantName
+      applicantRole
+      approvedById
+      approvedByName
+    }
+  }
+`;
+
+export const GET_LEAVE = gql`
+  query Leave($id: ID!) {
+    leave(id: $id) {
+      id
+      leaveType
+      startDate
+      endDate
+      reason
+      status
+      remarks
+      appliedAt
+      decidedAt
+      applicantId
+      applicantName
+      applicantRole
+      approvedById
+      approvedByName
+    }
+  }
+`;
+
+export const APPLY_LEAVE = gql`
+  mutation ApplyLeave($input: ApplyLeaveInput!) {
+    applyLeave(input: $input) {
+      id
+      leaveType
+      startDate
+      endDate
+      reason
+      status
+    }
+  }
+`;
+
+export const DECIDE_LEAVE = gql`
+  mutation DecideLeave($input: DecideLeaveInput!) {
+    decideLeave(input: $input) {
+      id
+      status
+      remarks
+      decidedAt
+      approvedByName
+    }
+  }
+`;
+
+export const CANCEL_LEAVE = gql`
+  mutation CancelLeave($id: ID!) {
+    cancelLeave(id: $id) {
+      id
+      status
+    }
+  }
+`;
+
+export const GET_TEACHER_ATTENDANCE_OPTIONS = gql`
+  query TeacherAttendanceOptions {
+    teachers(take: 300) {
+      id
+      name
+      surname
     }
   }
 `;

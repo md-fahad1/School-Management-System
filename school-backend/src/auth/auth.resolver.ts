@@ -1,7 +1,11 @@
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { Role } from '@prisma/client';
 import { AuthService } from './auth.service';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+
 import {
   AuthPayload,
   LoginInput,
@@ -17,6 +21,12 @@ import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard';
 // endpoints brute-force and credential-stuffing attacks actually hit.
 const AUTH_THROTTLE = { default: { limit: 5, ttl: 60_000 } };
 
+// Roles a stranger off the street can self-register as. Everything
+// else (ADMIN, ACCOUNTANT, LIBRARIAN, PRINCIPAL) must go through
+// createStaffAccount below, which only an existing admin can call.
+const PUBLIC_SIGNUP_ROLES: Role[] = [Role.TEACHER, Role.PARENT];
+const STAFF_ACCOUNT_ROLES: Role[] = [Role.ADMIN, Role.ACCOUNTANT, Role.LIBRARIAN, Role.PRINCIPAL, Role.TEACHER];
+
 @Resolver()
 export class AuthResolver {
   constructor(private authService: AuthService) {}
@@ -24,6 +34,23 @@ export class AuthResolver {
   @Mutation(() => AuthPayload)
   @Throttle(AUTH_THROTTLE)
   register(@Args('input') input: RegisterInput, @ReqMeta() meta: RequestMeta) {
+    if (!PUBLIC_SIGNUP_ROLES.includes(input.role)) {
+      throw new BadRequestException(
+        'This role cannot self-register. Ask an admin to create the account.',
+      );
+    }
+    return this.authService.register(input, meta);
+  }
+
+  @Mutation(() => AuthPayload)
+  @UseGuards(GqlJwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  createStaffAccount(@Args('input') input: RegisterInput, @ReqMeta() meta: RequestMeta) {
+    if (!STAFF_ACCOUNT_ROLES.includes(input.role)) {
+      throw new BadRequestException(
+        `Role ${input.role} cannot be created this way.`,
+      );
+    }
     return this.authService.register(input, meta);
   }
 
@@ -43,9 +70,10 @@ export class AuthResolver {
   @UseGuards(GqlJwtAuthGuard)
   logout(
     @Args('input') input: LogoutInput,
-    @CurrentUser() user: { jti: string; exp: number },
+    @CurrentUser() user: { id: string; jti: string; exp: number },
+    @ReqMeta() meta: RequestMeta,
   ) {
-    return this.authService.logout(input.refreshToken, user.jti, String(user.exp));
+    return this.authService.logout(input.refreshToken, user.id, user.jti, user.exp, meta);
   }
 
   @Mutation(() => Boolean)

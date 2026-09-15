@@ -45,8 +45,6 @@ export class TeachersResolver {
     return this.teachersService.remove(id);
   }
 
-  // Resolved off the `user`/`subjects`/`classes` relations eagerly
-  // included in findAll/findOne — no extra round trips.
   @ResolveField('email', () => String, { nullable: true })
   email(@Parent() teacher: any) {
     return teacher.user?.email;
@@ -57,14 +55,18 @@ export class TeachersResolver {
     return teacher.subjects?.map((s: any) => s.name) ?? [];
   }
 
+  @ResolveField('subjectIds', () => [ID], { nullable: true })
+  subjectIds(@Parent() teacher: any) {
+    return teacher.subjects?.map((s: any) => s.id) ?? [];
+  }
+
   @ResolveField('classes', () => [String], { nullable: true })
   classes(@Parent() teacher: any) {
     return teacher.classes?.map((c: any) => c.name) ?? [];
   }
 
-    @ResolveField('userId', () => String, { nullable: true })
+  @ResolveField('userId', () => String, { nullable: true })
   userId(@Parent() teacher: any) {
     return teacher.userId;
   }
-
 }

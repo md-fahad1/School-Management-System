@@ -29,6 +29,9 @@ import { UsersModule } from './users/users.module';
 import { StatsModule } from './stats/stats.module';
 import { LibraryModule } from './library/library.module';
 import { FeesModule } from './fees/fees.module';
+import { TeacherAttendanceModule } from './teacher-attendance/teacher-attendance.module';
+import { StaffAttendanceModule } from './staff-attendance/staff-attendance.module';
+import { LeaveModule } from './leave/leave.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -39,7 +42,9 @@ import { FeesModule } from './fees/fees.module';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
-      playground: true,
+      playground: process.env.NODE_ENV !== 'production',
+      introspection: process.env.NODE_ENV !== 'production',
+      cache: 'bounded',
       // Both req and res are needed now — GqlThrottlerGuard reads req
       // for the client IP and writes rate-limit headers onto res.
       context: ({ req, res }) => ({ req, res }),
@@ -66,7 +71,10 @@ import { FeesModule } from './fees/fees.module';
     UsersModule,
     StatsModule,
     LibraryModule,
-    FeesModule
+    FeesModule,
+    TeacherAttendanceModule,
+    StaffAttendanceModule,
+    LeaveModule
   ],
    providers: [
     {

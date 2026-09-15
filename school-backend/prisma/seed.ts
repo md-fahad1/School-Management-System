@@ -23,7 +23,7 @@ function daysFromNow(n: number, hour = 9, minute = 0) {
 
 async function main() {
   // --- Admin ---
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminPassword = await bcrypt.hash('admin', 10);
   const adminUser = await prisma.user.upsert({
     where: { username: 'admin' },
     update: {},
@@ -98,7 +98,7 @@ async function main() {
     { username: 'teacher.amy', email: 'amy.teacher@school.local', name: 'Amy', surname: 'Clark', subjectNames: ['English', 'Art'], phone: '555-0109', address: '14 Poplar Rd', sex: 'FEMALE' as const, bloodType: 'A+' },
     { username: 'teacher.omar', email: 'omar.teacher@school.local', name: 'Omar', surname: 'Hassan', subjectNames: ['History', 'Geography'], phone: '555-0110', address: '27 Spruce Rd', sex: 'MALE' as const, bloodType: 'AB-' },
   ];
-  const teacherPassword = await bcrypt.hash('teacher123', 10);
+  const teacherPassword = await bcrypt.hash('teacher', 10);
   const teachers: Record<string, { id: string }> = {};
   for (const t of teacherDefs) {
     const user = await prisma.user.upsert({
@@ -140,6 +140,127 @@ async function main() {
     });
   }
 
+  // --- Staff: Accountant, Librarian, Principal ---
+  const accountantPassword = await bcrypt.hash('accountant123', 10);
+  const accountantUser = await prisma.user.upsert({
+    where: { username: 'accountant.maria' },
+    update: {},
+    create: {
+      username: 'accountant.maria',
+      email: 'maria.accountant@school.local',
+      password: accountantPassword,
+      role: Role.ACCOUNTANT,
+      accountant: { create: { name: 'Maria', surname: 'Santos' } },
+    },
+  });
+
+  const librarianPassword = await bcrypt.hash('librarian123', 10);
+  const librarianUser = await prisma.user.upsert({
+    where: { username: 'librarian.tom' },
+    update: {},
+    create: {
+      username: 'librarian.tom',
+      email: 'tom.librarian@school.local',
+      password: librarianPassword,
+      role: Role.LIBRARIAN,
+      librarian: { create: { name: 'Tom', surname: 'Reid' } },
+    },
+  });
+
+  const principalPassword = await bcrypt.hash('principal123', 10);
+  const principalUser = await prisma.user.upsert({
+    where: { username: 'principal.helen' },
+    update: {},
+    create: {
+      username: 'principal.helen',
+      email: 'helen.principal@school.local',
+      password: principalPassword,
+      role: Role.PRINCIPAL,
+      principal: { create: { name: 'Helen', surname: 'Carter' } },
+    },
+  });
+
+  // --- Teacher Attendance: Mon-Fri of the current week, every teacher ---
+  const attendanceWeekdays = [0, 1, 2, 3, 4]; // Mon..Fri offsets
+  const hrStatusCycle = ['PRESENT', 'PRESENT', 'PRESENT', 'LATE', 'ABSENT'] as const;
+  let teacherIdx = 0;
+  for (const t of teacherDefs) {
+    for (const offset of attendanceWeekdays) {
+      const date = new Date(getMonday(new Date()));
+      date.setDate(date.getDate() + offset);
+      const status = hrStatusCycle[(teacherIdx + offset) % hrStatusCycle.length];
+      await prisma.teacherAttendance.upsert({
+        where: { teacherId_date: { teacherId: teachers[t.username].id, date } },
+        update: {},
+        create: {
+          teacherId: teachers[t.username].id,
+          date,
+          status,
+          checkIn: status !== 'ABSENT' ? new Date(date.setHours(8, status === 'LATE' ? 30 : 0, 0, 0)) : undefined,
+        },
+      });
+    }
+    teacherIdx++;
+  }
+
+  // --- Staff Attendance: Mon-Fri, for accountant/librarian/principal ---
+  const staffUsers = [
+    { id: accountantUser.id, name: 'accountant.maria' },
+    { id: librarianUser.id, name: 'librarian.tom' },
+    { id: principalUser.id, name: 'principal.helen' },
+  ];
+  let staffIdx = 0;
+  for (const staff of staffUsers) {
+    for (const offset of attendanceWeekdays) {
+      const date = new Date(getMonday(new Date()));
+      date.setDate(date.getDate() + offset);
+      const status = hrStatusCycle[(staffIdx + offset) % hrStatusCycle.length];
+      await prisma.staffAttendance.upsert({
+        where: { userId_date: { userId: staff.id, date } },
+        update: {},
+        create: {
+          userId: staff.id,
+          date,
+          status,
+          checkIn: status !== 'ABSENT' ? new Date(date.setHours(9, status === 'LATE' ? 20 : 0, 0, 0)) : undefined,
+        },
+      });
+    }
+    staffIdx++;
+  }
+
+  // --- Leave Applications: a spread of types + statuses ---
+  const teacherPaulUser = await prisma.user.findUnique({ where: { username: 'teacher.paul' } });
+  const teacherAmyUser = await prisma.user.findUnique({ where: { username: 'teacher.amy' } });
+  const teacherOmarUser = await prisma.user.findUnique({ where: { username: 'teacher.omar' } });
+
+  const leaveDefs = [
+    { applicantId: teacherPaulUser?.id, leaveType: 'SICK', reason: 'Fever and needs rest', status: 'PENDING', startOffset: 1, endOffset: 2 },
+    { applicantId: teacherAmyUser?.id, leaveType: 'CASUAL', reason: 'Family function', status: 'APPROVED', startOffset: -5, endOffset: -4, approvedById: adminUser.id },
+    { applicantId: librarianUser.id, leaveType: 'EARNED', reason: 'Planned vacation', status: 'REJECTED', startOffset: 10, endOffset: 15, approvedById: adminUser.id, remarks: 'Too many staff already on leave that week' },
+    { applicantId: accountantUser.id, leaveType: 'MATERNITY', reason: 'Maternity leave', status: 'APPROVED', startOffset: -20, endOffset: 40, approvedById: adminUser.id },
+    { applicantId: teacherOmarUser?.id, leaveType: 'OTHER', reason: 'Personal emergency', status: 'CANCELLED', startOffset: -2, endOffset: -1 },
+  ];
+  for (const l of leaveDefs) {
+    if (!l.applicantId) continue;
+    const existing = await prisma.leave.findFirst({ where: { applicantId: l.applicantId, reason: l.reason } });
+    if (!existing) {
+      await prisma.leave.create({
+        data: {
+          applicantId: l.applicantId,
+          leaveType: l.leaveType as any,
+          reason: l.reason,
+          status: l.status as any,
+          startDate: daysFromNow(l.startOffset),
+          endDate: daysFromNow(l.endOffset),
+          approvedById: l.approvedById,
+          remarks: l.remarks,
+          decidedAt: l.status !== 'PENDING' ? daysFromNow(l.startOffset - 1) : undefined,
+        },
+      });
+    }
+  }
+
   // --- Parents (8, several with more than one child) ---
   const parentDefs = [
     { username: 'parent.davis', email: 'davis.parent@example.com', name: 'Robert', surname: 'Davis', phone: '555-0201', address: '10 Maple Ave' },
@@ -151,7 +272,7 @@ async function main() {
     { username: 'parent.rossi', email: 'rossi.parent@example.com', name: 'Giulia', surname: 'Rossi', phone: '555-0207', address: '44 Larch Ave' },
     { username: 'parent.singh', email: 'singh.parent@example.com', name: 'Priya', surname: 'Singh', phone: '555-0208', address: '2 Juniper Ave' },
   ];
-  const parentPassword = await bcrypt.hash('parent123', 10);
+  const parentPassword = await bcrypt.hash('parent', 10);
   const parents: Record<string, { id: string }> = {};
   for (const p of parentDefs) {
     const user = await prisma.user.upsert({
@@ -192,7 +313,7 @@ async function main() {
     { username: 'student.chloe', email: 'chloe.student@example.com', name: 'Chloe', surname: 'Davis', className: '8A', gradeLevel: 8, parentUsername: 'parent.davis', sex: 'FEMALE' as const },
     { username: 'student.yusuf', email: 'yusuf.student@example.com', name: 'Yusuf', surname: 'Khan', className: '8A', gradeLevel: 8, parentUsername: 'parent.khan', sex: 'MALE' as const },
   ];
-  const studentPassword = await bcrypt.hash('student123', 10);
+  const studentPassword = await bcrypt.hash('student', 10);
   const students: Record<string, { id: string; classId: string; gradeLevel: number }> = {};
   for (const s of studentDefs) {
     const user = await prisma.user.upsert({
@@ -502,13 +623,17 @@ async function main() {
   }
 
   console.log('✅ Seed complete.');
-  console.log('   Admin:    admin / admin123');
-  console.log('   Teachers: teacher.jane / .mark / .lisa / .sam / .nora / .paul / .grace / .leo / .amy / .omar — password: teacher123');
-  console.log('   Parents:  parent.davis / .wilson / .khan / .lopez / .chen / .osei / .rossi / .singh — password: parent123');
-  console.log('   Students: 20 students across classes 1A-8A — password: student123');
+  console.log('   Admin:      admin / admin123');
+  console.log('   Teachers:   teacher.jane / .mark / .lisa / .sam / .nora / .paul / .grace / .leo / .amy / .omar — password: teacher123');
+  console.log('   Parents:    parent.davis / .wilson / .khan / .lopez / .chen / .osei / .rossi / .singh — password: parent123');
+  console.log('   Students:   20 students across classes 1A-8A — password: student123');
+  console.log('   Accountant: accountant.maria — password: accountant123');
+  console.log('   Librarian:  librarian.tom — password: librarian123');
+  console.log('   Principal:  principal.helen — password: principal123');
   console.log('   + 8 grades, 13 subjects, 11 classes, 55 lessons/attendance rows, 11 exams, 11 assignments, 42 results,');
   console.log('     5 events, 4 announcements, 2 messages, 6 library books with 5 loans (active/returned/overdue),');
-  console.log('     16 fee structures, 20 invoices spread across PENDING/PARTIAL/PAID/OVERDUE with matching payments.');
+  console.log('     16 fee structures, 20 invoices spread across PENDING/PARTIAL/PAID/OVERDUE with matching payments,');
+  console.log('     50 teacher-attendance rows, 15 staff-attendance rows, 5 leave applications (all statuses).');
 }
 
 main()

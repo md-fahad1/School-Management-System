@@ -1,17 +1,16 @@
 import { InputType, Field, ID, Int, PartialType } from '@nestjs/graphql';
-import { IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsUUID, Min } from 'class-validator';
 
 @InputType()
 export class CreateResultInput {
   @Field(() => Int)
   @IsInt()
   @Min(0)
-  @Max(100)
-  score: number;
+  score!: number;
 
   @Field(() => ID)
   @IsUUID()
-  studentId: string;
+  studentId!: string;
 
   @Field(() => ID, { nullable: true })
   @IsOptional()

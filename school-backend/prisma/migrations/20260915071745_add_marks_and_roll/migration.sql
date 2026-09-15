@@ -1,0 +1,10 @@
+-- AlterTable
+ALTER TABLE "assignments" ADD COLUMN     "fullMarks" INTEGER NOT NULL DEFAULT 100,
+ADD COLUMN     "passMarks" INTEGER NOT NULL DEFAULT 33;
+
+-- AlterTable
+ALTER TABLE "exams" ADD COLUMN     "fullMarks" INTEGER NOT NULL DEFAULT 100,
+ADD COLUMN     "passMarks" INTEGER NOT NULL DEFAULT 33;
+
+-- AlterTable
+ALTER TABLE "students" ADD COLUMN     "roll" INTEGER;

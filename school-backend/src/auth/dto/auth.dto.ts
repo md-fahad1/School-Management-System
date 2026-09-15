@@ -1,6 +1,5 @@
 import { InputType, Field, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
-import { Role } from '@prisma/client';
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';import { Role } from '@prisma/client';
 
 registerEnumType(Role, { name: 'Role' });
 
@@ -30,13 +29,19 @@ export class RegisterInput {
   @Field()
   @IsString()
   surname!: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }
 
 @InputType()
 export class LoginInput {
+  // Email, phone অথবা username — যেকোনো একটা দিয়ে login করা যাবে।
   @Field()
   @IsString()
-  username!: string;
+  identifier!: string;
 
   @Field()
   @IsString()

@@ -1,14 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 import { Role } from '@prisma/client';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+// Dashboard counts/attendance don't need to be up-to-the-second — every
+// role's dashboard hits these on load, so a short cache turns N Postgres
+// round trips into a single Redis GET for the vast majority of requests.
+const DASHBOARD_COUNTS_TTL_SECONDS = 60;
+const WEEKLY_ATTENDANCE_TTL_SECONDS = 60;
+const DASHBOARD_COUNTS_KEY = 'stats:dashboard-counts';
+const WEEKLY_ATTENDANCE_KEY = 'stats:weekly-attendance';
+
 @Injectable()
 export class StatsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private redis: RedisService,
+  ) {}
 
   async getDashboardCounts() {
+    const cached = await this.redis.get(DASHBOARD_COUNTS_KEY);
+    if (cached) return JSON.parse(cached);
+
     const [studentCount, teacherCount, parentCount, adminCount, boysCount, girlsCount] =
       await Promise.all([
         this.prisma.user.count({ where: { role: Role.STUDENT } }),
@@ -19,7 +34,9 @@ export class StatsService {
         this.prisma.student.count({ where: { sex: 'FEMALE' } }),
       ]);
 
-    return { studentCount, teacherCount, parentCount, adminCount, boysCount, girlsCount };
+    const result = { studentCount, teacherCount, parentCount, adminCount, boysCount, girlsCount };
+    await this.redis.set(DASHBOARD_COUNTS_KEY, JSON.stringify(result), DASHBOARD_COUNTS_TTL_SECONDS);
+    return result;
   }
 
   /**
@@ -29,6 +46,9 @@ export class StatsService {
    * proper SQL GROUP BY instead of pulling rows into JS to bucket them.
    */
   async getWeeklyAttendance() {
+    const cached = await this.redis.get(WEEKLY_ATTENDANCE_KEY);
+    if (cached) return JSON.parse(cached);
+
     const now = new Date();
     const dayOfWeek = now.getDay(); // 0 = Sunday
     const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -60,6 +80,8 @@ export class StatsService {
       else buckets[label].absent++;
     }
 
-    return Object.entries(buckets).map(([day, counts]) => ({ day, ...counts }));
+    const result = Object.entries(buckets).map(([day, counts]) => ({ day, ...counts }));
+    await this.redis.set(WEEKLY_ATTENDANCE_KEY, JSON.stringify(result), WEEKLY_ATTENDANCE_TTL_SECONDS);
+    return result;
   }
 }

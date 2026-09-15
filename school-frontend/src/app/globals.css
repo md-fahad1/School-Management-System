@@ -1,3 +1,6 @@
+body {
+  font-family: var(--font-rubik), var(--font-roboto), sans-serif;
+}
 :root {
   --primary: #6c4cf1;
   --secondary: #b9a6ff;

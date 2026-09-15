@@ -43,17 +43,37 @@ export class ResultsService {
     return result;
   }
 
-  create(input: CreateResultInput) {
+    async create(input: CreateResultInput) {
     this.assertExactlyOneParent(input);
+    await this.assertScoreWithinFullMarks(input);
     return this.prisma.result.create({ data: input });
   }
 
   async update(id: string, input: UpdateResultInput) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     if (input.examId !== undefined || input.assignmentId !== undefined) {
       this.assertExactlyOneParent(input as CreateResultInput);
     }
+    if (input.score !== undefined) {
+      await this.assertScoreWithinFullMarks({
+        score: input.score,
+        examId: input.examId ?? existing.examId ?? undefined,
+        assignmentId: input.assignmentId ?? existing.assignmentId ?? undefined,
+      });
+    }
     return this.prisma.result.update({ where: { id }, data: input });
+  }
+
+  private async assertScoreWithinFullMarks(input: { score: number; examId?: string; assignmentId?: string }) {
+    const fullMarks = input.examId
+      ? (await this.prisma.exam.findUnique({ where: { id: input.examId } }))?.fullMarks
+      : input.assignmentId
+        ? (await this.prisma.assignment.findUnique({ where: { id: input.assignmentId } }))?.fullMarks
+        : undefined;
+
+    if (fullMarks !== undefined && input.score > fullMarks) {
+      throw new BadRequestException(`Score (${input.score}) cannot exceed full marks (${fullMarks})`);
+    }
   }
 
   async remove(id: string) {

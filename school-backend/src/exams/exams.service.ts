@@ -35,10 +35,12 @@ export class ExamsService {
     return exam;
   }
 
-  create(input: CreateExamInput) {
+    create(input: CreateExamInput) {
     return this.prisma.exam.create({
       data: {
         title: input.title,
+        fullMarks: input.fullMarks ?? 100,
+        passMarks: input.passMarks ?? 33,
         startTime: input.startTime,
         endTime: input.endTime,
         lessonId: input.lessonId,

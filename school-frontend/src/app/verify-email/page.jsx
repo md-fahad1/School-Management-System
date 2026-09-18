@@ -41,26 +41,26 @@ const VerifyEmailContent = () => {
   }, [token]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-6">
-      <div className="w-full max-w-md text-center">
+    <div className="min-h-screen flex items-center justify-center bg-bg p-6">
+      <div className="w-full max-w-md text-center bg-cardBg rounded-2xl shadow-sm border border-border p-8">
         {status === "verifying" && (
           <>
-            <Loader2 className="mx-auto animate-spin text-pink-600 mb-4" size={40} />
-            <h2 className="text-2xl font-bold text-gray-800">Verifying your email...</h2>
-            <p className="text-gray-500 mt-2">Just a moment.</p>
+            <Loader2 className="mx-auto animate-spin text-accent mb-4" size={40} />
+            <h2 className="text-2xl font-bold text-textPrimary">Verifying your email...</h2>
+            <p className="text-textMuted mt-2">Just a moment.</p>
           </>
         )}
 
         {status === "success" && (
           <>
-            <CheckCircle className="mx-auto text-green-500 mb-4" size={40} />
-            <h2 className="text-2xl font-bold text-gray-800">Email verified!</h2>
-            <p className="text-gray-500 mt-2 mb-6">
-              Your email address has been confirmed. You're all set.
+            <CheckCircle className="mx-auto text-success mb-4" size={40} />
+            <h2 className="text-2xl font-bold text-textPrimary">Email verified!</h2>
+            <p className="text-textMuted mt-2 mb-6">
+              Your email address has been confirmed. You&apos;re all set.
             </p>
             <Link
               href="/signin"
-              className="inline-block bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md"
+              className="inline-block bg-primary text-white px-6 py-2.5 rounded-lg hover:bg-primaryDark transition-colors shadow-sm"
             >
               Continue to Sign In
             </Link>
@@ -69,10 +69,10 @@ const VerifyEmailContent = () => {
 
         {status === "error" && (
           <>
-            <XCircle className="mx-auto text-red-500 mb-4" size={40} />
-            <h2 className="text-2xl font-bold text-gray-800">Verification failed</h2>
-            <p className="text-gray-500 mt-2 mb-6">{error}</p>
-            <Link href="/signin" className="text-pink-600 hover:underline text-sm">
+            <XCircle className="mx-auto text-danger mb-4" size={40} />
+            <h2 className="text-2xl font-bold text-textPrimary">Verification failed</h2>
+            <p className="text-textMuted mt-2 mb-6">{error}</p>
+            <Link href="/signin" className="text-accent hover:underline text-sm font-medium">
               Back to Sign In
             </Link>
           </>

@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSubjectInput, UpdateSubjectInput } from './dto/subject.dto';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 @Injectable()
 export class SubjectsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
   findAll(search?: string, skip = 0, take = 10) {
     return this.prisma.subject.findMany({
@@ -25,8 +29,8 @@ export class SubjectsService {
     return subject;
   }
 
-  create(input: CreateSubjectInput) {
-    return this.prisma.subject.create({
+  async create(input: CreateSubjectInput, actorId?: string) {
+    const created = await this.prisma.subject.create({
       data: {
         name: input.name,
         teachers: input.teacherIds
@@ -34,11 +38,20 @@ export class SubjectsService {
           : undefined,
       },
     });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.SUBJECT_CREATE,
+      success: true,
+      metadata: { subjectId: created.id, name: created.name },
+    });
+
+    return created;
   }
 
-  async update(id: string, input: UpdateSubjectInput) {
-    await this.findOne(id);
-    return this.prisma.subject.update({
+  async update(id: string, input: UpdateSubjectInput, actorId?: string) {
+    const before = await this.findOne(id);
+    const updated = await this.prisma.subject.update({
       where: { id },
       data: {
         name: input.name,
@@ -47,11 +60,28 @@ export class SubjectsService {
           : undefined,
       },
     });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.SUBJECT_UPDATE,
+      success: true,
+      metadata: { subjectId: id, before: before.name, after: updated.name },
+    });
+
+    return updated;
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, actorId?: string) {
+    const subject = await this.findOne(id);
     await this.prisma.subject.delete({ where: { id } });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.SUBJECT_DELETE,
+      success: true,
+      metadata: { subjectId: id, name: subject.name },
+    });
+
     return true;
   }
 }

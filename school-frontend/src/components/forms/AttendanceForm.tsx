@@ -125,7 +125,7 @@ const AttendanceForm = ({
         />
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Status</label>
+          <label className="text-xs text-textMuted">Status</label>
           <select
             {...register("present")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -136,7 +136,7 @@ const AttendanceForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Student</label>
+          <label className="text-xs text-textMuted">Student</label>
           <select
             {...register("studentId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -154,7 +154,7 @@ const AttendanceForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Lesson</label>
+          <label className="text-xs text-textMuted">Lesson</label>
           <select
             {...register("lessonId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

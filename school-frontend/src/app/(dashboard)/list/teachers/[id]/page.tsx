@@ -19,7 +19,7 @@ const SingleTeacherPage = async ({ params }: { params: { id: string } }) => {
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
       <div className="w-full xl:w-2/3">
         <div className="flex flex-col lg:flex-row gap-4">
-          <div className="bg-lamaSky py-6 px-4 rounded-md flex-1 flex flex-col sm:flex-row gap-4">
+          <div className="bg-primary py-6 px-4 rounded-2xl flex-1 flex flex-col sm:flex-row gap-4">
             <div className="w-24 sm:w-1/3 shrink-0">
               <Image
                 src={teacher.photo}
@@ -46,7 +46,7 @@ const SingleTeacherPage = async ({ params }: { params: { id: string } }) => {
                   />
                 )}
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-white/70">
                 {teacher.subjects.length > 0
                   ? `Teaches ${teacher.subjects.join(", ")}`
                   : "No subjects assigned"}
@@ -72,7 +72,7 @@ const SingleTeacherPage = async ({ params }: { params: { id: string } }) => {
             </div>
           </div>
           <div className="flex-1 flex gap-4 justify-between flex-wrap">
-            <div className="bg-white p-4 rounded-md flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
+            <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
               <Image src="/singleBranch.png" alt="" width={24} height={24} className="w-6 h-6" />
               <div>
                 <h1 className="text-xl font-semibold">{teacher.classes.length}</h1>
@@ -114,7 +114,7 @@ const SingleTeacherPage = async ({ params }: { params: { id: string } }) => {
       <div className="w-full xl:w-1/3 flex flex-col gap-4">
         <div className="bg-white p-4 rounded-md">
           <h1 className="text-xl font-semibold">Shortcuts</h1>
-          <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
+          <div className="mt-4 flex gap-4 flex-wrap text-xs text-textMuted">
             <Link className="p-3 rounded-md bg-lamaSkyLight" href={`/list/classes?teacherId=${teacher.id}`}>
               Teacher&apos;s Classes
             </Link>

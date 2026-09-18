@@ -3,11 +3,27 @@ import * as bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStudentInput, UpdateStudentInput } from './dto/student.dto';
-
+import { AuditService, AuditAction } from '../audit/audit.service';
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
+    /**
+   * Self-service: a PARENT can list their own linked children without
+   * needing the admin/teacher-only `students` query. Scoped by the
+   * caller's userId, same visibilityFilter pattern used for results/
+   * attendance/lessons elsewhere in the app.
+   */
+  findMyChildren(userId: string) {
+    return this.prisma.student.findMany({
+      where: { parent: { userId } },
+      orderBy: { name: 'asc' },
+      include: { user: true, class: true, grade: true, parent: true },
+    });
+  }
   findAll(search?: string, skip = 0, take = 10) {
     return this.prisma.student.findMany({
       where: search
@@ -34,7 +50,7 @@ export class StudentsService {
     return student;
   }
 
-  async create(input: CreateStudentInput) {
+  async create(input: CreateStudentInput, actorId?: string) {
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ username: input.username }, { email: input.email }] },
     });
@@ -75,13 +91,21 @@ export class StudentsService {
       },
       include: { student: true },
     });
+        await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.STUDENT_CREATE,
+      success: true,
+      metadata: { studentId: user.student?.id, name: input.name, surname: input.surname },
+    });
+
+    return user.student;
 
     return user.student;
   }
 
-  async update(id: string, input: UpdateStudentInput) {
-    await this.findOne(id);
-    return this.prisma.student.update({
+  async update(id: string, input: UpdateStudentInput, actorId?: string) {
+    const before = await this.findOne(id);
+    const updated = await this.prisma.student.update({
       where: { id },
       data: {
         name: input.name,
@@ -97,9 +121,22 @@ export class StudentsService {
         parentId: input.parentId,
       },
     });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.STUDENT_UPDATE,
+      success: true,
+      metadata: {
+        studentId: id,
+        before: { name: before.name, surname: before.surname, classId: before.classId },
+        after: { name: updated.name, surname: updated.surname, classId: updated.classId },
+      },
+    });
+
+    return updated;
   }
 
- async remove(id: string) {
+async remove(id: string, actorId?: string) {
   const student = await this.findOne(id);
 
   // Invoices and book loans reference the student without a cascade rule
@@ -128,6 +165,12 @@ export class StudentsService {
 
   try {
     await this.prisma.user.delete({ where: { id: student.userId } });
+        await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.STUDENT_DELETE,
+      success: true,
+      metadata: { studentId: id, name: student.name, surname: student.surname },
+    });
     return true;
   } catch (err) {
     // Safety net for any relation we haven't accounted for above —
@@ -137,4 +180,87 @@ export class StudentsService {
     );
   }
 }
+  /**
+   * Minimal CSV importer for students. Expects a header row with (at
+   * minimum) username,email,password,name,surname,classId,gradeId,parentId
+   * — phone,sex,address,bloodType are optional extra columns. Rows are
+   * processed independently: one bad row (duplicate username, missing
+   * class, etc.) is recorded and skipped rather than aborting the whole
+   * import, since a 200-row CSV shouldn't fail entirely over row 47.
+   */
+  async importFromCsv(csvText: string, actorId?: string) {
+    const lines = csvText.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    if (lines.length < 2) {
+      return { created: 0, failed: [{ row: 0, error: 'CSV has no data rows' }] };
+    }
+
+    const headers = this.parseCsvLine(lines[0]).map((h) => h.trim());
+    const required = ['username', 'email', 'password', 'name', 'surname', 'classId', 'gradeId', 'parentId'];
+    const missing = required.filter((r) => !headers.includes(r));
+    if (missing.length > 0) {
+      return { created: 0, failed: [{ row: 0, error: `Missing columns: ${missing.join(', ')}` }] };
+    }
+
+    let created = 0;
+    const failed: { row: number; error: string }[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = this.parseCsvLine(lines[i]);
+      const row: Record<string, string> = {};
+      headers.forEach((h, idx) => (row[h] = values[idx] ?? ''));
+
+      try {
+        await this.create(
+          {
+            username: row.username,
+            email: row.email,
+            password: row.password,
+            name: row.name,
+            surname: row.surname,
+            classId: row.classId,
+            gradeId: row.gradeId,
+            parentId: row.parentId,
+            phone: row.phone || undefined,
+            address: row.address || undefined,
+            bloodType: row.bloodType || undefined,
+          } as any,
+          actorId,
+        );
+        created++;
+      } catch (err: any) {
+        failed.push({ row: i + 1, error: err?.message ?? 'Unknown error' });
+      }
+    }
+
+    return { created, failed };
+  }
+
+  private parseCsvLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (inQuotes) {
+        if (char === '"' && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else if (char === '"') {
+          inQuotes = false;
+        } else {
+          current += char;
+        }
+      } else if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result;
+  }
 }

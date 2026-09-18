@@ -7,6 +7,7 @@ import { CreateSubjectInput, UpdateSubjectInput } from './dto/subject.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Subject)
 @UseGuards(GqlJwtAuthGuard, RolesGuard)
@@ -29,20 +30,24 @@ export class SubjectsResolver {
 
   @Mutation(() => Subject)
   @Roles(Role.ADMIN)
-  createSubject(@Args('input') input: CreateSubjectInput) {
-    return this.subjectsService.create(input);
+  createSubject(@Args('input') input: CreateSubjectInput, @CurrentUser() user: { id: string }) {
+    return this.subjectsService.create(input, user.id);
   }
 
   @Mutation(() => Subject)
   @Roles(Role.ADMIN)
-  updateSubject(@Args('id', { type: () => ID }) id: string, @Args('input') input: UpdateSubjectInput) {
-    return this.subjectsService.update(id, input);
+  updateSubject(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateSubjectInput,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.subjectsService.update(id, input, user.id);
   }
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN)
-  removeSubject(@Args('id', { type: () => ID }) id: string) {
-    return this.subjectsService.remove(id);
+  removeSubject(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
+    return this.subjectsService.remove(id, user.id);
   }
 
   @ResolveField('teachers', () => [String], { nullable: true })

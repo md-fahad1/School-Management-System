@@ -108,4 +108,50 @@ export class PasswordResetService {
   private hashToken(raw: string): string {
     return crypto.createHash('sha256').update(raw).digest('hex');
   }
+    /** Self-service password change for an already-logged-in user. */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+    meta: RequestMeta = {},
+  ): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestException('User not found');
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      await this.audit.log({
+        userId,
+        action: AuditAction.PASSWORD_CHANGE_FAILURE,
+        success: false,
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        metadata: { reason: 'incorrect current password' },
+      });
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    assertPasswordComplexity(newPassword);
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: userId }, data: { password: hashed } }),
+      // Same as a forced reset — changing your password should kill
+      // every other logged-in session for safety.
+      this.prisma.refreshToken.updateMany({
+        where: { userId, revoked: false },
+        data: { revoked: true, revokedAt: new Date() },
+      }),
+    ]);
+
+    await this.audit.log({
+      userId,
+      action: AuditAction.PASSWORD_CHANGED,
+      success: true,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
+    return true;
+  }
 }

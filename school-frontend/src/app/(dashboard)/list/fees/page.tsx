@@ -3,7 +3,7 @@ import Table from "@/components/Table";
 import { getFeeStructures } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import Link from "next/link";
-
+import FeeStructureCard from "@/components/FeeStructureCard";
 type FeeStructure = {
   id: string;
   name: string;
@@ -25,7 +25,7 @@ const FeesListPage = async () => {
   const renderRow = (item: FeeStructure) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="border-b border-border even:bg-bg/50 text-sm hover:bg-accentLight transition-colors"
     >
       <td className="p-4">
         <h3 className="font-semibold">{item.name}</h3>
@@ -46,19 +46,24 @@ const FeesListPage = async () => {
   );
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">Fee Structures</h1>
+        <h1 className="hidden md:block text-lg font-semibold text-textPrimary">Fee Structures</h1>
         <div className="flex items-center gap-4">
           <Link href="/list/fees/invoices">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaSky text-xs">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-infoLight text-xs">
               Invoices
             </button>
           </Link>
           {role === "admin" && <FormModal table="feeStructure" type="create" />}
         </div>
       </div>
-      <Table columns={columns} renderRow={renderRow} data={feeStructures} />
+           <Table
+        columns={columns}
+        renderRow={renderRow}
+        renderCard={(item) => <FeeStructureCard item={item} role={role} />}
+        data={feeStructures}
+      />
     </div>
   );
 };

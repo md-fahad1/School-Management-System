@@ -56,7 +56,7 @@ const LeaveApplyForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
       <div className="flex justify-between flex-wrap gap-4">
         <div className="flex flex-col gap-2 w-full md:w-[45%]">
-          <label className="text-xs text-gray-500">Leave type</label>
+          <label className="text-xs text-textMuted">Leave type</label>
           <select
             {...register("leaveType")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -75,7 +75,7 @@ const LeaveApplyForm = ({ onSuccess }: { onSuccess: () => void }) => {
         <InputField label="End date" name="endDate" type="date" register={register} error={errors.endDate} />
 
         <div className="flex flex-col gap-2 w-full">
-          <label className="text-xs text-gray-500">Reason</label>
+          <label className="text-xs text-textMuted">Reason</label>
           <textarea
             {...register("reason")}
             rows={3}

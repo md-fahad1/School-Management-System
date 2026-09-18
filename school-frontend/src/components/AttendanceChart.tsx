@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import { MoreVertical } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -19,23 +19,25 @@ type DayAttendance = {
 
 const AttendanceChart = ({ data }: { data: DayAttendance[] }) => {
   return (
-    <div className="bg-white rounded-lg p-4 h-full">
+    <div className="bg-cardBg rounded-2xl border border-border shadow-sm p-4 h-full">
       <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold">Attendance</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+        <h1 className="text-lg font-semibold text-textPrimary">Attendance</h1>
+        <button type="button" className="text-textMuted hover:text-textSecondary" aria-label="More options">
+          <MoreVertical size={18} />
+        </button>
       </div>
       <ResponsiveContainer width="100%" height="90%">
         <BarChart width={500} height={300} data={data} barSize={20}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ddd" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7EAF2" />
           <XAxis
             dataKey="day"
             axisLine={false}
-            tick={{ fill: "#d1d5db" }}
+            tick={{ fill: "#A3A9BC" }}
             tickLine={false}
           />
-          <YAxis axisLine={false} tick={{ fill: "#d1d5db" }} tickLine={false} />
+          <YAxis axisLine={false} tick={{ fill: "#A3A9BC" }} tickLine={false} />
           <Tooltip
-            contentStyle={{ borderRadius: "10px", borderColor: "lightgray" }}
+            contentStyle={{ borderRadius: "10px", borderColor: "#E7EAF2" }}
           />
           <Legend
             align="left"
@@ -44,13 +46,13 @@ const AttendanceChart = ({ data }: { data: DayAttendance[] }) => {
           />
           <Bar
             dataKey="present"
-            fill="#FAE27C"
+            fill="#17255A"
             legendType="circle"
             radius={[10, 10, 0, 0]}
           />
           <Bar
             dataKey="absent"
-            fill="#C3EBFA"
+            fill="#B7CDF0"
             legendType="circle"
             radius={[10, 10, 0, 0]}
           />

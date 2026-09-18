@@ -5,7 +5,16 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const allowedOrigins = (process.env.FRONTEND_URL ?? "http://localhost:3000")
+    .split(",")
+    .map((origin) => origin.trim());
+
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      origin: allowedOrigins,
+      credentials: true,
+    },
+  });
 
   // gzip/brotli-negotiated compression for every response — biggest
   // single win for GraphQL payloads (student/teacher lists, stats, etc.

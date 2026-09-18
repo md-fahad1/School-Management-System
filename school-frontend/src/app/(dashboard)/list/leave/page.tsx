@@ -3,7 +3,7 @@ import { getLeaves } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import LeaveApplyModal from "@/components/LeaveApplyModal";
 import LeaveDecideButtons from "@/components/LeaveDecideButtons";
-
+import LeaveCard from "@/components/LeaveCard";
 type Row = {
   id: string;
   leaveType: string;
@@ -43,7 +43,7 @@ const LeaveListPage = async () => {
   const renderRow = (item: Row) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="border-b border-border even:bg-bg/50 text-sm hover:bg-accentLight transition-colors"
     >
       <td className="flex items-center gap-4 p-4">
         {item.applicant}{" "}
@@ -74,12 +74,19 @@ const LeaveListPage = async () => {
   );
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">Leave Requests</h1>
+        <h1 className="hidden md:block text-lg font-semibold text-textPrimary">Leave Requests</h1>
         <LeaveApplyModal />
       </div>
-      <Table columns={columns} renderRow={renderRow} data={data} />
+      <Table
+        columns={columns}
+        renderRow={renderRow}
+        renderCard={(item) => (
+          <LeaveCard item={item} canDecide={canDecide} myId={myId} />
+        )}
+        data={data}
+      />
     </div>
   );
 };

@@ -119,7 +119,7 @@ const ClassForm = ({
         />
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Grade</label>
+          <label className="text-xs text-textMuted">Grade</label>
           <select
             {...register("gradeId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -137,7 +137,7 @@ const ClassForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Supervisor (optional)</label>
+          <label className="text-xs text-textMuted">Supervisor (optional)</label>
           <select
             {...register("supervisorId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

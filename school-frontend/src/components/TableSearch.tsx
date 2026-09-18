@@ -43,9 +43,9 @@ const TableSearch = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full md:w-auto flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2"
+      className="w-full md:w-auto flex items-center gap-2 text-sm rounded-full bg-bg border border-border focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight px-3 transition-colors"
     >
-      <button type="submit" aria-label="Search">
+      <button type="submit" aria-label="Search" className="opacity-50">
         <Image src="/search.png" alt="" width={14} height={14} />
       </button>
       <input
@@ -53,7 +53,7 @@ const TableSearch = () => {
         value={value}
         onChange={handleChange}
         placeholder="Search..."
-        className="w-full md:w-[200px] p-2 bg-transparent outline-none"
+        className="w-full md:w-[200px] p-2.5 bg-transparent outline-none placeholder:text-textMuted"
       />
     </form>
   );

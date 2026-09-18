@@ -3,10 +3,11 @@ import * as bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTeacherInput, UpdateTeacherInput } from './dto/teacher.dto';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 @Injectable()
 export class TeachersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private auditService: AuditService) {}
 
   findAll(search?: string, skip = 0, take = 10) {
     return this.prisma.teacher.findMany({
@@ -34,7 +35,7 @@ export class TeachersService {
     return teacher;
   }
 
-  async create(input: CreateTeacherInput) {
+  async create(input: CreateTeacherInput, actorId?: string) {
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ username: input.username }, { email: input.email }] },
     });
@@ -67,12 +68,19 @@ export class TeachersService {
       include: { teacher: true },
     });
 
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.TEACHER_CREATE,
+      success: true,
+      metadata: { teacherId: user.teacher?.id, name: input.name, surname: input.surname },
+    });
+
     return user.teacher;
   }
 
-  async update(id: string, input: UpdateTeacherInput) {
-    await this.findOne(id);
-    return this.prisma.teacher.update({
+  async update(id: string, input: UpdateTeacherInput, actorId?: string) {
+    const before = await this.findOne(id);
+    const updated = await this.prisma.teacher.update({
       where: { id },
       data: {
         name: input.name,
@@ -88,9 +96,22 @@ export class TeachersService {
           : undefined,
       },
     });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.TEACHER_UPDATE,
+      success: true,
+      metadata: {
+        teacherId: id,
+        before: { name: before.name, surname: before.surname },
+        after: { name: updated.name, surname: updated.surname },
+      },
+    });
+
+    return updated;
   }
 
- async remove(id: string) {
+ async remove(id: string, actorId?: string) {
   const teacher = await this.findOne(id);
 
   const [lessonCount, supervisedClassCount, bookLoanCount] = await Promise.all([
@@ -121,6 +142,14 @@ export class TeachersService {
 
   try {
     await this.prisma.user.delete({ where: { id: teacher.userId } });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.TEACHER_DELETE,
+      success: true,
+      metadata: { teacherId: id, name: teacher.name, surname: teacher.surname },
+    });
+
     return true;
   } catch (err) {
     throw new BadRequestException(

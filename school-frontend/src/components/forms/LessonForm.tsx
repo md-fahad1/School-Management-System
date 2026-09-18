@@ -120,7 +120,7 @@ const LessonForm = ({
         <InputField label="Lesson name" name="name" register={register} error={errors.name} />
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Day</label>
+          <label className="text-xs text-textMuted">Day</label>
           <select
             {...register("day")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -153,7 +153,7 @@ const LessonForm = ({
         />
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Subject</label>
+          <label className="text-xs text-textMuted">Subject</label>
           <select
             {...register("subjectId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -171,7 +171,7 @@ const LessonForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Class</label>
+          <label className="text-xs text-textMuted">Class</label>
           <select
             {...register("classId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -189,7 +189,7 @@ const LessonForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Teacher</label>
+          <label className="text-xs text-textMuted">Teacher</label>
           <select
             {...register("teacherId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

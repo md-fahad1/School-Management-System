@@ -1,4 +1,5 @@
 "use client";
+import { MoreVertical } from "lucide-react";
 import Image from "next/image";
 import {
   RadialBarChart,
@@ -12,17 +13,19 @@ const CountChart = ({ boys = 0, girls = 0 }: { boys?: number; girls?: number }) 
   const girlsPct = total > 0 ? Math.round((girls / total) * 100) : 0;
 
   const data = [
-    { name: "Total", count: total, fill: "white" },
-    { name: "Girls", count: girls, fill: "#FAE27C" },
-    { name: "Boys", count: boys, fill: "#C3EBFA" },
+    { name: "Total", count: total, fill: "#F4F6FB" },
+    { name: "Girls", count: girls, fill: "#F5B301" },
+    { name: "Boys", count: boys, fill: "#3563E9" },
   ];
 
   return (
-    <div className="bg-white rounded-xl w-full h-full p-4">
+    <div className="bg-cardBg rounded-2xl border border-border shadow-sm w-full h-full p-4">
       {/* TITLE */}
       <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold">Students</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+        <h1 className="text-lg font-semibold text-textPrimary">Students</h1>
+        <button type="button" className="text-textMuted hover:text-textSecondary" aria-label="More options">
+          <MoreVertical size={18} />
+        </button>
       </div>
       {/* CHART */}
       <div className="relative w-full h-[75%]">
@@ -49,14 +52,14 @@ const CountChart = ({ boys = 0, girls = 0 }: { boys?: number; girls?: number }) 
       {/* BOTTOM */}
       <div className="flex justify-center gap-16">
         <div className="flex flex-col gap-1">
-          <div className="w-5 h-5 bg-lamaSky rounded-full" />
-          <h1 className="font-bold">{boys.toLocaleString()}</h1>
-          <h2 className="text-xs text-gray-300">Boys ({boysPct}%)</h2>
+          <div className="w-5 h-5 bg-info rounded-full" />
+          <h1 className="font-bold text-textPrimary">{boys.toLocaleString()}</h1>
+          <h2 className="text-xs text-textMuted">Boys ({boysPct}%)</h2>
         </div>
         <div className="flex flex-col gap-1">
-          <div className="w-5 h-5 bg-lamaYellow rounded-full" />
-          <h1 className="font-bold">{girls.toLocaleString()}</h1>
-          <h2 className="text-xs text-gray-300">Girls ({girlsPct}%)</h2>
+          <div className="w-5 h-5 bg-warning rounded-full" />
+          <h1 className="font-bold text-textPrimary">{girls.toLocaleString()}</h1>
+          <h2 className="text-xs text-textMuted">Girls ({girlsPct}%)</h2>
         </div>
       </div>
     </div>

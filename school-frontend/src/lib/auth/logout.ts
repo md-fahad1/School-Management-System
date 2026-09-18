@@ -1,8 +1,6 @@
 "use client";
 
 import Cookies from "js-cookie";
-import { getClientGqlClient } from "@/lib/graphql/client";
-import { LOGOUT } from "@/lib/graphql/queries";
 import { store } from "@/redux/store";
 import { logout as logoutAction } from "@/redux/slices/authSlice";
 
@@ -11,21 +9,19 @@ import { logout as logoutAction } from "@/redux/slices/authSlice";
  * and the sidebar Menu "Logout" item, so behavior stays consistent.
  * Best-effort server-side revoke; always clears the local session
  * even if the network call fails, so logout never gets "stuck".
+ *
+ * Goes through our own /api/auth/logout route rather than calling the
+ * backend directly, because the refresh token is httpOnly now —
+ * client JS has no way to read it to send along itself.
  */
 export async function performLogout() {
-  const refreshToken = Cookies.get("refreshToken");
-
-  if (refreshToken) {
-    try {
-      const client = await getClientGqlClient();
-      await client.request(LOGOUT, { input: { refreshToken } });
-    } catch (err) {
-      console.error("Server-side logout failed, clearing local session anyway:", err);
-    }
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+  } catch (err) {
+    console.error("Server-side logout failed, clearing local session anyway:", err);
   }
 
   Cookies.remove("token");
-  Cookies.remove("refreshToken");
   Cookies.remove("role");
   Cookies.remove("userId");
   Cookies.remove("username");

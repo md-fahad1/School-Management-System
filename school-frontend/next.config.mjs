@@ -11,6 +11,7 @@ const nextConfig = {
       { hostname: "images.pexels.com" },
       { hostname: "images.unsplash.com" },
       { hostname: "placehold.co" },
+      { hostname: "res.cloudinary.com" },
     ],
     formats: ["image/avif", "image/webp"],
   },

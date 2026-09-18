@@ -6,6 +6,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
   extensions = [pg_trgm]
 }
 
@@ -17,6 +18,7 @@ enum Role {
   ACCOUNTANT
   LIBRARIAN
   PRINCIPAL
+  TRANSPORT_STAFF
 }
 
 enum Sex {
@@ -44,6 +46,10 @@ enum FeeFrequency {
   TERM
   YEARLY
   ONE_TIME
+}
+enum DiscountType {
+  PERCENTAGE
+  FIXED
 }
 
 enum PaymentStatus {
@@ -95,6 +101,8 @@ model User {
   password  String
   emailVerified Boolean  @default(false)
   phoneVerified Boolean  @default(false)
+  img           String?
+   emailNotifications Boolean @default(true)
   role      Role
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -106,6 +114,7 @@ model User {
   accountant Accountant?
   librarian  Librarian?
   principal  Principal?
+  transportStaff TransportStaff?
 
    sentMessages     Message[]      @relation("SentMessages")
   receivedMessages Message[]      @relation("ReceivedMessages")
@@ -224,6 +233,35 @@ model Principal {
 
   @@map("principals")
 }
+model TransportStaff {
+  id      String @id @default(uuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name    String
+  surname String
+
+  vehicles Vehicle[]
+
+  @@map("transport_staff")
+}
+
+model Vehicle {
+  id            String   @id @default(uuid())
+  vehicleNumber String   @unique
+  type          String
+  capacity      Int
+  driverName    String
+  route         String?
+  status        String   @default("ACTIVE")
+
+  transportStaffId String?
+  transportStaff    TransportStaff? @relation(fields: [transportStaffId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("vehicles")
+}
 
 model Teacher {
   id        String   @id @default(uuid())
@@ -276,6 +314,7 @@ model Student {
   attendances Attendance[]
   results     Result[]
   invoices Invoice[]
+  scholarships Scholarship[]
 
   @@index([name(ops: raw("gin_trgm_ops")), surname(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("students")
@@ -584,6 +623,10 @@ model Invoice {
   period     String        // e.g. "September 2026" or "Term 1 2026"
   amount     Float
   amountPaid Float         @default(0)
+  discountAmount Float     @default(0)
+  discountReason String?
+  fineAmount     Float     @default(0)
+  fineReason     String?
   dueDate    DateTime
   status     PaymentStatus @default(PENDING)
   createdAt  DateTime      @default(now())
@@ -616,4 +659,22 @@ model Payment {
   receivedBy   User   @relation("PaymentsReceived", fields: [receivedById], references: [id])
 
   @@map("payments")
+}
+model Scholarship {
+  id        String       @id @default(uuid())
+  name      String
+  type      DiscountType
+  value     Float // PERCENTAGE হলে 0-100, FIXED হলে সরাসরি amount
+  active    Boolean      @default(true)
+  startDate DateTime     @default(now())
+  endDate   DateTime?
+  notes     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@map("scholarships")
 }

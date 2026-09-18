@@ -23,9 +23,10 @@ export class LessonsService {
     });
   }
 
-  async findOne(id: string) {
-    const lesson = await this.prisma.lesson.findUnique({
-      where: { id },
+  async findOne(id: string, user?: RequestUser) {
+    const where = user ? { id, ...(await this.visibilityFilter(user)) } : { id };
+    const lesson = await this.prisma.lesson.findFirst({
+      where,
       include: { subject: true, class: true, teacher: true },
     });
     if (!lesson) throw new NotFoundException(`Lesson ${id} not found`);

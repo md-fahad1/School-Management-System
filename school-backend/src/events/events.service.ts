@@ -23,8 +23,9 @@ export class EventsService {
     });
   }
 
-  async findOne(id: string) {
-    const event = await this.prisma.event.findUnique({ where: { id }, include: { class: true } });
+  async findOne(id: string, user?: RequestUser) {
+    const where = user ? { id, ...(await this.visibilityFilter(user)) } : { id };
+    const event = await this.prisma.event.findFirst({ where, include: { class: true } });
     if (!event) throw new NotFoundException(`Event ${id} not found`);
     return event;
   }

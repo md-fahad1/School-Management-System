@@ -5,7 +5,7 @@ import TableSearch from "@/components/TableSearch";
 import { getParents } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import Image from "next/image";
-
+import ParentCard from "@/components/ParentCard";
 type Parent = {
   id: string;
   name: string;
@@ -48,12 +48,12 @@ const ParentListPage = async () => {
   const renderRow = (item: Parent) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="border-b border-border even:bg-bg/50 text-sm hover:bg-accentLight transition-colors"
     >
       <td className="flex items-center gap-4 p-4">
         <div className="flex flex-col">
           <h3 className="font-semibold">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item?.email}</p>
+          <p className="text-xs text-textMuted">{item?.email}</p>
         </div>
       </td>
       <td className="hidden md:table-cell">{item.students.join(",")}</td>
@@ -73,27 +73,32 @@ const ParentListPage = async () => {
   );
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">All Parents</h1>
+        <h1 className="hidden md:block text-lg font-semibold text-textPrimary">All Parents</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
               <Image src="/filter.png" alt="" width={14} height={14} />
             </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
+            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && (
-              <FormModal table="teacher" type="create"/>
+              <FormModal table="parent" type="create"/>
             )}
           </div>
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={parentsData} />
+      <Table
+        columns={columns}
+        renderRow={renderRow}
+        renderCard={(item) => <ParentCard item={item} role={role} />}
+        data={parentsData}
+      />
       {/* PAGINATION */}
       <Pagination />
     </div>

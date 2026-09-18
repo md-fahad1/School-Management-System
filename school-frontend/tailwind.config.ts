@@ -12,24 +12,53 @@ const config: Config = {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "brand-gradient": "linear-gradient(135deg, #6C4CF1 0%, #2B1660 100%)",
+        "brand-gradient":
+          "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
       },
-      colors: {
-        // Kept the old names so every existing component (buttons, table
-        // stripes, cards) picks up the new palette automatically —
-        // nothing needs to be touched file-by-file for this pass.
-        lamaSky: "#CFE8FF",
-        lamaSkyLight: "#F0F8FF",
-        lamaPurple: "#E4DBFF",
-        lamaPurpleLight: "#F6F3FF",
-        lamaYellow: "#FFD6E8",
-        lamaYellowLight: "#FFF3F8",
+     colors: {
+        // Sidebar
+        sidebarBg: "var(--color-sidebar-bg)",
+        sidebarBgHover: "var(--color-sidebar-bg-hover)",
+        sidebarText: "var(--color-sidebar-text)",
+        sidebarTextActive: "var(--color-sidebar-text-active)",
+        sidebarActiveBg: "var(--color-sidebar-active-bg)",
+        sidebarBorder: "var(--color-sidebar-border)",
+        sidebarSectionLabel: "var(--color-sidebar-section-label)",
 
-        // New brand tokens for primary actions, active nav state, and
-        // the dark promo/gradient card seen in the reference design.
-        brandPurple: "#6C4CF1",
-        brandPurpleDark: "#2B1660",
-        brandInk: "#29253D",
+        // Brand / primary
+        primary: "var(--color-primary)",
+        primaryDark: "var(--color-primary-dark)",
+        primaryLight: "var(--color-primary-light)",
+        accent: "var(--color-accent)",
+        accentLight: "var(--color-accent-light)",
+
+        // Status
+        success: "var(--color-success)",
+        successLight: "var(--color-success-light)",
+        danger: "var(--color-danger)",
+        dangerLight: "var(--color-danger-light)",
+        warning: "var(--color-warning)",
+        warningLight: "var(--color-warning-light)",
+        info: "var(--color-info)",
+        infoLight: "var(--color-info-light)",
+
+        // Surfaces / text
+        cardBg: "var(--color-card-bg)",
+        border: "var(--color-border)",
+        textPrimary: "var(--color-text-primary)",
+        textSecondary: "var(--color-text-secondary)",
+        textMuted: "var(--color-text-muted)",
+
+        // Backward-compat aliases (old components using these still work)
+        lamaSky: "var(--color-accent-light)",
+        lamaSkyLight: "var(--color-accent-light)",
+        lamaPurple: "var(--color-primary-light)",
+        lamaPurpleLight: "var(--color-accent-light)",
+        lamaYellow: "var(--color-warning-light)",
+        lamaYellowLight: "var(--color-warning-light)",
+        brandPurple: "var(--color-accent)",
+        brandPurpleDark: "var(--color-primary-dark)",
+        brandInk: "var(--color-text-primary)",
       },
     },
   },

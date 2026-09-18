@@ -18,6 +18,21 @@ export class Invoice {
   @Field(() => Float)
   amountPaid!: number;
 
+  @Field(() => Float)
+  discountAmount!: number;
+
+  @Field({ nullable: true })
+  discountReason?: string;
+
+  @Field(() => Float)
+  fineAmount!: number;
+
+  @Field({ nullable: true })
+  fineReason?: string;
+
+  @Field(() => Float)
+  payableAmount!: number;
+
   @Field()
   dueDate!: Date;
 

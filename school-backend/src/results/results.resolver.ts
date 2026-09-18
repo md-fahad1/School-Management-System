@@ -24,26 +24,30 @@ export class ResultsResolver {
   }
 
   @Query(() => Result)
-  result(@Args('id', { type: () => ID }) id: string) {
-    return this.resultsService.findOne(id);
+  result(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string; role: Role }) {
+    return this.resultsService.findOne(id, user);
   }
 
   @Mutation(() => Result)
   @Roles(Role.ADMIN, Role.TEACHER)
-  createResult(@Args('input') input: CreateResultInput) {
-    return this.resultsService.create(input);
+  createResult(@Args('input') input: CreateResultInput, @CurrentUser() user: { id: string }) {
+    return this.resultsService.create(input, user.id);
   }
 
   @Mutation(() => Result)
   @Roles(Role.ADMIN, Role.TEACHER)
-  updateResult(@Args('id', { type: () => ID }) id: string, @Args('input') input: UpdateResultInput) {
-    return this.resultsService.update(id, input);
+  updateResult(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateResultInput,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.resultsService.update(id, input, user.id);
   }
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN, Role.TEACHER)
-  removeResult(@Args('id', { type: () => ID }) id: string) {
-    return this.resultsService.remove(id);
+  removeResult(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
+    return this.resultsService.remove(id, user.id);
   }
 
   // These read off the `student`/`exam`/`assignment` relations eagerly

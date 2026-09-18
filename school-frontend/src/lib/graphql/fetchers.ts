@@ -24,11 +24,28 @@ import {
   GET_INVOICES,
   GET_DEFAULTERS,
   GET_FEE_SUMMARY,
+  GET_SCHOLARSHIPS,
    GET_TEACHER_ATTENDANCES,
   GET_STAFF_ATTENDANCES,
   GET_LEAVES,
+  GET_GRADES,
+  GET_AUDIT_LOGS,
+  GET_MY_CHILDREN,
+    GET_VEHICLES,
+  GET_MY_VEHICLES,
+  ME_QUERY,
 } from "./queries";
 
+export async function getMe() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ me: any }>(ME_QUERY, {});
+    return data.me;
+  } catch (err) {
+    console.error("getMe failed:", err);
+    return null;
+  }
+}
 /** Formats an ISO date string the same way the original dummy data did: "2025-01-01". */
 function fmtDate(value?: string | null) {
   if (!value) return "-";
@@ -465,6 +482,28 @@ export async function getClassSchedule(classId: string) {
     return [];
   }
 }
+/**
+ * The current logged-in user's own schedule. Unlike getTeacherSchedule /
+ * getClassSchedule (which need an id and filter client-side), this
+ * relies on the backend's own role-based visibility filter on the
+ * `lessons` query — a teacher's token only ever returns their own
+ * lessons, a student's/parent's token only their class(es)' lessons —
+ * so no id lookup is needed on the frontend at all.
+ */
+export async function getMySchedule() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ lessons: any[] }>(GET_SCHEDULE, {});
+    return data.lessons.map((l) => ({
+      title: l.subjectName ?? l.name,
+      start: new Date(l.startTime),
+      end: new Date(l.endTime),
+    }));
+  } catch (err) {
+    console.error("getMySchedule failed:", err);
+    return [];
+  }
+}
 export async function getFeeStructures(gradeId?: string) {
   try {
     const client = getServerClient();
@@ -491,6 +530,11 @@ export async function getInvoices(status?: string) {
       period: i.period,
       amount: i.amount,
       amountPaid: i.amountPaid,
+      discountAmount: i.discountAmount,
+      discountReason: i.discountReason,
+      fineAmount: i.fineAmount,
+      fineReason: i.fineReason,
+      payableAmount: i.payableAmount,
       balance: i.balance,
       dueDate: fmtDate(i.dueDate),
       status: i.status,
@@ -499,6 +543,28 @@ export async function getInvoices(status?: string) {
     }));
   } catch (err) {
     console.error("getInvoices failed:", err);
+    return [];
+  }
+}
+
+export async function getScholarships(studentId?: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ scholarships: any[] }>(GET_SCHOLARSHIPS, { studentId });
+    return data.scholarships.map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      type: s.type,
+      value: s.value,
+      active: s.active,
+      startDate: fmtDate(s.startDate),
+      endDate: s.endDate ? fmtDate(s.endDate) : null,
+      notes: s.notes,
+      studentId: s.studentId,
+      studentName: s.student ? `${s.student.name} ${s.student.surname}` : (s.studentName ?? "-"),
+    }));
+  } catch (err) {
+    console.error("getScholarships failed:", err);
     return [];
   }
 }
@@ -575,10 +641,10 @@ export async function getStaffAttendances(date?: string) {
   }
 }
 
-export async function getLeaves() {
+export async function getLeaves(status?: string) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ leaves: any[] }>(GET_LEAVES, {});
+    const data = await client.request<{ leaves: any[] }>(GET_LEAVES, { status });
     return data.leaves.map((l) => ({
       id: l.id,
       leaveType: l.leaveType,
@@ -595,6 +661,99 @@ export async function getLeaves() {
     }));
   } catch (err) {
     console.error("getLeaves failed:", err);
+    return [];
+  }
+}
+export async function getGrades() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ grades: { id: string; level: number }[] }>(GET_GRADES, {});
+    return data.grades;
+  } catch (err) {
+    console.error("getGrades failed:", err);
+    return [];
+  }
+}
+
+export async function getAuditLogs(params?: {
+  skip?: number;
+  take?: number;
+  userId?: string;
+  action?: string;
+}) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{
+      auditLogs: {
+        id: string;
+        userId?: string;
+        action: string;
+        success: boolean;
+        ip?: string;
+        userAgent?: string;
+        metadata?: string;
+        createdAt: string;
+      }[];
+    }>(GET_AUDIT_LOGS, {
+      skip: params?.skip ?? 0,
+      take: params?.take ?? 50,
+      userId: params?.userId,
+      action: params?.action,
+    });
+    return data.auditLogs;
+  } catch (err) {
+    console.error("getAuditLogs failed:", err);
+    return [];
+  }
+}
+export async function getMyChildren() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{
+      myChildren: { id: string; name: string; surname: string; className?: string }[];
+    }>(GET_MY_CHILDREN, {});
+    return data.myChildren;
+  } catch (err) {
+    console.error("getMyChildren failed:", err);
+    return [];
+  }
+}
+export async function getVehicles() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ vehicles: any[] }>(GET_VEHICLES, {});
+    return data.vehicles.map((v) => ({
+      id: v.id,
+      vehicleNumber: v.vehicleNumber,
+      type: v.type,
+      capacity: v.capacity,
+      driverName: v.driverName,
+      route: v.route ?? "-",
+      status: v.status,
+      transportStaffId: v.transportStaffId,
+      transportStaffName: v.transportStaffName ?? "Unassigned",
+    }));
+  } catch (err) {
+    console.error("getVehicles failed:", err);
+    return [];
+  }
+}
+
+export async function getMyVehicles() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ myVehicles: any[] }>(GET_MY_VEHICLES, {});
+    return data.myVehicles.map((v) => ({
+      id: v.id,
+      vehicleNumber: v.vehicleNumber,
+      type: v.type,
+      capacity: v.capacity,
+      driverName: v.driverName,
+      route: v.route ?? "-",
+      status: v.status,
+    }));
+  } catch (err) {
+    console.error("getMyVehicles failed:", err);
     return [];
   }
 }

@@ -23,7 +23,7 @@ const SingleStudentPage = async ({ params }) => {
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
       <div className="w-full xl:w-2/3">
         <div className="flex flex-col lg:flex-row gap-4">
-          <div className="bg-lamaSky py-6 px-4 rounded-md flex-1 flex flex-col sm:flex-row gap-4">
+          <div className="bg-primary py-6 px-4 rounded-2xl flex-1 flex flex-col sm:flex-row gap-4">
             <div className="w-24 sm:w-1/3 shrink-0">
               <Image
                 src={student.photo}
@@ -35,7 +35,7 @@ const SingleStudentPage = async ({ params }) => {
             </div>
             <div className="w-full sm:w-2/3 flex flex-col justify-between gap-4">
               <div className="flex items-center gap-4">
-                <h1 className="text-xl font-semibold">{student.name}</h1>
+                <h1 className="text-xl font-semibold text-white">{student.name}</h1>
                 {role === "admin" && (
                   <FormModal
                     table="student"
@@ -52,25 +52,25 @@ const SingleStudentPage = async ({ params }) => {
                   />
                 )}
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-white/70">
                 {student.className !== "-" ? `Class ${student.className}` : "No class assigned"}
                 {student.parentName !== "-" ? ` · Parent: ${student.parentName}` : ""}
               </p>
-              <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium">
+              <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium text-white/80">
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-                  <Image src="/blood.png" alt="" width={14} height={14} />
+                  <Image src="/blood.png" alt="" width={14} height={14} className="brightness-0 invert opacity-80" />
                   <span>{student.bloodType}</span>
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-                  <Image src="/date.png" alt="" width={14} height={14} />
+                  <Image src="/date.png" alt="" width={14} height={14} className="brightness-0 invert opacity-80" />
                   <span>{student.birthday !== "-" ? student.birthday : "No birthday set"}</span>
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-                  <Image src="/mail.png" alt="" width={14} height={14} />
+                  <Image src="/mail.png" alt="" width={14} height={14} className="brightness-0 invert opacity-80" />
                   <span className="truncate">{student.email ?? "-"}</span>
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-                  <Image src="/phone.png" alt="" width={14} height={14} />
+                  <Image src="/phone.png" alt="" width={14} height={14} className="brightness-0 invert opacity-80" />
                   <span>{student.phone}</span>
                 </div>
               </div>
@@ -78,7 +78,7 @@ const SingleStudentPage = async ({ params }) => {
           </div>
 
           <div className="flex-1 flex gap-4 justify-between flex-wrap">
-            <div className="bg-white p-4 rounded-md flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
+            <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
               <Image src="/singleBranch.png" alt="" width={24} height={24} className="w-6 h-6" />
               <div>
                 <h1 className="text-xl font-semibold">{student.gradeLevel}</h1>
@@ -86,7 +86,7 @@ const SingleStudentPage = async ({ params }) => {
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-md flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
+            <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
               <Image src="/singleClass.png" alt="" width={24} height={24} className="w-6 h-6" />
               <div>
                 <h1 className="text-xl font-semibold">{student.className}</h1>
@@ -94,7 +94,7 @@ const SingleStudentPage = async ({ params }) => {
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-md flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
+            <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
               <Image src="/singleAttendance.png" alt="" width={24} height={24} className="w-6 h-6" />
               <div>
                 <h1 className="text-xl font-semibold">{student.sex ?? "-"}</h1>
@@ -102,7 +102,7 @@ const SingleStudentPage = async ({ params }) => {
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-md flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
+            <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
               <Image src="/singleLesson.png" alt="" width={24} height={24} className="w-6 h-6" />
               <div>
                 <h1 className="text-xl font-semibold truncate">{student.parentName}</h1>
@@ -121,9 +121,9 @@ const SingleStudentPage = async ({ params }) => {
       </div>
 
       <div className="w-full xl:w-1/3 flex flex-col gap-4">
-        <div className="bg-white p-4 rounded-md">
+        <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl">
           <h1 className="text-xl font-semibold">Shortcuts</h1>
-          <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
+          <div className="mt-4 flex gap-4 flex-wrap text-xs text-textMuted">
             <Link className="p-3 rounded-md bg-lamaSkyLight" href={`/list/lessons?classId=${student.classId ?? ""}`}>
               Student&apos;s Lessons
             </Link>

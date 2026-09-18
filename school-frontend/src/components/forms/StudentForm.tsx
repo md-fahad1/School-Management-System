@@ -173,7 +173,7 @@ const StudentForm = ({
       <span className="text-xs text-gray-400 font-medium">Enrollment</span>
       <div className="flex justify-between flex-wrap gap-4">
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Class</label>
+          <label className="text-xs text-textMuted">Class</label>
           <select
             {...register("classId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -191,7 +191,7 @@ const StudentForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Grade</label>
+          <label className="text-xs text-textMuted">Grade</label>
           <select
             {...register("gradeId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -209,7 +209,7 @@ const StudentForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Parent</label>
+          <label className="text-xs text-textMuted">Parent</label>
           <select
             {...register("parentId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

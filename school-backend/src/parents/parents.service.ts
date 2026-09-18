@@ -3,10 +3,14 @@ import * as bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateParentInput, UpdateParentInput } from './dto/parent.dto';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 @Injectable()
 export class ParentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
   findAll(search?: string, skip = 0, take = 10) {
     return this.prisma.parent.findMany({
@@ -34,7 +38,7 @@ export class ParentsService {
     return parent;
   }
 
-  async create(input: CreateParentInput) {
+  async create(input: CreateParentInput, actorId?: string) {
     const existing = await this.prisma.user.findFirst({
       where: { OR: [{ username: input.username }, { email: input.email }] },
     });
@@ -60,12 +64,19 @@ export class ParentsService {
       include: { parent: true },
     });
 
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.PARENT_CREATE,
+      success: true,
+      metadata: { parentId: user.parent?.id, name: input.name, surname: input.surname },
+    });
+
     return user.parent;
   }
 
-  async update(id: string, input: UpdateParentInput) {
-    await this.findOne(id);
-    return this.prisma.parent.update({
+  async update(id: string, input: UpdateParentInput, actorId?: string) {
+    const before = await this.findOne(id);
+    const updated = await this.prisma.parent.update({
       where: { id },
       data: {
         name: input.name,
@@ -74,9 +85,22 @@ export class ParentsService {
         address: input.address,
       },
     });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.PARENT_UPDATE,
+      success: true,
+      metadata: {
+        parentId: id,
+        before: { name: before.name, surname: before.surname },
+        after: { name: updated.name, surname: updated.surname },
+      },
+    });
+
+    return updated;
   }
 
-  async remove(id: string) {
+  async remove(id: string, actorId?: string) {
     const parent = await this.findOne(id);
     // Guard against orphaning students: block delete if children exist.
     const childCount = await this.prisma.student.count({ where: { parentId: id } });
@@ -84,6 +108,14 @@ export class ParentsService {
       throw new BadRequestException('Cannot delete a parent with linked students');
     }
     await this.prisma.user.delete({ where: { id: parent.userId } });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.PARENT_DELETE,
+      success: true,
+      metadata: { parentId: id, name: parent.name, surname: parent.surname },
+    });
+
     return true;
   }
 }

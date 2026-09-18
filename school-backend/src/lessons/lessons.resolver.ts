@@ -24,8 +24,8 @@ export class LessonsResolver {
   }
 
   @Query(() => Lesson)
-  lesson(@Args('id', { type: () => ID }) id: string) {
-    return this.lessonsService.findOne(id);
+  lesson(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string; role: Role }) {
+    return this.lessonsService.findOne(id, user);
   }
 
   @Mutation(() => Lesson)

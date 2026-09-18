@@ -54,19 +54,15 @@ class SimpleGraphQLClient {
  * logged-out state).
  */
 export async function refreshSession(): Promise<string | null> {
-  const refreshToken = Cookies.get("refreshToken");
-  if (!refreshToken) return null;
-
   try {
-    const anonClient = new SimpleGraphQLClient(GRAPHQL_URL);
-    const data = await anonClient.request<{
-      refreshToken: { accessToken: string; refreshToken: string; id: string; username: string; role: string };
-    }>(REFRESH_TOKEN, { input: { refreshToken } });
+    // Refresh token is httpOnly now — this route reads it straight
+    // from the incoming request's cookies server-side; client JS
+    // never sees the raw value.
+    const res = await fetch("/api/auth/refresh", { method: "POST" });
+    if (!res.ok) throw new Error("refresh failed");
+    const next = await res.json();
 
-    const next = data.refreshToken;
-
-    Cookies.set("token", next.accessToken, { expires: 1 }); // access token: short-lived, cookie expiry is just a ceiling
-    Cookies.set("refreshToken", next.refreshToken, COOKIE_OPTS);
+    Cookies.set("token", next.accessToken, { expires: 1 });
     Cookies.set("userId", next.id, COOKIE_OPTS);
     Cookies.set("username", next.username, COOKIE_OPTS);
     Cookies.set("role", next.role.toLowerCase(), COOKIE_OPTS);
@@ -77,11 +73,8 @@ export async function refreshSession(): Promise<string | null> {
 
     return next.accessToken;
   } catch (err) {
-    // Refresh token is invalid/expired/revoked (e.g. reuse-detection
-    // fired server-side) — clear the dead session rather than looping.
     console.error("Session refresh failed:", err);
     Cookies.remove("token");
-    Cookies.remove("refreshToken");
     Cookies.remove("userId");
     Cookies.remove("username");
     Cookies.remove("role");

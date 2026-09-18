@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateResultInput, UpdateResultInput } from './dto/result.dto';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 interface RequestUser {
   id: string;
@@ -10,7 +11,7 @@ interface RequestUser {
 
 @Injectable()
 export class ResultsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService,   private auditService: AuditService,) {}
 
   async findAll(user: RequestUser, skip = 0, take = 10) {
     const where = await this.visibilityFilter(user);
@@ -28,9 +29,10 @@ export class ResultsService {
     });
   }
 
-  async findOne(id: string) {
-    const result = await this.prisma.result.findUnique({
-      where: { id },
+  async findOne(id: string, user?: RequestUser) {
+    const where = user ? { id, ...(await this.visibilityFilter(user)) } : { id };
+    const result = await this.prisma.result.findFirst({
+      where,
       include: {
         student: true,
         exam: { include: { lesson: { include: { subject: true, class: true, teacher: true } } } },
@@ -43,13 +45,22 @@ export class ResultsService {
     return result;
   }
 
-    async create(input: CreateResultInput) {
+  async create(input: CreateResultInput, actorId?: string) {
     this.assertExactlyOneParent(input);
     await this.assertScoreWithinFullMarks(input);
-    return this.prisma.result.create({ data: input });
+    const result = await this.prisma.result.create({ data: input });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.RESULT_CREATE,
+      success: true,
+      metadata: { resultId: result.id, studentId: input.studentId, score: input.score },
+    });
+
+    return result;
   }
 
-  async update(id: string, input: UpdateResultInput) {
+  async update(id: string, input: UpdateResultInput, actorId?: string) {
     const existing = await this.findOne(id);
     if (input.examId !== undefined || input.assignmentId !== undefined) {
       this.assertExactlyOneParent(input as CreateResultInput);
@@ -61,7 +72,24 @@ export class ResultsService {
         assignmentId: input.assignmentId ?? existing.assignmentId ?? undefined,
       });
     }
-    return this.prisma.result.update({ where: { id }, data: input });
+    const updated = await this.prisma.result.update({ where: { id }, data: input });
+
+    // Mirrors the doc's own example verbatim: "Old Mark: 72, New Mark: 82"
+    if (input.score !== undefined && input.score !== existing.score) {
+      await this.auditService.log({
+        userId: actorId,
+        action: AuditAction.RESULT_UPDATE,
+        success: true,
+        metadata: {
+          resultId: id,
+          studentId: existing.studentId,
+          oldMark: existing.score,
+          newMark: input.score,
+        },
+      });
+    }
+
+    return updated;
   }
 
   private async assertScoreWithinFullMarks(input: { score: number; examId?: string; assignmentId?: string }) {
@@ -76,9 +104,17 @@ export class ResultsService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+    async remove(id: string, actorId?: string) {
+    const existing = await this.findOne(id);
     await this.prisma.result.delete({ where: { id } });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.RESULT_DELETE,
+      success: true,
+      metadata: { resultId: id, studentId: existing.studentId, score: existing.score },
+    });
+
     return true;
   }
 

@@ -91,6 +91,9 @@ export class AuthService {
         ...(input.role === Role.PRINCIPAL && {
           principal: { create: { name: input.name, surname: input.surname } },
         }),
+        ...(input.role === Role.TRANSPORT_STAFF && {
+          transportStaff: { create: { name: input.name, surname: input.surname } },
+        }),
       },
     });
 

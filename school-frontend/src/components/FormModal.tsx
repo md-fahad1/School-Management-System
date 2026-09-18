@@ -49,6 +49,12 @@ const BookForm = dynamic(() => import("./forms/BookForm"), {
 const FeeStructureForm = dynamic(() => import("./forms/FeeStructureForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const GradeForm = dynamic(() => import("./forms/GradeForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const VehicleForm = dynamic(() => import("./forms/VehicleForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (type: "create" | "update", data: any, onSuccess: () => void) => JSX.Element;
@@ -67,6 +73,8 @@ const forms: {
   attendance: (type, data, onSuccess) => <AttendanceForm type={type} data={data} onSuccess={onSuccess} />,
   book: (type, data, onSuccess) => <BookForm type={type} data={data} onSuccess={onSuccess} />,
   feeStructure: (type, data, onSuccess) => <FeeStructureForm type={type} data={data} onSuccess={onSuccess} />,
+    grade: (type, data, onSuccess) => <GradeForm type={type} data={data} onSuccess={onSuccess} />,
+      vehicle: (type, data, onSuccess) => <VehicleForm type={type} data={data} onSuccess={onSuccess} />,
 };
 // One remove mutation per table, all following the same
 // `remove<Entity>(id: ID!): Boolean` shape the backend already exposes.
@@ -87,14 +95,16 @@ const REMOVE_MUTATIONS: { [key: string]: string } = {
   attendance: `mutation($id: ID!) { removeAttendance(id: $id) }`,
   book: `mutation($id: ID!) { removeBook(id: $id) }`,
   feeStructure: `mutation($id: ID!) { removeFeeStructure(id: $id) }`,
+    grade: `mutation($id: ID!) { removeGrade(id: $id) }`,
+      vehicle: `mutation($id: ID!) { removeVehicle(id: $id) }`,
 };
 
 // One icon + color per action, used for the trigger button instead of
 // the old /create.png, /update.png, /delete.png images.
 const actionMeta = {
-  create: { Icon: Plus, bg: "bg-brandPurple", iconColor: "text-white" },
-  update: { Icon: Pencil, bg: "bg-lamaSky", iconColor: "text-brandInk" },
-  delete: { Icon: Trash2, bg: "bg-lamaYellow", iconColor: "text-red-600" },
+  create: { Icon: Plus, bg: "bg-accent", iconColor: "text-white" },
+  update: { Icon: Pencil, bg: "bg-infoLight", iconColor: "text-info" },
+  delete: { Icon: Trash2, bg: "bg-dangerLight", iconColor: "text-danger" },
 } as const;
 
 const FormModal = ({
@@ -117,7 +127,10 @@ const FormModal = ({
     | "event"
     | "announcement"
     | "book"
-    | "feeStructure";
+    | "feeStructure"
+    | "grade"
+     | "vehicle";
+    
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
@@ -161,17 +174,17 @@ const FormModal = ({
 
   const Form = () => {
     return type === "delete" && id ? (
-      <form onSubmit={handleDelete} className="p-4 flex flex-col gap-4">
-        <span className="text-center font-medium">
+      <form onSubmit={handleDelete} className="p-5 flex flex-col gap-4">
+        <span className="text-center font-medium text-textPrimary">
           All data will be lost. Are you sure you want to delete this {table}?
         </span>
         {deleteError && (
-          <span className="text-center text-sm text-red-500">{deleteError}</span>
+          <span className="text-center text-sm text-danger">{deleteError}</span>
         )}
         <button
           type="submit"
           disabled={deleting}
-          className="bg-red-600 text-white py-2 px-4 rounded-md border-none w-max self-center disabled:opacity-60 flex items-center gap-2"
+          className="bg-danger text-white py-2.5 px-4 rounded-lg border-none w-max self-center disabled:opacity-60 flex items-center gap-2 hover:opacity-90 transition-opacity"
         >
           <Trash2 size={16} />
           {deleting ? "Deleting..." : "Delete"}
@@ -199,15 +212,17 @@ const FormModal = ({
         <Icon size={iconSize} />
       </button>
       {open && (
-        <div className="w-screen h-screen absolute left-0 top-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-cardBg p-4 sm:p-6 rounded-2xl shadow-lg relative w-full sm:w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%] max-h-[90vh] overflow-y-auto">
             <Form />
-            <div
-              className="absolute top-4 right-4 cursor-pointer text-gray-500 hover:text-brandInk"
+            <button
+              type="button"
+              className="absolute top-4 right-4 cursor-pointer text-textMuted hover:text-textPrimary"
               onClick={() => setOpen(false)}
+              aria-label="Close"
             >
               <X size={18} />
-            </div>
+            </button>
           </div>
         </div>
       )}

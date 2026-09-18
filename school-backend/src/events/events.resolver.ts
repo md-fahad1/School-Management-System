@@ -24,8 +24,8 @@ export class EventsResolver {
   }
 
   @Query(() => Event)
-  event(@Args('id', { type: () => ID }) id: string) {
-    return this.eventsService.findOne(id);
+  event(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string; role: Role }) {
+    return this.eventsService.findOne(id, user);
   }
 
   @Mutation(() => Event)

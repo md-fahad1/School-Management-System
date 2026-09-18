@@ -73,7 +73,7 @@ const TeacherAttendanceMarkForm = ({ onSuccess }: { onSuccess: () => void }) => 
 
       <div className="flex justify-between flex-wrap gap-4">
         <div className="flex flex-col gap-2 w-full md:w-[45%]">
-          <label className="text-xs text-gray-500">Teacher</label>
+          <label className="text-xs text-textMuted">Teacher</label>
           <select
             {...register("teacherId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -96,7 +96,7 @@ const TeacherAttendanceMarkForm = ({ onSuccess }: { onSuccess: () => void }) => 
         <InputField label="Date" name="date" type="date" register={register} error={errors.date} />
 
         <div className="flex flex-col gap-2 w-full md:w-[45%]">
-          <label className="text-xs text-gray-500">Status</label>
+          <label className="text-xs text-textMuted">Status</label>
           <select
             {...register("status")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

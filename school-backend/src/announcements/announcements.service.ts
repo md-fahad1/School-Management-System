@@ -23,9 +23,10 @@ export class AnnouncementsService {
     });
   }
 
-  async findOne(id: string) {
-    const announcement = await this.prisma.announcement.findUnique({
-      where: { id },
+  async findOne(id: string, user?: RequestUser) {
+    const where = user ? { id, ...(await this.visibilityFilter(user)) } : { id };
+    const announcement = await this.prisma.announcement.findFirst({
+      where,
       include: { class: true },
     });
     if (!announcement) throw new NotFoundException(`Announcement ${id} not found`);

@@ -93,7 +93,7 @@ const FeeStructureForm = ({
         />
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Frequency</label>
+          <label className="text-xs text-textMuted">Frequency</label>
           <select
             {...register("frequency")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -106,7 +106,7 @@ const FeeStructureForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Grade</label>
+          <label className="text-xs text-textMuted">Grade</label>
           <select
             {...register("gradeId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

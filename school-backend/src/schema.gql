@@ -12,6 +12,17 @@ type Announcement {
   title: String!
 }
 
+input ApplyDiscountInput {
+  reason: String
+  type: DiscountType!
+  value: Float!
+}
+
+input ApplyFineInput {
+  amount: Float!
+  reason: String
+}
+
 input ApplyLeaveInput {
   applicantId: ID
   endDate: String!
@@ -120,6 +131,11 @@ input BulkMarkTeacherAttendanceInput {
   entries: [BulkMarkTeacherAttendanceEntry!]!
 }
 
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
 type Class {
   capacity: Int!
   gradeId: ID!
@@ -223,6 +239,16 @@ input CreateResultInput {
   studentId: ID!
 }
 
+input CreateScholarshipInput {
+  endDate: String
+  name: String!
+  notes: String
+  startDate: String
+  studentId: ID!
+  type: DiscountType!
+  value: Float!
+}
+
 input CreateStudentInput {
   address: String
   birthday: String
@@ -260,6 +286,16 @@ input CreateTeacherInput {
   username: String!
 }
 
+input CreateVehicleInput {
+  capacity: Int!
+  driverName: String!
+  route: String
+  status: String
+  transportStaffId: ID
+  type: String!
+  vehicleNumber: String!
+}
+
 type DailyAttendance {
   absent: Int!
   day: String!
@@ -293,6 +329,11 @@ input DecideLeaveInput {
   id: ID!
   remarks: String
   status: LeaveStatus!
+}
+
+enum DiscountType {
+  FIXED
+  PERCENTAGE
 }
 
 type Event {
@@ -372,15 +413,30 @@ enum HrAttendanceStatus {
   PRESENT
 }
 
+type ImportFailure {
+  error: String!
+  row: Int!
+}
+
+type ImportResult {
+  created: Int!
+  failed: [ImportFailure!]!
+}
+
 type Invoice {
   amount: Float!
   amountPaid: Float!
   balance: Float!
   createdAt: DateTime!
+  discountAmount: Float!
+  discountReason: String
   dueDate: DateTime!
   feeStructure: FeeStructure
   feeStructureId: ID
+  fineAmount: Float!
+  fineReason: String
   id: ID!
+  payableAmount: Float!
   period: String!
   status: PaymentStatus!
   studentId: ID!
@@ -480,6 +536,18 @@ input MarkTeacherAttendanceInput {
   teacherId: ID!
 }
 
+type Me {
+  email: String!
+  emailNotifications: Boolean!
+  id: ID!
+  img: String
+  name: String!
+  phone: String
+  role: Role!
+  surname: String!
+  username: String!
+}
+
 type Message {
   content: String!
   id: ID!
@@ -492,11 +560,14 @@ type Message {
 }
 
 type Mutation {
+  applyInvoiceDiscount(input: ApplyDiscountInput!, invoiceId: ID!): Invoice!
+  applyInvoiceFine(input: ApplyFineInput!, invoiceId: ID!): Invoice!
   applyLeave(input: ApplyLeaveInput!): Leave!
   bulkMarkAttendance(input: BulkMarkAttendanceInput!): [Attendance!]!
   bulkMarkStaffAttendance(input: BulkMarkStaffAttendanceInput!): [StaffAttendance!]!
   bulkMarkTeacherAttendance(input: BulkMarkTeacherAttendanceInput!): [TeacherAttendance!]!
   cancelLeave(id: ID!): Leave!
+  changePassword(input: ChangePasswordInput!): Boolean!
   createAnnouncement(input: CreateAnnouncementInput!): Announcement!
   createAssignment(input: CreateAssignmentInput!): Assignment!
   createAttendance(input: CreateAttendanceInput!): Attendance!
@@ -509,13 +580,16 @@ type Mutation {
   createLesson(input: CreateLessonInput!): Lesson!
   createParent(input: CreateParentInput!): Parent!
   createResult(input: CreateResultInput!): Result!
+  createScholarship(input: CreateScholarshipInput!): Scholarship!
   createStaffAccount(input: RegisterInput!): AuthPayload!
   createStudent(input: CreateStudentInput!): Student!
   createSubject(input: CreateSubjectInput!): Subject!
   createTeacher(input: CreateTeacherInput!): Teacher!
+  createVehicle(input: CreateVehicleInput!): Vehicle!
   decideLeave(input: DecideLeaveInput!): Leave!
   generateBulkInvoices(input: GenerateBulkInvoicesInput!): String!
   generateInvoice(input: GenerateInvoiceInput!): Invoice!
+  importStudentsCsv(csv: String!): ImportResult!
   issueBook(input: IssueBookInput!): BookLoan!
   login(input: LoginInput!): AuthPayload!
   logout(input: LogoutInput!): Boolean!
@@ -539,9 +613,11 @@ type Mutation {
   removeMessage(id: ID!): Boolean!
   removeParent(id: ID!): Boolean!
   removeResult(id: ID!): Boolean!
+  removeScholarship(id: ID!): Boolean!
   removeStudent(id: ID!): Boolean!
   removeSubject(id: ID!): Boolean!
   removeTeacher(id: ID!): Boolean!
+  removeVehicle(id: ID!): Boolean!
   requestPasswordReset(input: RequestPasswordResetInput!): Boolean!
   resendVerificationEmail(input: ResendVerificationInput!): Boolean!
   resetPassword(input: ResetPasswordInput!): Boolean!
@@ -550,6 +626,7 @@ type Mutation {
   updateAnnouncement(id: ID!, input: UpdateAnnouncementInput!): Announcement!
   updateAssignment(id: ID!, input: UpdateAssignmentInput!): Assignment!
   updateAttendance(id: ID!, input: UpdateAttendanceInput!): Attendance!
+  updateAvatar(input: UpdateAvatarInput!): Me!
   updateBook(id: ID!, input: UpdateBookInput!): Book!
   updateClass(id: ID!, input: UpdateClassInput!): Class!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
@@ -557,11 +634,15 @@ type Mutation {
   updateFeeStructure(id: ID!, input: UpdateFeeStructureInput!): FeeStructure!
   updateGrade(id: ID!, input: UpdateGradeInput!): Grade!
   updateLesson(id: ID!, input: UpdateLessonInput!): Lesson!
+  updateMyNotificationPreferences(input: UpdateNotificationPreferencesInput!): Me!
   updateParent(id: ID!, input: UpdateParentInput!): Parent!
+  updateProfile(input: UpdateProfileInput!): Me!
   updateResult(id: ID!, input: UpdateResultInput!): Result!
+  updateScholarship(id: ID!, input: UpdateScholarshipInput!): Scholarship!
   updateStudent(id: ID!, input: UpdateStudentInput!): Student!
   updateSubject(id: ID!, input: UpdateSubjectInput!): Subject!
   updateTeacher(id: ID!, input: UpdateTeacherInput!): Teacher!
+  updateVehicle(id: ID!, input: UpdateVehicleInput!): Vehicle!
   verifyEmail(input: VerifyEmailInput!): Boolean!
 }
 
@@ -625,6 +706,7 @@ type Query {
   feeCollectionSummary(period: String): FeeCollectionSummary!
   feeStructure(id: ID!): FeeStructure!
   feeStructures(gradeId: ID): [FeeStructure!]!
+  globalSearch(query: String!): [SearchResult!]!
   grade(id: ID!): Grade!
   grades: [Grade!]!
   inbox(skip: Float, take: Float): [Message!]!
@@ -634,10 +716,14 @@ type Query {
   leaves(skip: Float, status: LeaveStatus, take: Float): [Leave!]!
   lesson(id: ID!): Lesson!
   lessons(skip: Float, take: Float): [Lesson!]!
+  me: Me!
+  myChildren: [Student!]!
+  myVehicles: [Vehicle!]!
   parent(id: ID!): Parent!
   parents(search: String, skip: Float, take: Float): [Parent!]!
   result(id: ID!): Result!
   results(skip: Float, take: Float): [Result!]!
+  scholarships(studentId: ID): [Scholarship!]!
   staffAttendances(date: String, skip: Float, take: Float, userId: ID): [StaffAttendance!]!
   student(id: ID!): Student!
   students(search: String, skip: Float, take: Float): [Student!]!
@@ -647,6 +733,8 @@ type Query {
   teacherAttendances(date: String, skip: Float, take: Float, teacherId: ID): [TeacherAttendance!]!
   teachers(search: String, skip: Float, take: Float): [Teacher!]!
   users(search: String): [UserSummary!]!
+  vehicle(id: ID!): Vehicle!
+  vehicles(skip: Float, take: Float): [Vehicle!]!
   weeklyAttendance: [DailyAttendance!]!
 }
 
@@ -715,6 +803,30 @@ enum Role {
   PRINCIPAL
   STUDENT
   TEACHER
+  TRANSPORT_STAFF
+}
+
+type Scholarship {
+  active: Boolean!
+  createdAt: DateTime!
+  endDate: DateTime
+  id: ID!
+  name: String!
+  notes: String
+  startDate: DateTime!
+  studentId: ID!
+  studentName: String
+  type: DiscountType!
+  updatedAt: DateTime!
+  value: Float!
+}
+
+type SearchResult {
+  id: ID!
+  subtitle: String
+  title: String!
+  type: String!
+  url: String!
 }
 
 input SendMessageInput {
@@ -815,6 +927,10 @@ input UpdateAttendanceInput {
   studentId: ID
 }
 
+input UpdateAvatarInput {
+  image: String!
+}
+
 input UpdateBookInput {
   author: String
   category: String
@@ -869,6 +985,10 @@ input UpdateLessonInput {
   teacherId: ID
 }
 
+input UpdateNotificationPreferencesInput {
+  emailNotifications: Boolean!
+}
+
 input UpdateParentInput {
   address: String
   email: String
@@ -879,11 +999,27 @@ input UpdateParentInput {
   username: String
 }
 
+input UpdateProfileInput {
+  name: String
+  phone: String
+  surname: String
+}
+
 input UpdateResultInput {
   assignmentId: ID
   examId: ID
   score: Int
   studentId: ID
+}
+
+input UpdateScholarshipInput {
+  active: Boolean
+  endDate: String
+  name: String
+  notes: String
+  startDate: String
+  type: DiscountType
+  value: Float
 }
 
 input UpdateStudentInput {
@@ -923,10 +1059,34 @@ input UpdateTeacherInput {
   username: String
 }
 
+input UpdateVehicleInput {
+  capacity: Int
+  driverName: String
+  route: String
+  status: String
+  transportStaffId: ID
+  type: String
+  vehicleNumber: String
+}
+
 type UserSummary {
   id: ID!
   roleName: String!
   username: String!
+}
+
+type Vehicle {
+  capacity: Int!
+  createdAt: DateTime!
+  driverName: String!
+  id: ID!
+  route: String
+  status: String!
+  transportStaffId: ID
+  transportStaffName: String
+  type: String!
+  updatedAt: DateTime!
+  vehicleNumber: String!
 }
 
 input VerifyEmailInput {

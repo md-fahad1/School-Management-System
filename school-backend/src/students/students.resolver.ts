@@ -7,11 +7,20 @@ import { CreateStudentInput, UpdateStudentInput } from './dto/student.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ImportResult } from './entities/import-result.entity';
+
 
 @Resolver(() => Student)
 @UseGuards(GqlJwtAuthGuard, RolesGuard)
 export class StudentsResolver {
   constructor(private studentsService: StudentsService) {}
+
+  @Query(() => [Student])
+  @Roles(Role.PARENT)
+  myChildren(@CurrentUser() user: { id: string }) {
+    return this.studentsService.findMyChildren(user.id);
+  }
 
   @Query(() => [Student])
   @Roles(Role.ADMIN, Role.TEACHER)
@@ -30,20 +39,29 @@ export class StudentsResolver {
 
   @Mutation(() => Student)
   @Roles(Role.ADMIN)
-  createStudent(@Args('input') input: CreateStudentInput) {
-    return this.studentsService.create(input);
+  createStudent(@Args('input') input: CreateStudentInput, @CurrentUser() user: { id: string }) {
+    return this.studentsService.create(input, user.id);
   }
 
   @Mutation(() => Student)
   @Roles(Role.ADMIN)
-  updateStudent(@Args('id', { type: () => ID }) id: string, @Args('input') input: UpdateStudentInput) {
-    return this.studentsService.update(id, input);
+  updateStudent(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateStudentInput,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.studentsService.update(id, input, user.id);
   }
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN)
-  removeStudent(@Args('id', { type: () => ID }) id: string) {
-    return this.studentsService.remove(id);
+  removeStudent(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
+    return this.studentsService.remove(id, user.id);
+  }
+    @Mutation(() => ImportResult)
+  @Roles(Role.ADMIN)
+  importStudentsCsv(@Args('csv') csv: string, @CurrentUser() user: { id: string }) {
+    return this.studentsService.importFromCsv(csv, user.id);
   }
 
   @ResolveField('email', () => String, { nullable: true })

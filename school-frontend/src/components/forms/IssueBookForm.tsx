@@ -90,7 +90,7 @@ const IssueBookForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
       <div className="flex justify-between flex-wrap gap-4">
         <div className="flex flex-col gap-2 w-full md:w-[45%]">
-          <label className="text-xs text-gray-500">Book</label>
+          <label className="text-xs text-textMuted">Book</label>
           <select
             {...register("bookId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -111,7 +111,7 @@ const IssueBookForm = ({ onSuccess }: { onSuccess: () => void }) => {
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-[45%]">
-          <label className="text-xs text-gray-500">Borrower</label>
+          <label className="text-xs text-textMuted">Borrower</label>
           <select
             {...register("borrowerId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

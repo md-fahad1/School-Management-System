@@ -7,8 +7,12 @@ import {
   ResetPasswordInput,
   VerifyEmailInput,
   ResendVerificationInput,
+  ChangePasswordInput,
 } from './dto/password-reset.dto';
 import { ReqMeta, RequestMeta } from '../common/decorators/req-meta.decorator';
+import { UseGuards } from '@nestjs/common';
+import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 // Same tight limit as login/register — these send emails and touch
 // tokens, so they're just as attractive a target for abuse (e.g.
@@ -44,5 +48,15 @@ export class AccountResolver {
   @Throttle(SENSITIVE_THROTTLE)
   resendVerificationEmail(@Args('input') input: ResendVerificationInput, @ReqMeta() meta: RequestMeta) {
     return this.emailVerification.resendVerification(input.email, meta);
+  }
+    @Mutation(() => Boolean)
+  @UseGuards(GqlJwtAuthGuard)
+  @Throttle(SENSITIVE_THROTTLE)
+  changePassword(
+    @CurrentUser() user: { id: string },
+    @Args('input') input: ChangePasswordInput,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    return this.passwordReset.changePassword(user.id, input.currentPassword, input.newPassword, meta);
   }
 }

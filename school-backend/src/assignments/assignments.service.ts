@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAssignmentInput, UpdateAssignmentInput } from './dto/assignment.dto';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 interface RequestUser {
   id: string;
@@ -10,7 +11,10 @@ interface RequestUser {
 
 @Injectable()
 export class AssignmentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
   async findAll(user: RequestUser, skip = 0, take = 10) {
     const where = await this.visibilityFilter(user);
@@ -23,17 +27,18 @@ export class AssignmentsService {
     });
   }
 
-  async findOne(id: string) {
-    const assignment = await this.prisma.assignment.findUnique({
-      where: { id },
+  async findOne(id: string, user?: RequestUser) {
+    const where = user ? { id, ...(await this.visibilityFilter(user)) } : { id };
+    const assignment = await this.prisma.assignment.findFirst({
+      where,
       include: { lesson: { include: { subject: true, class: true, teacher: true } } },
     });
     if (!assignment) throw new NotFoundException(`Assignment ${id} not found`);
     return assignment;
   }
 
-  create(input: CreateAssignmentInput) {
-    return this.prisma.assignment.create({
+  async create(input: CreateAssignmentInput, actorId?: string) {
+    const created = await this.prisma.assignment.create({
       data: {
         title: input.title,
         fullMarks: input.fullMarks ?? 100,
@@ -43,16 +48,46 @@ export class AssignmentsService {
         lessonId: input.lessonId,
       },
     });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.ASSIGNMENT_CREATE,
+      success: true,
+      metadata: { assignmentId: created.id, title: created.title },
+    });
+
+    return created;
   }
 
-  async update(id: string, input: UpdateAssignmentInput) {
-    await this.findOne(id);
-    return this.prisma.assignment.update({ where: { id }, data: input });
+  async update(id: string, input: UpdateAssignmentInput, actorId?: string) {
+    const before = await this.findOne(id);
+    const updated = await this.prisma.assignment.update({ where: { id }, data: input });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.ASSIGNMENT_UPDATE,
+      success: true,
+      metadata: {
+        assignmentId: id,
+        before: { title: before.title, dueDate: before.dueDate },
+        after: { title: updated.title, dueDate: updated.dueDate },
+      },
+    });
+
+    return updated;
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, actorId?: string) {
+    const assignment = await this.findOne(id);
     await this.prisma.assignment.delete({ where: { id } });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.ASSIGNMENT_DELETE,
+      success: true,
+      metadata: { assignmentId: id, title: assignment.title },
+    });
+
     return true;
   }
 

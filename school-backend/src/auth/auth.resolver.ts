@@ -25,7 +25,7 @@ const AUTH_THROTTLE = { default: { limit: 5, ttl: 60_000 } };
 // else (ADMIN, ACCOUNTANT, LIBRARIAN, PRINCIPAL) must go through
 // createStaffAccount below, which only an existing admin can call.
 const PUBLIC_SIGNUP_ROLES: Role[] = [Role.TEACHER, Role.PARENT];
-const STAFF_ACCOUNT_ROLES: Role[] = [Role.ADMIN, Role.ACCOUNTANT, Role.LIBRARIAN, Role.PRINCIPAL, Role.TEACHER];
+const STAFF_ACCOUNT_ROLES: Role[] = [Role.ADMIN, Role.ACCOUNTANT, Role.LIBRARIAN, Role.PRINCIPAL, Role.TEACHER, Role.TRANSPORT_STAFF];
 
 @Resolver()
 export class AuthResolver {

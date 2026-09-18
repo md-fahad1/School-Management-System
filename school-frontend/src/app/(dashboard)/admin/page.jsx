@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import Announcements from "@/components/Announcements";
 import EventCalendar from "@/components/EventCalendar";
 import UserCard from "@/components/UserCard";
+import WelcomeCard from "@/components/WelcomeCard";
 import { getDashboardCounts, getWeeklyAttendance } from "@/lib/graphql/fetchers";
 
 // recharts is a heavy dependency — split these into their own chunk so
@@ -24,7 +25,9 @@ const AdminPage = async () => {
   return (
     <div className="p-4 flex gap-4 flex-col md:flex-row">
       {/* LEFT */}
-      <div className="w-full lg:w-2/3 flex flex-col gap-8">
+      <div className="w-full lg:w-2/3 flex flex-col gap-6">
+        {/* WELCOME CARD */}
+        <WelcomeCard />
         {/* USER CARDS */}
         <div className="flex gap-4 justify-between flex-wrap">
           <UserCard type="student" count={counts.studentCount} />
@@ -33,7 +36,7 @@ const AdminPage = async () => {
           <UserCard type="admin" count={counts.adminCount} />
         </div>
         {/* MIDDLE CHARTS */}
-        <div className="flex gap-4 flex-col lg:flex-row">
+        <div className="flex gap-4 flex-col lg:flex-row mt-2">
           {/* COUNT CHART */}
           <div className="w-full lg:w-1/3 h-[450px]">
             <CountChart boys={counts.boysCount} girls={counts.girlsCount} />

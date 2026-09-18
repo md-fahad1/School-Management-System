@@ -24,26 +24,30 @@ export class ExamsResolver {
   }
 
   @Query(() => Exam)
-  exam(@Args('id', { type: () => ID }) id: string) {
-    return this.examsService.findOne(id);
+  exam(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string; role: Role }) {
+    return this.examsService.findOne(id, user);
   }
 
   @Mutation(() => Exam)
   @Roles(Role.ADMIN, Role.TEACHER)
-  createExam(@Args('input') input: CreateExamInput) {
-    return this.examsService.create(input);
+  createExam(@Args('input') input: CreateExamInput, @CurrentUser() user: { id: string }) {
+    return this.examsService.create(input, user.id);
   }
 
   @Mutation(() => Exam)
   @Roles(Role.ADMIN, Role.TEACHER)
-  updateExam(@Args('id', { type: () => ID }) id: string, @Args('input') input: UpdateExamInput) {
-    return this.examsService.update(id, input);
+  updateExam(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateExamInput,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.examsService.update(id, input, user.id);
   }
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN, Role.TEACHER)
-  removeExam(@Args('id', { type: () => ID }) id: string) {
-    return this.examsService.remove(id);
+  removeExam(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
+    return this.examsService.remove(id, user.id);
   }
 
   // These resolve off the `lesson` relation that findAll/findOne eagerly

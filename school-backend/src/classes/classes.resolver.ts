@@ -7,6 +7,7 @@ import { CreateClassInput, UpdateClassInput } from './dto/class.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Class)
 @UseGuards(GqlJwtAuthGuard, RolesGuard)
@@ -29,20 +30,24 @@ export class ClassesResolver {
 
   @Mutation(() => Class)
   @Roles(Role.ADMIN)
-  createClass(@Args('input') input: CreateClassInput) {
-    return this.classesService.create(input);
+  createClass(@Args('input') input: CreateClassInput, @CurrentUser() user: { id: string }) {
+    return this.classesService.create(input, user.id);
   }
 
   @Mutation(() => Class)
   @Roles(Role.ADMIN)
-  updateClass(@Args('id', { type: () => ID }) id: string, @Args('input') input: UpdateClassInput) {
-    return this.classesService.update(id, input);
+  updateClass(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateClassInput,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.classesService.update(id, input, user.id);
   }
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN)
-  removeClass(@Args('id', { type: () => ID }) id: string) {
-    return this.classesService.remove(id);
+  removeClass(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
+    return this.classesService.remove(id, user.id);
   }
 
   @ResolveField('gradeLevel', () => Number, { nullable: true })

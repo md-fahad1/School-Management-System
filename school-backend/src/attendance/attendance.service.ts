@@ -27,9 +27,10 @@ export class AttendanceService {
     });
   }
 
-  async findOne(id: string) {
-    const attendance = await this.prisma.attendance.findUnique({
-      where: { id },
+  async findOne(id: string, user?: RequestUser) {
+    const where = user ? { id, ...(await this.visibilityFilter(user)) } : { id };
+    const attendance = await this.prisma.attendance.findFirst({
+      where,
       include: { student: true, lesson: { include: { subject: true, class: true, teacher: true } } },
     });
     if (!attendance) throw new NotFoundException(`Attendance record ${id} not found`);

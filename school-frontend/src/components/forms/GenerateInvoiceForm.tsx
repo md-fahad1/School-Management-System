@@ -80,7 +80,7 @@ const GenerateInvoiceForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
       <div className="flex justify-between flex-wrap gap-4">
         <div className="flex flex-col gap-2 w-full md:w-[45%]">
-          <label className="text-xs text-gray-500">Student</label>
+          <label className="text-xs text-textMuted">Student</label>
           <select
             {...register("studentId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -101,7 +101,7 @@ const GenerateInvoiceForm = ({ onSuccess }: { onSuccess: () => void }) => {
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-[45%]">
-          <label className="text-xs text-gray-500">Fee structure (optional)</label>
+          <label className="text-xs text-textMuted">Fee structure (optional)</label>
           <select
             {...register("feeStructureId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

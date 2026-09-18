@@ -24,8 +24,8 @@ export class AnnouncementsResolver {
   }
 
   @Query(() => Announcement)
-  announcement(@Args('id', { type: () => ID }) id: string) {
-    return this.announcementsService.findOne(id);
+  announcement(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string; role: Role }) {
+    return this.announcementsService.findOne(id, user);
   }
 
   @Mutation(() => Announcement)

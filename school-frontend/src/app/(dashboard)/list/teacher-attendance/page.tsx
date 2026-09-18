@@ -2,7 +2,7 @@ import Table from "@/components/Table";
 import { getTeacherAttendances } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import TeacherAttendanceMarkModal from "@/components/TeacherAttendanceMarkModal";
-
+import TeacherAttendanceCard from "@/components/TeacherAttendanceCard";
 type Row = {
   id: string;
   date: string;
@@ -36,7 +36,7 @@ const TeacherAttendanceListPage = async () => {
   const renderRow = (item: Row) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="border-b border-border even:bg-bg/50 text-sm hover:bg-accentLight transition-colors"
     >
       <td className="flex items-center gap-4 p-4">{item.teacher}</td>
       <td>{item.date}</td>
@@ -54,12 +54,17 @@ const TeacherAttendanceListPage = async () => {
   );
 
   return (
-    <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
+    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">Teacher Attendance</h1>
+        <h1 className="hidden md:block text-lg font-semibold text-textPrimary">Teacher Attendance</h1>
         {(role === "admin" || role === "principal") && <TeacherAttendanceMarkModal />}
       </div>
-      <Table columns={columns} renderRow={renderRow} data={data} />
+      <Table
+        columns={columns}
+        renderRow={renderRow}
+        renderCard={(item) => <TeacherAttendanceCard item={item} />}
+        data={data}
+      />
     </div>
   );
 };

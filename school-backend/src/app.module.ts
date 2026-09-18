@@ -32,6 +32,10 @@ import { FeesModule } from './fees/fees.module';
 import { TeacherAttendanceModule } from './teacher-attendance/teacher-attendance.module';
 import { StaffAttendanceModule } from './staff-attendance/staff-attendance.module';
 import { LeaveModule } from './leave/leave.module';
+import { TransportModule } from './transport/transport.module';
+import { SearchModule } from './search/search.module';
+import { ExportModule } from './export/export.module';
+import { ReportsModule } from './reports/reports.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -74,7 +78,12 @@ import { LeaveModule } from './leave/leave.module';
     FeesModule,
     TeacherAttendanceModule,
     StaffAttendanceModule,
-    LeaveModule
+    LeaveModule,
+     TransportModule,
+      SearchModule,
+      ExportModule,
+       ReportsModule
+
   ],
    providers: [
     {

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { performLogout } from "@/lib/auth/logout";
+import { useSidebar } from "./SidebarContext";
 
 type MenuItem = {
   icon: string;
@@ -12,9 +13,12 @@ type MenuItem = {
   action?: string;
 };
 
-const MenuLink = ({ item }: { item: MenuItem }) => {
+const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const { mobileOpen } = useSidebar();
+  const labelClass = mobileOpen ? "block" : "hidden lg:block";
+  const justifyClass = mobileOpen ? "justify-start" : "justify-center lg:justify-start";
   const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
   if (item.action === "logout") {
@@ -24,10 +28,16 @@ const MenuLink = ({ item }: { item: MenuItem }) => {
           await performLogout();
           router.push("/signin");
         }}
-        className="flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors text-gray-500 hover:bg-lamaPurpleLight w-full"
+         className={`flex items-center ${justifyClass} gap-4 py-2.5 px-3 rounded-lg transition-colors text-sidebarText hover:bg-sidebarBgHover hover:text-sidebarTextActive w-full`}
       >
-        <Image src={item.icon} alt="" width={20} height={20} />
-        <span className="hidden lg:block">{item.label}</span>
+        <Image
+          src={item.icon}
+          alt=""
+          width={20}
+          height={20}
+          className="brightness-0 invert opacity-70"
+        />
+        <span className={labelClass}>{item.label}</span>
       </button>
     );
   }
@@ -35,18 +45,22 @@ const MenuLink = ({ item }: { item: MenuItem }) => {
   return (
     <Link
       href={item.href}
-      className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors ${
-        isActive ? "bg-brandPurple text-white" : "text-gray-500 hover:bg-lamaPurpleLight"
+        className={`flex items-center ${justifyClass} gap-4 rounded-lg transition-colors ${
+        nested ? "py-2 px-3 text-[13px]" : "py-2.5 px-3"
+      } ${
+        isActive
+          ? "bg-accent text-white"
+          : "text-sidebarText hover:bg-sidebarBgHover hover:text-sidebarTextActive"
       }`}
     >
       <Image
         src={item.icon}
         alt=""
-        width={20}
-        height={20}
-        className={isActive ? "brightness-0 invert" : ""}
+        width={nested ? 16 : 20}
+        height={nested ? 16 : 20}
+        className={`brightness-0 invert ${isActive ? "opacity-100" : "opacity-70"}`}
       />
-      <span className="hidden lg:block">{item.label}</span>
+      <span className={labelClass}>{item.label}</span>
     </Link>
   );
 };

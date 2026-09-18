@@ -132,10 +132,10 @@ const MessagesPage = () => {
       {/* CONVERSATION LIST */}
       <div className="w-full md:w-1/3 border-r border-gray-200 flex flex-col">
         <div className="p-4 flex items-center justify-between border-b border-gray-200">
-          <h1 className="text-lg font-semibold">Messages</h1>
+          <h1 className="text-lg font-semibold text-textPrimary">Messages</h1>
           <button
             onClick={openNewMessage}
-            className="text-xs bg-lamaYellow px-3 py-1.5 rounded-full"
+            className="text-xs bg-warningLight text-warning px-3 py-1.5 rounded-full"
           >
             New
           </button>
@@ -171,7 +171,7 @@ const MessagesPage = () => {
                 setShowNewMessage(false);
                 openConversation(c.id);
               }}
-              className={`w-full text-left p-4 border-b border-gray-100 hover:bg-lamaPurpleLight transition ${
+              className={`w-full text-left p-4 border-b border-border hover:bg-accentLight transition ${
                 selectedUserId === c.id ? "bg-lamaPurpleLight" : ""
               }`}
             >
@@ -192,7 +192,7 @@ const MessagesPage = () => {
                   key={m.id}
                   className={`max-w-[70%] p-3 rounded-lg text-sm ${
                     m.senderId === myId
-                      ? "bg-lamaSky self-end"
+                      ? "bg-accent text-white self-end"
                       : "bg-gray-100 self-start"
                   }`}
                 >

@@ -236,14 +236,6 @@ export const GET_PARENTS = gql`
 
 /* ---------- Classes ---------- */
 
-export const GET_GRADES = gql`
-  query Grades {
-    grades {
-      id
-      level
-    }
-  }
-`;
 
 export const GET_PARENT_OPTIONS = gql`
   query ParentOptions {
@@ -406,6 +398,42 @@ export const GET_CONVERSATION = gql`
       receiverId
       senderName
       receiverName
+    }
+  }
+`;
+/* ---------- Profile ---------- */
+
+export const GET_ME = gql`
+  query Me {
+    me {
+      id
+      username
+      email
+      phone
+      role
+      img
+      name
+      surname
+    }
+  }
+`;
+
+export const UPDATE_PROFILE = gql`
+  mutation UpdateProfile($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      id
+      name
+      surname
+      phone
+    }
+  }
+`;
+
+export const UPDATE_AVATAR = gql`
+  mutation UpdateAvatar($input: UpdateAvatarInput!) {
+    updateAvatar(input: $input) {
+      id
+      img
     }
   }
 `;
@@ -598,12 +626,72 @@ export const GET_INVOICES = gql`
       period
       amount
       amountPaid
+      discountAmount
+      discountReason
+      fineAmount
+      fineReason
+      payableAmount
       balance
       dueDate
       status
       studentId
       studentName
     }
+  }
+`;
+
+export const APPLY_INVOICE_DISCOUNT = gql`
+  mutation ApplyInvoiceDiscount($invoiceId: ID!, $input: ApplyDiscountInput!) {
+    applyInvoiceDiscount(invoiceId: $invoiceId, input: $input) {
+      id
+    }
+  }
+`;
+
+export const APPLY_INVOICE_FINE = gql`
+  mutation ApplyInvoiceFine($invoiceId: ID!, $input: ApplyFineInput!) {
+    applyInvoiceFine(invoiceId: $invoiceId, input: $input) {
+      id
+    }
+  }
+`;
+
+export const GET_SCHOLARSHIPS = gql`
+  query Scholarships($studentId: ID) {
+    scholarships(studentId: $studentId) {
+      id
+      name
+      type
+      value
+      active
+      startDate
+      endDate
+      notes
+      studentId
+       studentName
+    }
+  }
+`;
+
+export const CREATE_SCHOLARSHIP = gql`
+  mutation CreateScholarship($input: CreateScholarshipInput!) {
+    createScholarship(input: $input) {
+      id
+    }
+  }
+`;
+
+export const UPDATE_SCHOLARSHIP = gql`
+  mutation UpdateScholarship($id: ID!, $input: UpdateScholarshipInput!) {
+    updateScholarship(id: $id, input: $input) {
+      id
+    }
+  }
+`;
+
+export const REMOVE_SCHOLARSHIP = gql`
+  mutation RemoveScholarship($id: ID!) {
+    removeScholarship(id: $id)
   }
 `;
 
@@ -838,6 +926,163 @@ export const GET_TEACHER_ATTENDANCE_OPTIONS = gql`
       id
       name
       surname
+    }
+  }
+`;
+
+/* ---------- Grades ---------- */
+
+export const GET_GRADES = gql`
+  query Grades {
+    grades {
+      id
+      level
+    }
+  }
+`;
+
+export const CREATE_GRADE = gql`
+  mutation CreateGrade($input: CreateGradeInput!) {
+    createGrade(input: $input) {
+      id
+      level
+    }
+  }
+`;
+
+export const UPDATE_GRADE = gql`
+  mutation UpdateGrade($id: ID!, $input: UpdateGradeInput!) {
+    updateGrade(id: $id, input: $input) {
+      id
+      level
+    }
+  }
+`;
+
+/* ---------- Audit Logs ---------- */
+
+export const GET_AUDIT_LOGS = gql`
+  query AuditLogs($skip: Float, $take: Float, $userId: ID, $action: String) {
+    auditLogs(skip: $skip, take: $take, userId: $userId, action: $action) {
+      id
+      userId
+      action
+      success
+      ip
+      userAgent
+      metadata
+      createdAt
+    }
+  }
+`;
+export const GET_MY_CHILDREN = gql`
+  query MyChildren {
+    myChildren {
+      id
+      name
+      surname
+      className
+    }
+  }
+`;
+/* ---------- Transport ---------- */
+
+export const GET_VEHICLES = gql`
+  query Vehicles($skip: Float, $take: Float) {
+    vehicles(skip: $skip, take: $take) {
+      id
+      vehicleNumber
+      type
+      capacity
+      driverName
+      route
+      status
+      transportStaffId
+      transportStaffName
+    }
+  }
+`;
+
+export const GET_MY_VEHICLES = gql`
+  query MyVehicles {
+    myVehicles {
+      id
+      vehicleNumber
+      type
+      capacity
+      driverName
+      route
+      status
+    }
+  }
+`;
+
+export const CREATE_VEHICLE = gql`
+  mutation CreateVehicle($input: CreateVehicleInput!) {
+    createVehicle(input: $input) {
+      id
+      vehicleNumber
+    }
+  }
+`;
+
+export const UPDATE_VEHICLE = gql`
+  mutation UpdateVehicle($id: ID!, $input: UpdateVehicleInput!) {
+    updateVehicle(id: $id, input: $input) {
+      id
+      vehicleNumber
+    }
+  }
+`;
+export const GLOBAL_SEARCH = gql`
+  query GlobalSearch($query: String!) {
+    globalSearch(query: $query) {
+      type
+      id
+      title
+      subtitle
+      url
+    }
+  }
+`;
+export const IMPORT_STUDENTS_CSV = gql`
+  mutation ImportStudentsCsv($csv: String!) {
+    importStudentsCsv(csv: $csv) {
+      created
+      failed {
+        row
+        error
+      }
+    }
+  }
+`;
+export const ME_QUERY = gql`
+  query Me {
+    me {
+      id
+      username
+      email
+      phone
+      role
+      img
+      emailNotifications
+      name
+      surname
+    }
+  }
+`;
+
+export const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($input: ChangePasswordInput!) {
+    changePassword(input: $input)
+  }
+`;
+
+export const UPDATE_MY_NOTIFICATION_PREFERENCES = gql`
+  mutation UpdateMyNotificationPreferences($input: UpdateNotificationPreferencesInput!) {
+    updateMyNotificationPreferences(input: $input) {
+      id
+      emailNotifications
     }
   }
 `;

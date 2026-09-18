@@ -28,8 +28,8 @@ export class AttendanceResolver {
   }
 
   @Query(() => Attendance)
-  attendance(@Args('id', { type: () => ID }) id: string) {
-    return this.attendanceService.findOne(id);
+  attendance(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string; role: Role }) {
+    return this.attendanceService.findOne(id, user);
   }
 
   @Mutation(() => Attendance)

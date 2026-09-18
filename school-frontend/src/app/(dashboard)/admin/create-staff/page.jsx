@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { CREATE_STAFF_ACCOUNT } from "@/lib/graphql/queries";
 
-const ROLE_OPTIONS = ["ADMIN", "ACCOUNTANT", "LIBRARIAN", "PRINCIPAL", "TEACHER"];
+const ROLE_OPTIONS = ["ADMIN", "ACCOUNTANT", "LIBRARIAN", "PRINCIPAL", "TEACHER", "TRANSPORT_STAFF"];
 
 const initialForm = {
   username: "",

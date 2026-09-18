@@ -17,8 +17,6 @@ const PROTECTED_PREFIXES = [
 
 // These correspond to real backend roles (see Role enum in the
 // NestJS schema) — role-mismatch redirects apply to all of them.
-// transport-staf still has no backend Role yet, so it's left out —
-// that route only requires *some* valid session, not a specific role.
 const ROLE_HOME: Record<string, string> = {
   admin: "/admin",
   teacher: "/teacher",
@@ -27,6 +25,7 @@ const ROLE_HOME: Record<string, string> = {
   librarian: "/librarian",
   accountant: "/accountant",
   principal: "/principal",
+  transport_staff: "/transport-staf",
 };
 
 const AUTH_PAGES = ["/signin", "/signup"];
@@ -81,6 +80,11 @@ async function tryRefresh(refreshToken: string): Promise<RefreshResult | null> {
 }
 
 const COOKIE_BASE = { path: "/", sameSite: "lax" as const };
+const REFRESH_COOKIE_OPTS = {
+  ...COOKIE_BASE,
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+};
 const ACCESS_TOKEN_MAX_AGE = 60 * 15; // 15 minutes, mirrors backend ACCESS_TOKEN_EXPIRES_IN
 const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 30; // 30 days, mirrors backend REFRESH_TOKEN_EXPIRES_IN_DAYS
 
@@ -129,7 +133,7 @@ export async function middleware(request: NextRequest) {
         maxAge: ACCESS_TOKEN_MAX_AGE,
       });
       response.cookies.set("refreshToken", refreshed.refreshToken, {
-        ...COOKIE_BASE,
+        ...REFRESH_COOKIE_OPTS,
         maxAge: REFRESH_TOKEN_MAX_AGE,
       });
       response.cookies.set("role", role, { ...COOKIE_BASE, maxAge: REFRESH_TOKEN_MAX_AGE });

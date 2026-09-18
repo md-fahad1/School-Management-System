@@ -24,14 +24,14 @@ export class AssignmentsResolver {
   }
 
   @Query(() => Assignment)
-  assignment(@Args('id', { type: () => ID }) id: string) {
-    return this.assignmentsService.findOne(id);
+  assignment(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string; role: Role }) {
+    return this.assignmentsService.findOne(id, user);
   }
 
   @Mutation(() => Assignment)
   @Roles(Role.ADMIN, Role.TEACHER)
-  createAssignment(@Args('input') input: CreateAssignmentInput) {
-    return this.assignmentsService.create(input);
+  createAssignment(@Args('input') input: CreateAssignmentInput, @CurrentUser() user: { id: string }) {
+    return this.assignmentsService.create(input, user.id);
   }
 
   @Mutation(() => Assignment)
@@ -39,14 +39,15 @@ export class AssignmentsResolver {
   updateAssignment(
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateAssignmentInput,
+    @CurrentUser() user: { id: string },
   ) {
-    return this.assignmentsService.update(id, input);
+    return this.assignmentsService.update(id, input, user.id);
   }
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN, Role.TEACHER)
-  removeAssignment(@Args('id', { type: () => ID }) id: string) {
-    return this.assignmentsService.remove(id);
+  removeAssignment(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
+    return this.assignmentsService.remove(id, user.id);
   }
 
   @ResolveField('subjectName', () => String, { nullable: true })

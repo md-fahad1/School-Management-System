@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Suspense, useState } from "react";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
@@ -18,7 +18,7 @@ const SignInForm = () => {
   // Backend logs in by username, not email — the form still labels
   // the field "Email Address" to match the original design, and
   // accepts the account's username there.
-    const [identifier, setIdentifier] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,18 +29,23 @@ const SignInForm = () => {
     setLoading(true);
 
     try {
-      const client = await getClientGqlClient();
-      const data = await client.request(LOGIN, { input: { identifier, password } });
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
 
-      const { accessToken, refreshToken, id, username: uname, role } = data.login;
+      if (!res.ok) {
+        throw new Error(data.error || "Invalid username or password");
+      }
 
-      // Cookies (not localStorage) so Server Components can read the
-      // session too via next/headers — see src/lib/graphql/server-client.ts.
-      // Access token cookie is short-lived to match its actual JWT
-      // lifetime; refreshToken/role/etc last as long as the refresh
-      // token itself, since those are what auto-refresh depends on.
+      const { accessToken, id, username: uname, role } = data;
+
+      // Access token stays JS-readable (short-lived, low risk). The
+      // refresh token never reaches this code at all anymore — it's
+      // set server-side as an httpOnly cookie by /api/auth/login.
       Cookies.set("token", accessToken, { expires: 1 });
-      Cookies.set("refreshToken", refreshToken, { expires: 30 });
       Cookies.set("userId", id, { expires: 30 });
       Cookies.set("username", uname, { expires: 30 });
       Cookies.set("role", role.toLowerCase(), { expires: 30 });
@@ -62,19 +67,25 @@ const SignInForm = () => {
   };
 
   return (
-    <div className="min-h-screen grid md:grid-cols-2 bg-white">
-      {/* Left Illustration Section */}
-      <div className="hidden md:flex items-center justify-center bg-pink-50">
-        <div className="max-w-md p-6 text-center">
+    <div className="min-h-screen grid md:grid-cols-2 bg-bg">
+      {/* Left Brand Panel */}
+      <div className="hidden md:flex flex-col items-center justify-center bg-primary relative overflow-hidden p-10">
+        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/5" />
+        <div className="absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-white/5" />
+
+        <div className="relative max-w-md text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mx-auto mb-6">
+            <GraduationCap className="text-white" size={32} />
+          </div>
           <img
             src="/img/img3.svg"
             alt="Illustration"
-            className="w-full h-auto"
+            className="w-full h-auto max-w-xs mx-auto"
           />
-          <h2 className="text-2xl font-bold mt-6">
-            Welcome to <span className="text-blue-500">DreamsEdu</span> Login
+          <h2 className="text-2xl font-bold mt-6 text-white">
+            Welcome to Dream Edu
           </h2>
-          <p className="mt-2 text-gray-600 text-sm">
+          <p className="mt-2 text-primaryLight text-sm">
             Sign in to access your dashboard, manage your profile, and track
             your learning progress.
           </p>
@@ -83,20 +94,28 @@ const SignInForm = () => {
 
       {/* Right Login Form Section */}
       <div className="flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <h2 className="text-3xl font-bold text-center text-pink-600 mb-6">
-            DreamEdu Login
+        <div className="w-full max-w-md bg-cardBg rounded-2xl shadow-sm border border-border p-6 sm:p-8">
+          <div className="md:hidden w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
+            <GraduationCap className="text-white" size={24} />
+          </div>
+          <h2 className="text-2xl font-bold text-center text-textPrimary mb-1">
+            Sign In
           </h2>
+          <p className="text-center text-sm text-textMuted mb-6">
+            Enter your details to access your account
+          </p>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-             <label className="block mb-1 text-gray-700">Email / Phone / Username</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500">
-                <Mail className="text-gray-400 mr-2" size={18} />
+              <label className="block mb-1.5 text-sm text-textSecondary">
+                Email / Phone / Username
+              </label>
+              <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
+                <Mail className="text-textMuted mr-2" size={18} />
                 <input
                   type="text"
                   placeholder="Enter email, phone or username"
-                  className="w-full bg-transparent outline-none"
+                  className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   required
@@ -105,39 +124,41 @@ const SignInForm = () => {
             </div>
 
             <div>
-              <label className="block mb-1 text-gray-700">Password</label>
-              <div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500">
-                <Lock className="text-gray-400 mr-2" size={18} />
+              <label className="block mb-1.5 text-sm text-textSecondary">
+                Password
+              </label>
+              <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
+                <Lock className="text-textMuted mr-2" size={18} />
                 <input
                   type="password"
                   placeholder="Enter your password"
-                  className="w-full bg-transparent outline-none"
+                  className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
-              <div className="text-right mt-1">
-                <Link href="/forgot-password" className="text-xs text-pink-600 hover:underline">
+              <div className="text-right mt-1.5">
+                <Link href="/forgot-password" className="text-xs text-accent hover:underline">
                   Forgot password?
                 </Link>
               </div>
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-danger">{error}</p>}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-blue-700 transition shadow-md disabled:opacity-60"
+              className="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primaryDark transition-colors shadow-sm disabled:opacity-60"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-gray-500 text-sm">
+          <p className="mt-6 text-center text-textMuted text-sm">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-pink-600 hover:underline">
+            <Link href="/signup" className="text-accent hover:underline font-medium">
               Sign Up
             </Link>
           </p>
@@ -156,4 +177,3 @@ function SignIn() {
     </Suspense>
   );
 }
-

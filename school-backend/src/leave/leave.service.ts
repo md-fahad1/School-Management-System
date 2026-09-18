@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Role, LeaveStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ApplyLeaveInput, DecideLeaveInput } from './dto/leave.dto';
+import { AuditService, AuditAction } from '../audit/audit.service';
 
 interface RequestUser {
   id: string;
@@ -25,7 +26,10 @@ const APPLICANT_INCLUDE = {
 
 @Injectable()
 export class LeaveService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
   async findAll(user: RequestUser, status?: LeaveStatus, skip = 0, take = 20) {
     const where: any = {};
@@ -81,7 +85,7 @@ export class LeaveService {
       throw new BadRequestException('This leave request has already been decided');
     }
 
-    return this.prisma.leave.update({
+    const updated = await this.prisma.leave.update({
       where: { id: input.id },
       data: {
         status: input.status,
@@ -91,6 +95,15 @@ export class LeaveService {
       },
       include: APPLICANT_INCLUDE,
     });
+
+    await this.auditService.log({
+      userId: user.id,
+      action: AuditAction.LEAVE_DECIDED,
+      success: true,
+      metadata: { leaveId: input.id, applicantId: leave.applicantId, status: input.status },
+    });
+
+    return updated;
   }
 
   async cancel(user: RequestUser, id: string) {

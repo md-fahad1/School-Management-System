@@ -133,7 +133,7 @@ const ResultForm = ({
         />
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Student</label>
+          <label className="text-xs text-textMuted">Student</label>
           <select
             {...register("studentId")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
@@ -151,7 +151,7 @@ const ResultForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">This result is for a...</label>
+          <label className="text-xs text-textMuted">This result is for a...</label>
           <select
             {...register("resultType")}
             className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"

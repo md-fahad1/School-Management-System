@@ -57,7 +57,7 @@ const TableSearch = () => {
         value={value}
         onChange={handleChange}
         placeholder="Search..."
-        className="w-full md:w-[200px] p-2.5 bg-transparent outline-none text-base md:text-sm placeholder:text-textMuted"
+        className="w-full md:w-[200px] p-2.5 bg-transparent border-0 rounded-full outline-none focus:outline-none focus:ring-0 focus:shadow-none appearance-none [-webkit-appearance:none] [-webkit-tap-highlight-color:transparent] text-base md:text-sm placeholder:text-textMuted"
       />
     </form>
   );

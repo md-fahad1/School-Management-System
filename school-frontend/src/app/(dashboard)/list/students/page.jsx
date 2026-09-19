@@ -11,7 +11,6 @@ import { Eye, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import ExportCsvButton from "@/components/ExportCsvButton";
 import ImportCsvButton from "@/components/ImportCsvButton";
 import StudentCard from "@/components/StudentCard";
-import { Eye } from "lucide-react";
 const columns = [
   { header: "Info", accessor: "info" },
   { header: "Student ID", accessor: "studentId", className: "hidden md:table-cell" },

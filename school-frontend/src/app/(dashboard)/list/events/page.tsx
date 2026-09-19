@@ -4,7 +4,7 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { getEvents } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
-import Image from "next/image";
+import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import EventCard from "@/components/EventCard";
 
 type Event = {
@@ -82,10 +82,10 @@ const EventListPage = async () => {
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-              <Image src="/filter.png" alt="" width={14} height={14} />
+              <SlidersHorizontal size={14} className="text-textSecondary" />
             </button>
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-              <Image src="/sort.png" alt="" width={14} height={14} />
+              <ArrowUpDown size={14} className="text-textSecondary" />
             </button>
             {role === "admin" && <FormModal table="event" type="create" />}
           </div>

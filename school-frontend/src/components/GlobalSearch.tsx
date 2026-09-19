@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { GLOBAL_SEARCH } from "@/lib/graphql/queries";
@@ -70,7 +70,7 @@ const GlobalSearch = () => {
   return (
      <div ref={boxRef} className="relative flex-1 max-w-[420px]">
       <div className="flex items-center gap-2 text-sm rounded-full bg-bg border border-border focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight px-4 transition-colors">
-        <Image src="/search.png" alt="" width={14} height={14} className="opacity-50" />
+        <Search size={14} className="opacity-50" />
         <input
           type="text"
           placeholder="Find anything..."

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { BookOpen } from "lucide-react";
 import FormModal from "./FormModal";
 
 type Subject = {
@@ -13,7 +13,7 @@ const SubjectCard = ({ item, role }: { item: Subject; role: string }) => {
       {/* Header: icon + subject name */}
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-full bg-accentLight flex items-center justify-center shrink-0">
-          <Image src="/subject.png" alt="" width={20} height={20} />
+          <BookOpen size={20} className="text-accent" />
         </div>
         <h3 className="font-semibold text-textPrimary text-base">{item.name}</h3>
       </div>

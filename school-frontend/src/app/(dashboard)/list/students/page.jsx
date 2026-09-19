@@ -7,6 +7,7 @@ import { getStudents } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import { Eye, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import ExportCsvButton from "@/components/ExportCsvButton";
 import ImportCsvButton from "@/components/ImportCsvButton";
 import StudentCard from "@/components/StudentCard";
@@ -52,7 +53,7 @@ const StudentListPage = async ({ searchParams }) => {
         <div className="flex items-center gap-2">
           <Link href={`/list/students/${item.id}`}>
             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-infoLight">
-              <Image src="/view.png" alt="" width={16} height={16} />
+              <Eye size={16} className="text-textSecondary" />
             </button>
           </Link>
           {role === "admin" && (
@@ -86,10 +87,10 @@ const StudentListPage = async ({ searchParams }) => {
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-              <Image src="/filter.png" alt="" width={14} height={14} />
+              <SlidersHorizontal size={14} className="text-textSecondary" />
             </button>
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-              <Image src="/sort.png" alt="" width={14} height={14} />
+              <ArrowUpDown size={14} className="text-textSecondary" />
             </button>
             {role === "admin" && (
   <div className="flex items-center gap-4">

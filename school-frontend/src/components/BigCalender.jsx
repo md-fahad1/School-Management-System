@@ -7,6 +7,7 @@ import { useState } from "react";
 
 const localizer = momentLocalizer(moment);
 
+/** @param {{ events?: { title: string; start: Date; end: Date }[] }} props */
 const BigCalendar = ({ events = [] }) => {
   const [view, setView] = useState(Views.WORK_WEEK);
 

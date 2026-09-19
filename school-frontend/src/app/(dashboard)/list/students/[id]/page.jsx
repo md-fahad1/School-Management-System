@@ -1,15 +1,17 @@
 import dynamic from "next/dynamic";
 import Announcements from "@/components/Announcements";
+import BigCalendar from "@/components/BigCalender";
 import FormModal from "@/components/FormModal";
 
 const Performance = dynamic(() => import("@/components/Performance"), {
   loading: () => <div className="h-72 bg-gray-100 rounded-2xl animate-pulse" />,
 });
-import { getStudent } from "@/lib/graphql/fetchers";
+import { getStudent, getClassSchedule } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Layers, School, User, Users, Droplet, Calendar, Mail, Phone } from "lucide-react";
 
 const SingleStudentPage = async ({ params }) => {
   const role = cookies().get("role")?.value ?? "admin";
@@ -18,6 +20,8 @@ const SingleStudentPage = async ({ params }) => {
   if (!student) {
     notFound();
   }
+
+  const schedule = student.classId ? await getClassSchedule(student.classId) : [];
 
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
@@ -58,19 +62,19 @@ const SingleStudentPage = async ({ params }) => {
               </p>
               <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium text-white/80">
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-                  <Image src="/blood.png" alt="" width={14} height={14} className="brightness-0 invert opacity-80" />
+                  <Droplet size={14} className="text-white/80" />
                   <span>{student.bloodType}</span>
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-                  <Image src="/date.png" alt="" width={14} height={14} className="brightness-0 invert opacity-80" />
+                  <Calendar size={14} className="text-white/80" />
                   <span>{student.birthday !== "-" ? student.birthday : "No birthday set"}</span>
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-                  <Image src="/mail.png" alt="" width={14} height={14} className="brightness-0 invert opacity-80" />
+                  <Mail size={14} className="text-white/80" />
                   <span className="truncate">{student.email ?? "-"}</span>
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-                  <Image src="/phone.png" alt="" width={14} height={14} className="brightness-0 invert opacity-80" />
+                  <Phone size={14} className="text-white/80" />
                   <span>{student.phone}</span>
                 </div>
               </div>
@@ -79,7 +83,7 @@ const SingleStudentPage = async ({ params }) => {
 
           <div className="flex-1 flex gap-4 justify-between flex-wrap">
             <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
-              <Image src="/singleBranch.png" alt="" width={24} height={24} className="w-6 h-6" />
+              <Layers size={24} className="text-primary" />
               <div>
                 <h1 className="text-xl font-semibold">{student.gradeLevel}</h1>
                 <span className="text-sm text-gray-400">Grade</span>
@@ -87,7 +91,7 @@ const SingleStudentPage = async ({ params }) => {
             </div>
 
             <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
-              <Image src="/singleClass.png" alt="" width={24} height={24} className="w-6 h-6" />
+              <School size={24} className="text-primary" />
               <div>
                 <h1 className="text-xl font-semibold">{student.className}</h1>
                 <span className="text-sm text-gray-400">Class</span>
@@ -95,7 +99,7 @@ const SingleStudentPage = async ({ params }) => {
             </div>
 
             <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
-              <Image src="/singleAttendance.png" alt="" width={24} height={24} className="w-6 h-6" />
+              <User size={24} className="text-primary" />
               <div>
                 <h1 className="text-xl font-semibold">{student.sex ?? "-"}</h1>
                 <span className="text-sm text-gray-400">Sex</span>
@@ -103,7 +107,7 @@ const SingleStudentPage = async ({ params }) => {
             </div>
 
             <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex gap-4 w-full sm:w-[48%] xl:w-[45%] 2xl:w-[48%]">
-              <Image src="/singleLesson.png" alt="" width={24} height={24} className="w-6 h-6" />
+              <Users size={24} className="text-primary" />
               <div>
                 <h1 className="text-xl font-semibold truncate">{student.parentName}</h1>
                 <span className="text-sm text-gray-400">Parent</span>
@@ -112,11 +116,11 @@ const SingleStudentPage = async ({ params }) => {
           </div>
         </div>
 
-        <div className="mt-4 bg-white rounded-md p-4">
-          <h1 className="font-semibold">Student's Schedule</h1>
-          <p className="text-sm text-gray-400 mt-2">
-            Full timetable view is not wired up on this page yet.
-          </p>
+        <div className="mt-4 h-[600px] bg-cardBg border border-border shadow-sm rounded-2xl p-4">
+          <h1 className="text-xl font-semibold text-textPrimary">Student&apos;s Schedule</h1>
+          <div className="mt-3 h-[calc(100%-2.75rem)]">
+            <BigCalendar events={schedule} />
+          </div>
         </div>
       </div>
 

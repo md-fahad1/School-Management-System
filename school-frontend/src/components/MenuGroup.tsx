@@ -7,6 +7,13 @@ import { ChevronDown } from "lucide-react";
 import MenuLink from "./MenuLink";
 import { useSidebar } from "./SidebarContext";
 
+// See MenuLink.tsx: subject.png / result.png have an opaque white
+// background, so they need a different filter to avoid a white box.
+const iconFilter = (src: string) =>
+  src === "/subject.png" || src === "/result.png"
+    ? "invert mix-blend-screen"
+    : "brightness-0 invert";
+
 type MenuItem = { icon: string; label: string; href: string };
 
 const MenuGroup = ({
@@ -33,7 +40,7 @@ const MenuGroup = ({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-         className={`flex items-center ${justifyClass} gap-4 py-2.5 px-3 rounded-lg transition-colors w-full ${
+        className={`flex items-center ${justifyClass} gap-4 py-2.5 px-3 rounded-lg transition-colors w-full ${
           hasActiveChild
             ? "text-sidebarTextActive bg-sidebarActiveBg"
             : "text-sidebarText"
@@ -45,7 +52,7 @@ const MenuGroup = ({
             alt=""
             width={20}
             height={20}
-            className={`brightness-0 invert ${
+            className={`${iconFilter(icon)} ${
               hasActiveChild ? "opacity-100" : "opacity-70"
             }`}
           />
@@ -60,11 +67,11 @@ const MenuGroup = ({
       </button>
 
       {open && (
-              <div
-                className={`flex flex-col gap-1 mt-1 border-sidebarBorder ${
-                  mobileOpen ? "pl-8 border-l ml-4" : "lg:pl-8 lg:border-l lg:ml-4"
-                }`}
-              >
+        <div
+          className={`flex flex-col gap-1 mt-1 border-sidebarBorder ${
+            mobileOpen ? "pl-8 border-l ml-4" : "lg:pl-8 lg:border-l lg:ml-4"
+          }`}
+        >
           {childrenItems.map((child) => (
             <MenuLink key={child.label} item={child} nested />
           ))}

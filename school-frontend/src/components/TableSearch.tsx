@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Search } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
@@ -46,7 +46,7 @@ const TableSearch = () => {
       className="w-full md:w-auto flex items-center gap-2 text-sm rounded-full bg-bg border border-border focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight px-3 transition-colors"
     >
       <button type="submit" aria-label="Search" className="opacity-50">
-        <Image src="/search.png" alt="" width={14} height={14} />
+        <Search size={14} />
       </button>
       <input
         type="text"

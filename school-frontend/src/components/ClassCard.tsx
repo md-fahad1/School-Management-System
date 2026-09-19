@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { School } from "lucide-react";
 import FormModal from "./FormModal";
 
 type Class = {
@@ -15,7 +15,7 @@ const ClassCard = ({ item, role }: { item: Class; role: string }) => {
       {/* Header: icon + class name */}
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-full bg-accentLight flex items-center justify-center shrink-0">
-          <Image src="/class.png" alt="" width={20} height={20} />
+          <School size={20} className="text-accent" />
         </div>
         <h3 className="font-semibold text-textPrimary text-base">{item.name}</h3>
       </div>

@@ -8,7 +8,7 @@ import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
 import { GET_SUBJECTS } from "@/lib/graphql/queries";
-
+import MultiSelectChips from "../MultiSelectChips";
 const CREATE_TEACHER = gql`
   mutation CreateTeacher($input: CreateTeacherInput!) {
     createTeacher(input: $input) {
@@ -63,9 +63,10 @@ const TeacherForm = ({
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
-  } = useForm<Inputs>({
-    resolver: zodResolver(schema),
+  } = useForm<Inputs>({    resolver: zodResolver(schema),
    defaultValues:
   type === "update"
     ? {
@@ -77,7 +78,12 @@ const TeacherForm = ({
       }
     : undefined,
   });
+  const selectedSubjects = (watch("subjectIds") ?? []) as string[];
 
+  // Make sure react-hook-form tracks the chip selection like a normal field.
+  useEffect(() => {
+    register("subjectIds");
+  }, [register]);
   const [subjectOptions, setSubjectOptions] = useState<{ id: string; name: string }[]>([]);
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -167,20 +173,13 @@ const TeacherForm = ({
           register={register}
           error={errors.address}
         />
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-textMuted">Subjects</label>
-          <select
-            multiple
-            {...register("subjectIds")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full h-24"
-          >
-            {subjectOptions.map((s) => (
-              <option value={s.id} key={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
+         <MultiSelectChips
+          label="Subjects"
+          options={subjectOptions}
+          value={selectedSubjects}
+          onChange={(next) => setValue("subjectIds", next, { shouldDirty: true })}
+          emptyText="No subjects available yet"
+        />
       </div>
 
       {submitError && <span className="text-red-500 text-sm">{submitError}</span>}

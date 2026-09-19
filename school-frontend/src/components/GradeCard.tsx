@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Layers } from "lucide-react";
 import FormModal from "./FormModal";
 
 const GradeCard = ({ item, role }: { item: { id: string; level: number }; role: string }) => {
@@ -6,7 +6,7 @@ const GradeCard = ({ item, role }: { item: { id: string; level: number }; role: 
     <div className="bg-cardBg border border-border rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-full bg-accentLight flex items-center justify-center shrink-0">
-          <Image src="/subject.png" alt="" width={20} height={20} />
+          <Layers size={20} className="text-accent" />
         </div>
         <h3 className="font-semibold text-textPrimary text-base">Grade {item.level}</h3>
       </div>

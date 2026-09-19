@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { BookMarked } from "lucide-react";
 import FormModal from "./FormModal";
 
 type Book = {
@@ -20,7 +20,7 @@ const BookCard = ({ item, role }: { item: Book; role: string }) => {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-full bg-accentLight flex items-center justify-center shrink-0">
-            <Image src="/subject.png" alt="" width={20} height={20} />
+            <BookMarked size={20} className="text-accent" />
           </div>
           <div>
             <h3 className="font-semibold text-textPrimary">{item.title}</h3>

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClassInput, UpdateClassInput } from './dto/class.dto';
 import { AuditService, AuditAction } from '../audit/audit.service';
-
+import { requireInstitutionId } from '../tenant/tenant-context';
 @Injectable()
 export class ClassesService {
   constructor(
@@ -16,21 +16,21 @@ export class ClassesService {
       skip,
       take,
       orderBy: { name: 'asc' },
-      include: { grade: true, supervisor: true },
+      include: { grade: true, supervisor: true, department: true }
     });
   }
 
   async findOne(id: string) {
     const cls = await this.prisma.class.findUnique({
       where: { id },
-      include: { grade: true, supervisor: true },
+      include: { grade: true, supervisor: true, department: true }
     });
     if (!cls) throw new NotFoundException(`Class ${id} not found`);
     return cls;
   }
 
   async create(input: CreateClassInput, actorId?: string) {
-    const created = await this.prisma.class.create({ data: input });
+    const created = await this.prisma.class.create({ data: { ...input, institutionId: requireInstitutionId() } });
 
     await this.auditService.log({
       userId: actorId,

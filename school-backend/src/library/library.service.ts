@@ -3,7 +3,7 @@ import { LoanStatus, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookInput, UpdateBookInput } from './dto/book.dto';
 import { IssueBookInput, ReturnBookInput } from './dto/book-loan.dto';
-
+import { requireInstitutionId } from '../tenant/tenant-context';
 interface RequestUser {
   id: string;
   role: Role;
@@ -39,10 +39,10 @@ export class LibraryService {
   }
 
   async createBook(input: CreateBookInput) {
-    const existing = await this.prisma.book.findUnique({ where: { isbn: input.isbn } });
+    const existing = await this.prisma.book.findFirst({ where: { isbn: input.isbn } });
     if (existing) throw new BadRequestException(`A book with ISBN ${input.isbn} already exists`);
     return this.prisma.book.create({
-      data: { ...input, availableCopies: input.totalCopies },
+      data: { ...input, availableCopies: input.totalCopies, institutionId: requireInstitutionId() },
     });
   }
 

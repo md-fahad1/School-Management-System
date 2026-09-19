@@ -19,7 +19,13 @@ export class CreateClassInput {
   @Field(() => ID, { nullable: true })
   @IsOptional()
   @IsUUID()
-  supervisorId?: string;
+    supervisorId?: string;
+
+  // Group (Science...) or department (CSE...) this class belongs to.
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string;
 }
 
 @InputType()

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { forwardedHeaders } from "@/lib/forwardHeaders";
 
 const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/graphql";
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
 
   const gqlRes = await fetch(GRAPHQL_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: forwardedHeaders(request.headers),
     body: JSON.stringify({
       query: LOGIN_MUTATION,
       variables: { input: { identifier, password } },

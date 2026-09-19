@@ -1,6 +1,6 @@
 import "server-only";
 import { GraphQLClient } from "graphql-request";
-import { cookies } from "next/headers";
+import { cookies, headers as nextHeaders } from "next/headers";
 
 const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/graphql";
@@ -14,8 +14,15 @@ const GRAPHQL_URL =
 export function getServerClient() {
   const token = cookies().get("token")?.value;
 
+  // Forward the visitor's real IP so rate limits are per user, not per Next server.
+  const h = nextHeaders();
+  const xff = h.get("x-forwarded-for") ?? h.get("x-real-ip");
+
   return new GraphQLClient(GRAPHQL_URL, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(xff ? { "x-forwarded-for": xff } : {}),
+    },
     // Server Components re-render on navigation; avoid stale cached
     // GraphQL responses across requests.
     fetch: (url, options) =>

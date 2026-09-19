@@ -5,8 +5,7 @@ import { Mail, Lock, User, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { getClientGqlClient } from "@/lib/graphql/client";
-import { REGISTER } from "@/lib/graphql/queries";
+import { roleHome } from "@/lib/roleHome";
 import { useAppDispatch } from "@/redux/hooks";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { getErrorMessage } from "@/lib/errors";
@@ -21,7 +20,8 @@ const SignUp = () => {
     password: "",
     name: "",
     surname: "",
-    role: "TEACHER",
+    role: "PARENT",
+    institutionSlug: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,20 +36,24 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      const client = await getClientGqlClient();
-      const data = await client.request(REGISTER, { input: form });
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Sign up failed");
 
-      const { accessToken, refreshToken, id, username, role } = data.register;
+      const { accessToken, id, username, role } = data;
 
       Cookies.set("token", accessToken, { expires: 1 });
-      Cookies.set("refreshToken", refreshToken, { expires: 30 });
       Cookies.set("userId", id, { expires: 30 });
       Cookies.set("username", username, { expires: 30 });
       Cookies.set("role", role.toLowerCase(), { expires: 30 });
 
       dispatch(setCredentials({ token: accessToken, id, username, role }));
 
-      router.push(`/${role.toLowerCase()}`);
+      router.push(roleHome(role));
     } catch (err) {
       setError(
         getErrorMessage(err, "Something went wrong. Please try again.")
@@ -176,16 +180,19 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-textSecondary text-sm">I am a...</label>
-              <select
-                name="role"
+              <label className="block mb-1.5 text-textSecondary text-sm">Institution code</label>
+              <input
+                type="text"
+                name="institutionSlug"
+                placeholder="e.g. demo-school"
                 className="w-full px-3 py-2.5 bg-bg border border-border rounded-lg outline-none text-sm focus:border-accent focus:ring-2 focus:ring-accentLight transition-colors"
-                value={form.role}
+                value={form.institutionSlug}
                 onChange={handleChange}
-              >
-                <option value="TEACHER">Teacher</option>
-                <option value="PARENT">Parent</option>
-              </select>
+                required
+              />
+              <p className="mt-1 text-xs text-textMuted">
+                Ask your school for its code. Sign-up here is for parents; teachers and staff get accounts from their admin.
+              </p>
             </div>
 
             {error && <p className="text-danger text-sm">{error}</p>}

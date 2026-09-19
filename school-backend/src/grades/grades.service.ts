@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGradeInput, UpdateGradeInput } from './dto/grade.dto';
-
+import { requireInstitutionId } from '../tenant/tenant-context';
 @Injectable()
 export class GradesService {
   constructor(private prisma: PrismaService) {}
@@ -17,9 +17,9 @@ export class GradesService {
   }
 
   async create(input: CreateGradeInput) {
-    const existing = await this.prisma.grade.findUnique({ where: { level: input.level } });
+    const existing = await this.prisma.grade.findFirst({ where: { level: input.level } });
     if (existing) throw new BadRequestException(`Grade level ${input.level} already exists`);
-    return this.prisma.grade.create({ data: input });
+    return this.prisma.grade.create({ data: { ...input, institutionId: requireInstitutionId() } });
   }
 
   async update(id: string, input: UpdateGradeInput) {

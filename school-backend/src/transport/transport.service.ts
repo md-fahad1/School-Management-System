@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVehicleInput, UpdateVehicleInput } from './dto/vehicle.dto';
-
+import { requireInstitutionId } from '../tenant/tenant-context';
 @Injectable()
 export class TransportService {
   constructor(private prisma: PrismaService) {}
@@ -25,7 +25,7 @@ export class TransportService {
   }
 
   create(input: CreateVehicleInput) {
-    return this.prisma.vehicle.create({ data: input });
+    return this.prisma.vehicle.create({ data: { ...input, institutionId: requireInstitutionId() } });
   }
 
   async update(id: string, input: UpdateVehicleInput) {

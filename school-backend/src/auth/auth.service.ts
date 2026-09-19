@@ -11,6 +11,7 @@ import { AuditService, AuditAction } from '../audit/audit.service';
 import { assertPasswordComplexity } from '../common/utils/password.util';
 import { LoginInput, RegisterInput, AuthPayload } from './dto/auth.dto';
 import { Role } from '@prisma/client';
+import { getTenant } from '../tenant/tenant-context';
 
 interface RequestMeta {
   ip?: string;
@@ -64,7 +65,23 @@ export class AuthService {
     }
 
     assertPasswordComplexity(input.password);
-    const hashed = await bcrypt.hash(input.password, 10);
+       const hashed = await bcrypt.hash(input.password, 10);
+
+    // Which institution does the new account belong to? An institution admin
+    // creating staff uses their own; a public sign-up must name one by slug.
+    let institutionId = getTenant()?.institutionId;
+    if (!institutionId) {
+      if (!input.institutionSlug) {
+        throw new BadRequestException('institutionSlug is required');
+      }
+      const institution = await this.prisma.institution.findUnique({
+        where: { slug: input.institutionSlug.trim().toLowerCase() },
+      });
+      if (!institution || institution.status === 'SUSPENDED') {
+        throw new BadRequestException('Institution not found or not active');
+      }
+      institutionId = institution.id;
+    }
 
     const user = await this.prisma.user.create({
       data: {
@@ -72,7 +89,8 @@ export class AuthService {
         email: input.email,
         phone: input.phone,
         password: hashed,
-        role: input.role,
+                role: input.role,
+        institutionId,
         ...(input.role === Role.ADMIN && {
           admin: { create: { name: input.name, surname: input.surname } },
         }),
@@ -185,7 +203,19 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    await this.loginAttempts.recordSuccess(input.identifier);
+        await this.loginAttempts.recordSuccess(input.identifier);
+
+    if (user.institutionId) {
+      const institution = await this.prisma.institution.findUnique({
+        where: { id: user.institutionId },
+        select: { status: true },
+      });
+      if (institution?.status === 'SUSPENDED') {
+        throw new UnauthorizedException(
+          'This institution account is suspended. Please contact support.',
+        );
+      }
+    }
     await this.audit.log({
       userId: user.id,
       action: AuditAction.LOGIN_SUCCESS,
@@ -249,7 +279,21 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token expired');
     }
 
-    const { user } = stored;
+        const { user } = stored;
+
+    // A suspended institution must not be able to keep refreshing sessions.
+    if (user.institutionId) {
+      const institution = await this.prisma.institution.findUnique({
+        where: { id: user.institutionId },
+        select: { status: true },
+      });
+      if (institution?.status === 'SUSPENDED') {
+        await this.revokeAllForUser(user.id);
+        throw new UnauthorizedException(
+          'This institution account is suspended. Please contact support.',
+        );
+      }
+    }
     const newTokens = await this.issueTokenPair(user.id, user.username, user.role, meta);
 
     // Rotate: mark the presented token as spent, linking it to its
@@ -327,7 +371,15 @@ export class AuthService {
   ): Promise<AuthPayload> {
     const jti = crypto.randomUUID();
     const accessExpiresIn = this.config.get<string>('ACCESS_TOKEN_EXPIRES_IN') ?? '15m';
-    const accessToken = this.jwt.sign({ sub, username, role, jti }, { expiresIn: accessExpiresIn });
+       const owner = await this.prisma.user.findUnique({
+      where: { id: sub },
+      select: { institutionId: true },
+    });
+    const institutionId = owner?.institutionId ?? undefined;
+    const accessToken = this.jwt.sign(
+      { sub, username, role, jti, institutionId },
+      { expiresIn: accessExpiresIn },
+    );
 
     const rawRefreshToken = crypto.randomBytes(REFRESH_TOKEN_BYTES).toString('hex');
     const refreshDays = Number(this.config.get<string>('REFRESH_TOKEN_EXPIRES_IN_DAYS') ?? '30');

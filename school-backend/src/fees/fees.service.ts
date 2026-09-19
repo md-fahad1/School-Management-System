@@ -7,6 +7,7 @@ import { CreateScholarshipInput, UpdateScholarshipInput } from './dto/scholarshi
 import { ApplyDiscountInput, ApplyFineInput } from './dto/discount-fine.dto';
 import { AuditService, AuditAction } from '../audit/audit.service';
 import { RecordPaymentInput } from './dto/payment.dto';
+import { requireInstitutionId } from '../tenant/tenant-context';
 interface RequestUser {
   id: string;
   role: Role;
@@ -40,7 +41,7 @@ export class FeesService {
         `A "${input.name}" fee structure already exists for this grade`,
       );
     }
-    return this.prisma.feeStructure.create({ data: input });
+    return this.prisma.feeStructure.create({ data: { ...input, institutionId: requireInstitutionId() } });
   }
 
   async updateFeeStructure(id: string, input: UpdateFeeStructureInput) {

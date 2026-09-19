@@ -1,5 +1,6 @@
 import "server-only";
-import { getServerClient } from "./server-client";
+import type { AcademicYearItem, DepartmentItem } from "@/lib/academic";
+import { getServerClient, getServerRole } from "./server-client";
 import {
   GET_ANNOUNCEMENTS,
   GET_ASSIGNMENTS,
@@ -34,6 +35,12 @@ import {
     GET_VEHICLES,
   GET_MY_VEHICLES,
   ME_QUERY,
+  GET_MY_INSTITUTION,
+  GET_PERMISSIONS,
+  GET_CUSTOM_ROLES,
+  GET_CUSTOM_ROLE,
+   GET_ACADEMIC_YEARS,
+  GET_DEPARTMENTS,
 } from "./queries";
 
 export async function getMe() {
@@ -43,6 +50,19 @@ export async function getMe() {
     return data.me;
   } catch (err) {
     console.error("getMe failed:", err);
+    return null;
+  }
+}
+
+export async function getMyInstitution() {
+  // The platform owner (super admin) belongs to no institution.
+  if (getServerRole() === "super_admin") return null;
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ myInstitution: any }>(GET_MY_INSTITUTION, {});
+    return data.myInstitution;
+  } catch (err) {
+    console.error("getMyInstitution failed:", err);
     return null;
   }
 }
@@ -246,12 +266,16 @@ export async function getClasses(search?: string) {
   try {
     const client = getServerClient();
     const data = await client.request<{ classes: any[] }>(GET_CLASSES, { search });
-    return data.classes.map((c) => ({
+   return data.classes.map((c) => ({
       id: c.id,
       name: c.name,
       capacity: c.capacity,
+      gradeId: c.gradeId,
       grade: c.gradeLevel ?? "-",
+      supervisorId: c.supervisorId ?? null,
       supervisor: c.supervisorName ?? "-",
+      departmentId: c.departmentId ?? null,
+      department: c.departmentName ?? "-",
     }));
   } catch (err) {
     console.error("getClasses failed:", err);
@@ -675,6 +699,50 @@ export async function getGrades() {
   }
 }
 
+export async function getPermissions() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ permissions: any[] }>(GET_PERMISSIONS, {});
+    return data.permissions;
+  } catch (err) {
+    console.error("getPermissions failed:", err);
+    return [];
+  }
+}
+
+function mapRole(r: any) {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    description: (r.description ?? "") as string,
+    isSystem: r.isSystem as boolean,
+    baseRole: (r.baseRole ?? null) as string | null,
+    permissionKeys: (r.permissions ?? []).map((p: { key: string }) => p.key) as string[],
+  };
+}
+
+export async function getCustomRoles() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ customRoles: any[] }>(GET_CUSTOM_ROLES, {});
+    return data.customRoles.map(mapRole);
+  } catch (err) {
+    console.error("getCustomRoles failed:", err);
+    return [];
+  }
+}
+
+export async function getCustomRole(id: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ customRole: any }>(GET_CUSTOM_ROLE, { id });
+    return mapRole(data.customRole);
+  } catch (err) {
+    console.error("getCustomRole failed:", err);
+    return null;
+  }
+}
+
 export async function getAuditLogs(params?: {
   skip?: number;
   take?: number;
@@ -754,6 +822,50 @@ export async function getMyVehicles() {
     }));
   } catch (err) {
     console.error("getMyVehicles failed:", err);
+    return [];
+  }
+  
+  
+}
+export async function getAcademicYears(): Promise<AcademicYearItem[]> {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ academicYears: any[] }>(GET_ACADEMIC_YEARS, {});
+    return data.academicYears.map((y) => ({
+      id: y.id,
+      name: y.name,
+      startDate: y.startDate,
+      endDate: y.endDate,
+      isCurrent: y.isCurrent,
+      terms: (y.terms ?? []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        type: t.type,
+        startDate: t.startDate,
+        endDate: t.endDate,
+        academicYearId: t.academicYearId,
+      })),
+    }));
+  } catch (err) {
+    console.error("getAcademicYears failed:", err);
+    return [];
+  }
+}
+
+export async function getDepartments(search?: string): Promise<DepartmentItem[]> {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ departments: any[] }>(GET_DEPARTMENTS, { search });
+    return data.departments.map((d) => ({
+      id: d.id,
+      name: d.name,
+      code: d.code ?? null,
+      type: d.type,
+      description: d.description ?? null,
+      classCount: d.classCount ?? 0,
+    }));
+  } catch (err) {
+    console.error("getDepartments failed:", err);
     return [];
   }
 }

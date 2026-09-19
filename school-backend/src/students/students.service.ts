@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStudentInput, UpdateStudentInput } from './dto/student.dto';
+import { StudentStatus } from '../common/enums/student-status.enum';
 import { AuditService, AuditAction } from '../audit/audit.service';
 @Injectable()
 export class StudentsService {
@@ -24,16 +25,19 @@ export class StudentsService {
       include: { user: true, class: true, grade: true, parent: true },
     });
   }
-  findAll(search?: string, skip = 0, take = 10) {
+  findAll(search?: string, skip = 0, take = 10, status?: StudentStatus) {
     return this.prisma.student.findMany({
-      where: search
-        ? {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { surname: { contains: search, mode: 'insensitive' } },
-            ],
-          }
-        : undefined,
+      where: {
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { surname: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
+        ...(status ? { status } : {}),
+      },
       skip,
       take,
       orderBy: { name: 'asc' },
@@ -65,6 +69,9 @@ export class StudentsService {
       throw new BadRequestException('Class is at full capacity');
     }
 
+        // Grade always comes from the class, so the two can never disagree.
+    const derivedGradeId = targetClass.gradeId;
+
     const hashed = await bcrypt.hash(input.password, 10);
 
     const user = await this.prisma.user.create({
@@ -83,8 +90,9 @@ export class StudentsService {
             bloodType: input.bloodType,
             sex: input.sex,
             birthday: input.birthday ? new Date(input.birthday) : undefined,
+            status: input.status,
             classId: input.classId,
-            gradeId: input.gradeId,
+            gradeId: derivedGradeId,
             parentId: input.parentId,
           },
         },
@@ -99,11 +107,15 @@ export class StudentsService {
     });
 
     return user.student;
-
-    return user.student;
   }
 
-  async update(id: string, input: UpdateStudentInput, actorId?: string) {
+    async update(id: string, input: UpdateStudentInput, actorId?: string) {
+    let derivedGradeId: string | undefined;
+    if (input.classId) {
+      const cls = await this.prisma.class.findUnique({ where: { id: input.classId } });
+      if (!cls) throw new BadRequestException('Class not found');
+      derivedGradeId = cls.gradeId;
+    }
     const before = await this.findOne(id);
     const updated = await this.prisma.student.update({
       where: { id },
@@ -116,8 +128,9 @@ export class StudentsService {
         bloodType: input.bloodType,
         sex: input.sex,
         birthday: input.birthday ? new Date(input.birthday) : undefined,
+        status: input.status,
         classId: input.classId,
-        gradeId: input.gradeId,
+        gradeId: derivedGradeId,
         parentId: input.parentId,
       },
     });
@@ -131,6 +144,26 @@ export class StudentsService {
         before: { name: before.name, surname: before.surname, classId: before.classId },
         after: { name: updated.name, surname: updated.surname, classId: updated.classId },
       },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Dedicated status-change mutation (Active/Graduated/Transferred/
+   * Suspended/...) so admins don't need to send a full profile update
+   * just to flip a status, and so the audit trail records status
+   * changes as their own action with an optional reason.
+   */
+  async updateStatus(id: string, status: StudentStatus, actorId?: string, reason?: string) {
+    const before = await this.findOne(id);
+    const updated = await this.prisma.student.update({ where: { id }, data: { status } });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.STUDENT_STATUS_CHANGE,
+      success: true,
+      metadata: { studentId: id, from: before.status, to: status, reason },
     });
 
     return updated;

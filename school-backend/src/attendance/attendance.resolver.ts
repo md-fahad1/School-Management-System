@@ -10,15 +10,18 @@ import {
 } from './dto/attendance.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Attendance)
-@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@UseGuards(GqlJwtAuthGuard, RolesGuard, PermissionsGuard)
 export class AttendanceResolver {
   constructor(private attendanceService: AttendanceService) {}
 
   @Query(() => [Attendance])
+  @RequirePermissions('attendance:view')
   attendances(
     @CurrentUser() user: { id: string; role: Role },
     @Args('skip', { nullable: true }) skip?: number,
@@ -34,18 +37,21 @@ export class AttendanceResolver {
 
   @Mutation(() => Attendance)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('attendance:create')
   createAttendance(@Args('input') input: CreateAttendanceInput) {
     return this.attendanceService.create(input);
   }
 
   @Mutation(() => [Attendance])
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('attendance:create')
   bulkMarkAttendance(@Args('input') input: BulkMarkAttendanceInput) {
     return this.attendanceService.bulkMark(input);
   }
 
   @Mutation(() => Attendance)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('attendance:update')
   updateAttendance(
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateAttendanceInput,
@@ -54,6 +60,7 @@ export class AttendanceResolver {
   }
     @Mutation(() => Boolean)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('attendance:delete')
   removeAttendance(@Args('id', { type: () => ID }) id: string) {
     return this.attendanceService.remove(id);
   }

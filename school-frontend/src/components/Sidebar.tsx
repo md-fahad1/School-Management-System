@@ -9,7 +9,14 @@ import { useSidebar } from "./SidebarContext";
 // is a Server Component (reads cookies()) — passing it as a node lets it
 // still render on the server even though Sidebar itself is a Client
 // Component (needed for the mobile open/close state).
-const Sidebar = ({ menu }: { menu: ReactNode }) => {
+type SidebarProps = {
+  menu: ReactNode;
+  institutionName?: string | null;
+  institutionLogo?: string | null;
+  institutionType?: string | null;
+};
+
+const Sidebar = ({ menu, institutionName, institutionLogo, institutionType }: SidebarProps) => {
   const { mobileOpen, closeMobile } = useSidebar();
 
   return (
@@ -34,9 +41,15 @@ const Sidebar = ({ menu }: { menu: ReactNode }) => {
             mobileOpen ? "justify-start" : "justify-center lg:justify-start"
           } gap-2 mb-3`}
         >
-          <Image src="/logo.png" alt="logo" width={32} height={32} />
-          <span className={`${mobileOpen ? "block" : "hidden lg:block"} font-bold text-sidebarTextActive`}>
-            Dream Edu
+          <Image
+            src={institutionLogo || "/logo.png"}
+            alt="logo"
+            width={32}
+            height={32}
+            className="rounded object-cover"
+          />
+          <span className={`${mobileOpen ? "block" : "hidden lg:block"} font-bold text-sidebarTextActive truncate`}>
+            {institutionName || "Dream Edu"}
           </span>
         </Link>
 
@@ -46,8 +59,8 @@ const Sidebar = ({ menu }: { menu: ReactNode }) => {
           } items-center gap-2 bg-sidebarBgHover rounded-lg px-3 py-2 mb-2`}
         >
           <span className="w-2 h-2 rounded-full bg-success shrink-0" />
-          <span className="text-sm text-sidebarTextActive truncate">
-            International School
+          <span className="text-sm text-sidebarTextActive truncate capitalize">
+            {institutionType ? institutionType.replace(/_/g, " ").toLowerCase() : "platform"}
           </span>
         </div>
 

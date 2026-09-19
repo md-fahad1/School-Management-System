@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSubjectInput, UpdateSubjectInput } from './dto/subject.dto';
 import { AuditService, AuditAction } from '../audit/audit.service';
-
+import { requireInstitutionId } from '../tenant/tenant-context';
 @Injectable()
 export class SubjectsService {
   constructor(
@@ -33,6 +33,7 @@ export class SubjectsService {
     const created = await this.prisma.subject.create({
       data: {
         name: input.name,
+        institutionId: requireInstitutionId(),
         teachers: input.teacherIds
           ? { connect: input.teacherIds.map((id) => ({ id })) }
           : undefined,

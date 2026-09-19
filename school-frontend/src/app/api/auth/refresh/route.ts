@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { forwardedHeaders } from "@/lib/forwardHeaders";
 
 const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/graphql";
@@ -16,7 +17,7 @@ const REFRESH_TOKEN_MUTATION = `
   }
 `;
 
-export async function POST() {
+export async function POST(request: Request) {
   const refreshToken = cookies().get("refreshToken")?.value;
   if (!refreshToken) {
     return NextResponse.json({ error: "No session" }, { status: 401 });
@@ -24,7 +25,7 @@ export async function POST() {
 
   const gqlRes = await fetch(GRAPHQL_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: forwardedHeaders(request.headers),
     body: JSON.stringify({
       query: REFRESH_TOKEN_MUTATION,
       variables: { input: { refreshToken } },

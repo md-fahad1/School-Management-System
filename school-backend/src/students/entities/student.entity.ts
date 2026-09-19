@@ -1,5 +1,6 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { Sex } from '../../common/enums/sex.enum';
+import { StudentStatus } from '../../common/enums/student-status.enum';
 
 @ObjectType()
 export class Student {
@@ -29,6 +30,9 @@ export class Student {
 
   @Field({ nullable: true })
   birthday?: Date;
+
+  @Field(() => StudentStatus)
+  status!: StudentStatus;
 
   @Field(() => ID)
   classId!: string;

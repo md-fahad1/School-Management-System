@@ -21,5 +21,11 @@ export class Class {
   gradeLevel?: number;
 
   @Field({ nullable: true })
-  supervisorName?: string;
+   supervisorName?: string;
+
+  @Field(() => ID, { nullable: true })
+  departmentId?: string;
+
+  @Field({ nullable: true })
+  departmentName?: string;
 }

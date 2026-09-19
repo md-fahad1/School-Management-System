@@ -7,6 +7,7 @@ type Class = {
   capacity: number;
   grade: number | string;
   supervisor: string;
+  department?: string;
 };
 
 const ClassCard = ({ item, role }: { item: Class; role: string }) => {
@@ -34,6 +35,10 @@ const ClassCard = ({ item, role }: { item: Class; role: string }) => {
       <div className="text-sm">
         <p className="text-textMuted text-xs uppercase tracking-wide mb-1">Supervisor</p>
         <p className="text-textPrimary font-medium">{item.supervisor || "-"}</p>
+      </div>
+            <div className="text-sm">
+        <p className="text-textMuted text-xs uppercase tracking-wide mb-1">Department</p>
+        <p className="text-textPrimary font-medium">{item.department || "-"}</p>
       </div>
 
       {/* Footer: edit / delete */}

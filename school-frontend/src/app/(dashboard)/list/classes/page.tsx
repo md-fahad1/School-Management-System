@@ -12,6 +12,7 @@ type Class = {
   capacity: number;
   grade: number | string;
   supervisor: string;
+  department?: string;
 };
 
 const columns = [
@@ -34,6 +35,11 @@ const columns = [
     accessor: "supervisor",
     className: "hidden md:table-cell",
   },
+    {
+    header: "Department",
+    accessor: "department",
+    className: "hidden md:table-cell",
+  },
   {
     header: "Actions",
     accessor: "action",
@@ -53,6 +59,7 @@ const ClassListPage = async () => {
       <td className="hidden md:table-cell">{item.capacity}</td>
       <td className="hidden md:table-cell">{item.grade}</td>
       <td className="hidden md:table-cell">{item.supervisor}</td>
+            <td className="hidden md:table-cell">{item.department ?? "-"}</td>
       <td>
         <div className="flex items-center gap-2">
           {role === "admin" && (

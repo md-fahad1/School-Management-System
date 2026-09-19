@@ -27,6 +27,9 @@ import {
   Settings,
   LogOut,
     LifeBuoy,
+  KeyRound,
+  CalendarRange, 
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -57,6 +60,9 @@ const icons: Record<string, LucideIcon> = {
   admin: ShieldCheck,
   createStaff: UserPlus,
   audit: ScrollText,
+  roles: KeyRound,
+    calendar: CalendarRange,
+  department: Building2,
   profile: User,
   settings: Settings,
   logout: LogOut,

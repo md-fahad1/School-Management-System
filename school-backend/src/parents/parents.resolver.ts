@@ -6,16 +6,19 @@ import { Parent } from './entities/parent.entity';
 import { CreateParentInput, UpdateParentInput } from './dto/parent.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Parent)
-@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@UseGuards(GqlJwtAuthGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.ADMIN)
 export class ParentsResolver {
   constructor(private parentsService: ParentsService) {}
 
   @Query(() => [Parent])
+  @RequirePermissions('parent:view')
   parents(
     @Args('search', { nullable: true }) search?: string,
     @Args('skip', { nullable: true }) skip?: number,
@@ -30,11 +33,13 @@ export class ParentsResolver {
   }
 
   @Mutation(() => Parent)
+  @RequirePermissions('parent:create')
   createParent(@Args('input') input: CreateParentInput, @CurrentUser() user: { id: string }) {
     return this.parentsService.create(input, user.id);
   }
 
   @Mutation(() => Parent)
+  @RequirePermissions('parent:update')
   updateParent(
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateParentInput,
@@ -44,6 +49,7 @@ export class ParentsResolver {
   }
 
   @Mutation(() => Boolean)
+  @RequirePermissions('parent:delete')
   removeParent(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
     return this.parentsService.remove(id, user.id);
   }

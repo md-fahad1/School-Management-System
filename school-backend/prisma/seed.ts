@@ -1,7 +1,56 @@
 import { PrismaClient, Role, Day, LoanStatus, FeeFrequency, PaymentStatus, PaymentMethod } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { tenantExtension } from '../src/tenant/tenant-extension';
+import { tenantStorage } from '../src/tenant/tenant-context';
+import { PERMISSIONS, DEFAULT_ROLE_PERMISSIONS } from '../src/common/constants/permissions.constant';
 
-const prisma = new PrismaClient();
+const basePrisma = new PrismaClient({ log: [{ emit: 'event', level: 'query' }] });
+let queryCount = 0;
+(basePrisma as any).$on('query', () => {
+  if (++queryCount % 50 === 0) console.log(`... ${queryCount} queries so far`);
+});
+// Extended client: inside tenantStorage.run(...) every query is scoped to one institution.
+const prisma = basePrisma.$extends(tenantExtension());
+
+// Seeds the Permission catalog + one isSystem CustomRole per legacy Role
+// enum value, pre-populated with that role's default permissions. These
+// system roles are just a DB-backed mirror of DEFAULT_ROLE_PERMISSIONS —
+// admins can clone one to build a custom role from, or edit it directly.
+async function seedPermissions() {
+  // Permissions and system roles are global (institutionId = null), so use the
+  // un-scoped client. The tenant extension would stamp them with the demo school's id.
+  const prisma = basePrisma;
+  const permissionRecords: Record<string, { id: string }> = {};
+  for (const p of PERMISSIONS) {
+    const rec = await prisma.permission.upsert({
+      where: { key: p.key },
+      update: { module: p.module, action: p.action, description: p.description },
+      create: p,
+    });
+    permissionRecords[p.key] = { id: rec.id };
+  }
+
+  for (const roleName of Object.keys(DEFAULT_ROLE_PERMISSIONS) as Role[]) {
+    // (institutionId, name) is unique, but NULL never equals NULL in a unique
+    // index, so system roles (institutionId = null) can't use upsert().
+    const found = await prisma.customRole.findFirst({ where: { name: roleName, institutionId: null } });
+    const role = found
+      ? await prisma.customRole.update({ where: { id: found.id }, data: { baseRole: roleName, isSystem: true } })
+      : await prisma.customRole.create({
+          data: { name: roleName, description: `System default role for ${roleName}`, isSystem: true, baseRole: roleName },
+        });
+
+    for (const key of DEFAULT_ROLE_PERMISSIONS[roleName]) {
+      const permission = permissionRecords[key];
+      if (!permission) continue;
+      await prisma.customRolePermission.upsert({
+        where: { customRoleId_permissionId: { customRoleId: role.id, permissionId: permission.id } },
+        update: {},
+        create: { customRoleId: role.id, permissionId: permission.id },
+      });
+    }
+  }
+}
 
 // Monday of the current week, so weekly-attendance data always lines
 // up with "this week" regardless of when the seed is actually run.
@@ -22,8 +71,37 @@ function daysFromNow(n: number, hour = 9, minute = 0) {
 }
 
 async function main() {
+  // --- Platform owner (belongs to no institution) ---
+  await basePrisma.user.upsert({
+    where: { username: 'superadmin' },
+    update: {},
+    create: {
+      username: 'superadmin',
+      email: 'superadmin@gmail.com',
+      password: await bcrypt.hash('superadmin', 10),
+      role: Role.SUPER_ADMIN,
+      emailVerified: true,
+    },
+  });
+
+  // --- Demo institution; all demo data below is created inside it ---
+  const institution = await basePrisma.institution.upsert({
+    where: { slug: 'demo-school' },
+    update: {},
+    create: { name: 'Demo School', slug: 'demo-school' },
+  });
+
+  await tenantStorage.run(
+    { institutionId: institution.id, isSuperAdmin: false, anonymous: false },
+    () => seedDemoSchool(institution.id),
+  );
+}
+
+async function seedDemoSchool(institutionId: string) {
+  await seedPermissions();
+
   // --- Admin ---
-  const adminPassword = await bcrypt.hash('admin', 10);
+  const adminPassword = await bcrypt.hash('admin123', 10);
   const adminUser = await prisma.user.upsert({
     where: { username: 'admin' },
     update: {},
@@ -41,9 +119,9 @@ async function main() {
   const grades: Record<number, { id: string }> = {};
   for (const level of gradeLevels) {
     grades[level] = await prisma.grade.upsert({
-      where: { level },
+      where: { institutionId_level: { institutionId, level } },
       update: {},
-      create: { level },
+      create: { level, institutionId },
     });
   }
 
@@ -56,9 +134,9 @@ async function main() {
   const subjects: Record<string, { id: string }> = {};
   for (const name of subjectNames) {
     subjects[name] = await prisma.subject.upsert({
-      where: { name },
+      where: { institutionId_name: { institutionId, name } },
       update: {},
-      create: { name },
+      create: { name, institutionId },
     });
   }
 
@@ -79,9 +157,9 @@ async function main() {
   const classes: Record<string, { id: string }> = {};
   for (const c of classDefs) {
     classes[c.name] = await prisma.class.upsert({
-      where: { name: c.name },
+      where: { institutionId_name: { institutionId, name: c.name } },
       update: {},
-      create: { name: c.name, capacity: c.capacity, gradeId: grades[c.gradeLevel].id },
+      create: { name: c.name, capacity: c.capacity, gradeId: grades[c.gradeLevel].id, institutionId },
     });
   }
 
@@ -98,7 +176,7 @@ async function main() {
     { username: 'teacher.amy', email: 'amy.teacher@school.local', name: 'Amy', surname: 'Clark', subjectNames: ['English', 'Art'], phone: '555-0109', address: '14 Poplar Rd', sex: 'FEMALE' as const, bloodType: 'A+' },
     { username: 'teacher.omar', email: 'omar.teacher@school.local', name: 'Omar', surname: 'Hassan', subjectNames: ['History', 'Geography'], phone: '555-0110', address: '27 Spruce Rd', sex: 'MALE' as const, bloodType: 'AB-' },
   ];
-  const teacherPassword = await bcrypt.hash('teacher', 10);
+  const teacherPassword = await bcrypt.hash('teacher123', 10);
   const teachers: Record<string, { id: string }> = {};
   for (const t of teacherDefs) {
     const user = await prisma.user.upsert({
@@ -135,7 +213,7 @@ async function main() {
   ];
   for (const [className, teacherUsername] of supervisorAssignments) {
     await prisma.class.update({
-      where: { name: className },
+      where: { institutionId_name: { institutionId, name: className } },
       data: { supervisorId: teachers[teacherUsername].id },
     });
   }
@@ -196,7 +274,7 @@ async function main() {
           teacherId: teachers[t.username].id,
           date,
           status,
-          checkIn: status !== 'ABSENT' ? new Date(date.setHours(8, status === 'LATE' ? 30 : 0, 0, 0)) : undefined,
+          checkIn: status !== 'ABSENT' ? new Date(new Date(date).setHours(8, status === 'LATE' ? 30 : 0, 0, 0)) : undefined,
         },
       });
     }
@@ -222,7 +300,7 @@ async function main() {
           userId: staff.id,
           date,
           status,
-          checkIn: status !== 'ABSENT' ? new Date(date.setHours(9, status === 'LATE' ? 20 : 0, 0, 0)) : undefined,
+          checkIn: status !== 'ABSENT' ? new Date(new Date(date).setHours(9, status === 'LATE' ? 20 : 0, 0, 0)) : undefined,
         },
       });
     }
@@ -272,7 +350,7 @@ async function main() {
     { username: 'parent.rossi', email: 'rossi.parent@example.com', name: 'Giulia', surname: 'Rossi', phone: '555-0207', address: '44 Larch Ave' },
     { username: 'parent.singh', email: 'singh.parent@example.com', name: 'Priya', surname: 'Singh', phone: '555-0208', address: '2 Juniper Ave' },
   ];
-  const parentPassword = await bcrypt.hash('parent', 10);
+  const parentPassword = await bcrypt.hash('parent123', 10);
   const parents: Record<string, { id: string }> = {};
   for (const p of parentDefs) {
     const user = await prisma.user.upsert({
@@ -313,7 +391,7 @@ async function main() {
     { username: 'student.chloe', email: 'chloe.student@example.com', name: 'Chloe', surname: 'Davis', className: '8A', gradeLevel: 8, parentUsername: 'parent.davis', sex: 'FEMALE' as const },
     { username: 'student.yusuf', email: 'yusuf.student@example.com', name: 'Yusuf', surname: 'Khan', className: '8A', gradeLevel: 8, parentUsername: 'parent.khan', sex: 'MALE' as const },
   ];
-  const studentPassword = await bcrypt.hash('student', 10);
+  const studentPassword = await bcrypt.hash('student123', 10);
   const students: Record<string, { id: string; classId: string; gradeLevel: number }> = {};
   for (const s of studentDefs) {
     const user = await prisma.user.upsert({
@@ -463,7 +541,7 @@ async function main() {
       const end = new Date(start);
       end.setHours(12, 0, 0, 0);
       await prisma.event.create({
-        data: { title: e.title, description: e.description, startTime: start, endTime: end, classId: e.classId },
+        data: { title: e.title, description: e.description, startTime: start, endTime: end, classId: e.classId, institutionId },
       });
     }
   }
@@ -479,7 +557,7 @@ async function main() {
     const existing = await prisma.announcement.findFirst({ where: { title: a.title } });
     if (!existing) {
       await prisma.announcement.create({
-        data: { title: a.title, description: a.description, classId: a.classId, authorId: adminUser.id },
+        data: { title: a.title, description: a.description, classId: a.classId, authorId: adminUser.id, institutionId },
       });
     }
   }
@@ -513,9 +591,9 @@ async function main() {
   const books: Record<string, { id: string }> = {};
   for (const b of bookDefs) {
     const book = await prisma.book.upsert({
-      where: { isbn: b.isbn },
+      where: { institutionId_isbn: { institutionId, isbn: b.isbn } },
       update: {},
-      create: { ...b, availableCopies: b.totalCopies },
+      create: { ...b, availableCopies: b.totalCopies, institutionId },
     });
     books[b.isbn] = { id: book.id };
   }
@@ -569,7 +647,7 @@ async function main() {
       const structure = await prisma.feeStructure.upsert({
         where: { name_gradeId: { name: fs.name, gradeId: grades[level].id } },
         update: {},
-        create: { name: fs.name, amount, frequency: fs.frequency, gradeId: grades[level].id },
+        create: { name: fs.name, amount, frequency: fs.frequency, gradeId: grades[level].id, institutionId },
       });
       feeStructures[`${fs.name}-${level}`] = { id: structure.id, amount };
     }
@@ -623,6 +701,7 @@ async function main() {
   }
 
   console.log('✅ Seed complete.');
+  console.log('   SuperAdmin: superadmin / superadmin  (no institution)');
   console.log('   Admin:      admin / admin123');
   console.log('   Teachers:   teacher.jane / .mark / .lisa / .sam / .nora / .paul / .grace / .leo / .amy / .omar — password: teacher123');
   console.log('   Parents:    parent.davis / .wilson / .khan / .lopez / .chen / .osei / .rossi / .singh — password: parent123');
@@ -630,17 +709,39 @@ async function main() {
   console.log('   Accountant: accountant.maria — password: accountant123');
   console.log('   Librarian:  librarian.tom — password: librarian123');
   console.log('   Principal:  principal.helen — password: principal123');
-  console.log('   + 8 grades, 13 subjects, 11 classes, 55 lessons/attendance rows, 11 exams, 11 assignments, 42 results,');
+  console.log('   + 8 grades, 13 subjects, 11 classes, 55 lessons, 100 attendance rows, 11 exams, 11 assignments, 40 results,');
   console.log('     5 events, 4 announcements, 2 messages, 6 library books with 5 loans (active/returned/overdue),');
   console.log('     16 fee structures, 20 invoices spread across PENDING/PARTIAL/PAID/OVERDUE with matching payments,');
   console.log('     50 teacher-attendance rows, 15 staff-attendance rows, 5 leave applications (all statuses).');
 }
 
-main()
+// Neon can drop long-lived connections (P1017). The seed is idempotent,
+// so on a transient DB error we reconnect and run it again.
+async function runWithRetry(maxAttempts = 5) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await main();
+      return;
+    } catch (e: any) {
+      const transient = ['P1017', 'P1001', 'P1008', 'P2024'].includes(e?.code);
+      if (!transient || attempt === maxAttempts) throw e;
+      console.warn(`⚠️  DB connection dropped (${e.code}), retrying ${attempt}/${maxAttempts - 1}...`);
+      await basePrisma.$disconnect();
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+}
+
+runWithRetry()
   .catch((e) => {
     console.error(e);
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await basePrisma.$disconnect();
   });
+
+// Fresh setup:
+//   npx prisma migrate reset --skip-seed
+//   npm run prisma:seed
+//   npm run start:dev

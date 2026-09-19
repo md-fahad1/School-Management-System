@@ -24,7 +24,7 @@ const AUTH_THROTTLE = { default: { limit: 5, ttl: 60_000 } };
 // Roles a stranger off the street can self-register as. Everything
 // else (ADMIN, ACCOUNTANT, LIBRARIAN, PRINCIPAL) must go through
 // createStaffAccount below, which only an existing admin can call.
-const PUBLIC_SIGNUP_ROLES: Role[] = [Role.TEACHER, Role.PARENT];
+const PUBLIC_SIGNUP_ROLES: Role[] = [Role.PARENT]; // teachers are created by an admin (createStaffAccount)
 const STAFF_ACCOUNT_ROLES: Role[] = [Role.ADMIN, Role.ACCOUNTANT, Role.LIBRARIAN, Role.PRINCIPAL, Role.TEACHER, Role.TRANSPORT_STAFF];
 
 @Resolver()

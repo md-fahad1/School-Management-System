@@ -14,7 +14,8 @@
  */
 export async function uploadToCloudinary(
   file: File,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  folder = "avatars"
 ): Promise<string> {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -29,7 +30,7 @@ export async function uploadToCloudinary(
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", uploadPreset);
-  formData.append("folder", "avatars");
+  formData.append("folder", folder);
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();

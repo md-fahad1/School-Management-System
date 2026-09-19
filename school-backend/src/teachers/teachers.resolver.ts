@@ -6,15 +6,18 @@ import { Teacher } from './entities/teacher.entity';
 import { CreateTeacherInput, UpdateTeacherInput } from './dto/teacher.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Teacher)
-@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@UseGuards(GqlJwtAuthGuard, RolesGuard, PermissionsGuard)
 export class TeachersResolver {
   constructor(private teachersService: TeachersService) {}
 
   @Query(() => [Teacher])
+  @RequirePermissions('teacher:view')
   teachers(
     @Args('search', { nullable: true }) search?: string,
     @Args('skip', { nullable: true }) skip?: number,
@@ -30,12 +33,14 @@ export class TeachersResolver {
 
   @Mutation(() => Teacher)
   @Roles(Role.ADMIN)
+  @RequirePermissions('teacher:create')
   createTeacher(@Args('input') input: CreateTeacherInput, @CurrentUser() user: { id: string }) {
     return this.teachersService.create(input, user.id);
   }
 
   @Mutation(() => Teacher)
   @Roles(Role.ADMIN)
+  @RequirePermissions('teacher:update')
   updateTeacher(
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateTeacherInput,
@@ -46,6 +51,7 @@ export class TeachersResolver {
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN)
+  @RequirePermissions('teacher:delete')
   removeTeacher(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
     return this.teachersService.remove(id, user.id);
   }

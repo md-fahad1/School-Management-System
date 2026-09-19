@@ -6,15 +6,18 @@ import { Assignment } from './entities/assignment.entity';
 import { CreateAssignmentInput, UpdateAssignmentInput } from './dto/assignment.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Assignment)
-@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@UseGuards(GqlJwtAuthGuard, RolesGuard, PermissionsGuard)
 export class AssignmentsResolver {
   constructor(private assignmentsService: AssignmentsService) {}
 
   @Query(() => [Assignment])
+  @RequirePermissions('assignment:view')
   assignments(
     @CurrentUser() user: { id: string; role: Role },
     @Args('skip', { nullable: true }) skip?: number,
@@ -30,12 +33,14 @@ export class AssignmentsResolver {
 
   @Mutation(() => Assignment)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('assignment:create')
   createAssignment(@Args('input') input: CreateAssignmentInput, @CurrentUser() user: { id: string }) {
     return this.assignmentsService.create(input, user.id);
   }
 
   @Mutation(() => Assignment)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('assignment:update')
   updateAssignment(
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateAssignmentInput,
@@ -46,6 +51,7 @@ export class AssignmentsResolver {
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('assignment:delete')
   removeAssignment(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
     return this.assignmentsService.remove(id, user.id);
   }

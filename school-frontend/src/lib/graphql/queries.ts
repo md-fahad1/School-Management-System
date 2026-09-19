@@ -252,8 +252,12 @@ export const GET_CLASSES = gql`
       id
       name
       capacity
+      gradeId
       gradeLevel
+      supervisorId
       supervisorName
+      departmentId
+      departmentName
     }
   }
 `;
@@ -1083,6 +1087,230 @@ export const UPDATE_MY_NOTIFICATION_PREFERENCES = gql`
     updateMyNotificationPreferences(input: $input) {
       id
       emailNotifications
+    }
+  }
+`;
+
+/* ---------- Super admin: institutions ---------- */
+
+export const GET_INSTITUTIONS = gql`
+  query Institutions($skip: Float, $take: Float) {
+    institutions(skip: $skip, take: $take) {
+      id
+      name
+      slug
+      type
+      status
+      createdAt
+    }
+  }
+`;
+
+export const CREATE_INSTITUTION = gql`
+  mutation CreateInstitution($input: CreateInstitutionInput!) {
+    createInstitution(input: $input) {
+      id
+      name
+      slug
+    }
+  }
+`;
+
+export const SET_INSTITUTION_STATUS = gql`
+  mutation SetInstitutionStatus($id: ID!, $status: InstitutionStatus!) {
+    setInstitutionStatus(id: $id, status: $status) {
+      id
+      status
+    }
+  }
+`;
+
+/* ---------- Institution (own) ---------- */
+
+export const GET_MY_INSTITUTION = gql`
+  query MyInstitution {
+    myInstitution {
+      id
+      name
+      slug
+      type
+      status
+      eiin
+      logo
+      phone
+      email
+      address
+      website
+      establishedYear
+    }
+  }
+`;
+
+/* ---------- Roles & Permissions ---------- */
+
+export const GET_PERMISSIONS = gql`
+  query Permissions {
+    permissions {
+      id
+      key
+      module
+      action
+      description
+    }
+  }
+`;
+
+export const GET_CUSTOM_ROLES = gql`
+  query CustomRoles {
+    customRoles {
+      id
+      name
+      description
+      isSystem
+      baseRole
+      permissions {
+        key
+      }
+    }
+  }
+`;
+
+export const GET_CUSTOM_ROLE = gql`
+  query CustomRole($id: ID!) {
+    customRole(id: $id) {
+      id
+      name
+      description
+      isSystem
+      baseRole
+      permissions {
+        key
+      }
+    }
+  }
+`;
+
+export const CREATE_CUSTOM_ROLE = gql`
+  mutation CreateCustomRole($input: CreateCustomRoleInput!) {
+    createCustomRole(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+export const UPDATE_CUSTOM_ROLE = gql`
+  mutation UpdateCustomRole($id: ID!, $input: UpdateCustomRoleInput!) {
+    updateCustomRole(id: $id, input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+export const REMOVE_CUSTOM_ROLE = gql`
+  mutation RemoveCustomRole($id: ID!) {
+    removeCustomRole(id: $id)
+  }
+`;
+
+export const UPDATE_MY_INSTITUTION = gql`
+  mutation UpdateMyInstitution($input: UpdateInstitutionInput!) {
+    updateMyInstitution(input: $input) {
+      id
+      name
+      logo
+    }
+  }
+`;
+/* ---------- Academic years & terms ---------- */
+
+export const GET_ACADEMIC_YEARS = gql`
+  query AcademicYears {
+    academicYears {
+      id
+      name
+      startDate
+      endDate
+      isCurrent
+      terms {
+        id
+        name
+        type
+        startDate
+        endDate
+        academicYearId
+      }
+    }
+  }
+`;
+
+export const CREATE_ACADEMIC_YEAR = gql`
+  mutation CreateAcademicYear($input: CreateAcademicYearInput!) {
+    createAcademicYear(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+export const UPDATE_ACADEMIC_YEAR = gql`
+  mutation UpdateAcademicYear($id: ID!, $input: UpdateAcademicYearInput!) {
+    updateAcademicYear(id: $id, input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+export const SET_CURRENT_ACADEMIC_YEAR = gql`
+  mutation SetCurrentAcademicYear($id: ID!) {
+    setCurrentAcademicYear(id: $id) {
+      id
+      name
+      isCurrent
+    }
+  }
+`;
+
+export const ADD_TERM = gql`
+  mutation AddTerm($input: CreateTermInput!) {
+    addTerm(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+/* ---------- Departments / groups ---------- */
+
+export const GET_DEPARTMENTS = gql`
+  query Departments($search: String) {
+    departments(search: $search) {
+      id
+      name
+      code
+      type
+      description
+      classCount
+    }
+  }
+`;
+
+export const CREATE_DEPARTMENT = gql`
+  mutation CreateDepartment($input: CreateDepartmentInput!) {
+    createDepartment(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+export const UPDATE_DEPARTMENT = gql`
+  mutation UpdateDepartment($id: ID!, $input: UpdateDepartmentInput!) {
+    updateDepartment(id: $id, input: $input) {
+      id
+      name
     }
   }
 `;

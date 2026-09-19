@@ -6,15 +6,18 @@ import { Result } from './entities/result.entity';
 import { CreateResultInput, UpdateResultInput } from './dto/result.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { gradeFromMarks } from '../common/utils/grading.util';
 @Resolver(() => Result)
-@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@UseGuards(GqlJwtAuthGuard, RolesGuard, PermissionsGuard)
 export class ResultsResolver {
   constructor(private resultsService: ResultsService) {}
 
   @Query(() => [Result])
+  @RequirePermissions('result:view')
   results(
     @CurrentUser() user: { id: string; role: Role },
     @Args('skip', { nullable: true }) skip?: number,
@@ -30,12 +33,14 @@ export class ResultsResolver {
 
   @Mutation(() => Result)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('result:create')
   createResult(@Args('input') input: CreateResultInput, @CurrentUser() user: { id: string }) {
     return this.resultsService.create(input, user.id);
   }
 
   @Mutation(() => Result)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('result:update')
   updateResult(
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateResultInput,
@@ -46,6 +51,7 @@ export class ResultsResolver {
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('result:delete')
   removeResult(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
     return this.resultsService.remove(id, user.id);
   }

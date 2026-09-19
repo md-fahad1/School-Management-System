@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { Role } from '@prisma/client';
+import { getTenant } from '../tenant/tenant-context';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -13,6 +14,11 @@ const WEEKLY_ATTENDANCE_TTL_SECONDS = 60;
 const DASHBOARD_COUNTS_KEY = 'stats:dashboard-counts';
 const WEEKLY_ATTENDANCE_KEY = 'stats:weekly-attendance';
 
+// Every institution must get its own cache entry — a shared key would
+// serve one school's numbers to another. The platform owner (no
+// institution) sees platform-wide numbers under the 'all' key.
+const cacheKey = (base: string) => `${base}:${getTenant()?.institutionId ?? 'all'}`;
+
 @Injectable()
 export class StatsService {
   constructor(
@@ -21,7 +27,8 @@ export class StatsService {
   ) {}
 
   async getDashboardCounts() {
-    const cached = await this.redis.get(DASHBOARD_COUNTS_KEY);
+    const key = cacheKey(DASHBOARD_COUNTS_KEY);
+    const cached = await this.redis.get(key);
     if (cached) return JSON.parse(cached);
 
     const [studentCount, teacherCount, parentCount, adminCount, boysCount, girlsCount] =
@@ -35,7 +42,7 @@ export class StatsService {
       ]);
 
     const result = { studentCount, teacherCount, parentCount, adminCount, boysCount, girlsCount };
-    await this.redis.set(DASHBOARD_COUNTS_KEY, JSON.stringify(result), DASHBOARD_COUNTS_TTL_SECONDS);
+    await this.redis.set(key, JSON.stringify(result), DASHBOARD_COUNTS_TTL_SECONDS);
     return result;
   }
 
@@ -46,7 +53,8 @@ export class StatsService {
    * proper SQL GROUP BY instead of pulling rows into JS to bucket them.
    */
   async getWeeklyAttendance() {
-    const cached = await this.redis.get(WEEKLY_ATTENDANCE_KEY);
+    const key = cacheKey(WEEKLY_ATTENDANCE_KEY);
+    const cached = await this.redis.get(key);
     if (cached) return JSON.parse(cached);
 
     const now = new Date();
@@ -81,7 +89,7 @@ export class StatsService {
     }
 
     const result = Object.entries(buckets).map(([day, counts]) => ({ day, ...counts }));
-    await this.redis.set(WEEKLY_ATTENDANCE_KEY, JSON.stringify(result), WEEKLY_ATTENDANCE_TTL_SECONDS);
+    await this.redis.set(key, JSON.stringify(result), WEEKLY_ATTENDANCE_TTL_SECONDS);
     return result;
   }
 }

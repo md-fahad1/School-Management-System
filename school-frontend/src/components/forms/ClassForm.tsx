@@ -7,7 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
-import { GET_GRADES, GET_TEACHER_OPTIONS } from "@/lib/graphql/queries";
+import { GET_GRADES, GET_TEACHER_OPTIONS, GET_DEPARTMENTS } from "@/lib/graphql/queries";
 import { getErrorMessage } from "@/lib/errors";
 
 const CREATE_CLASS = gql`
@@ -31,6 +31,7 @@ const schema = z.object({
   capacity: z.coerce.number().min(1, { message: "Capacity must be at least 1" }),
   gradeId: z.string().min(1, { message: "Grade is required" }),
   supervisorId: z.string().optional(),
+  departmentId: z.string().optional(),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -47,17 +48,23 @@ const ClassForm = ({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: data?.name ?? "",
       capacity: data?.capacity ?? undefined,
+      gradeId: "",
+      supervisorId: "",
+      departmentId: "",
     },
   });
 
   const [gradeOptions, setGradeOptions] = useState<{ id: string; level: number }[]>([]);
   const [teacherOptions, setTeacherOptions] = useState<{ id: string; name: string }[]>([]);
+  const [departmentOptions, setDepartmentOptions] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [optionsLoaded, setOptionsLoaded] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -65,28 +72,40 @@ const ClassForm = ({
     (async () => {
       try {
         const client = await getClientGqlClient();
-        const [grades, teachers] = await Promise.all([
+        const [grades, teachers, departments] = await Promise.all([
           client.request<{ grades: { id: string; level: number }[] }>(GET_GRADES),
           client.request<{ teachers: { id: string; name: string }[] }>(GET_TEACHER_OPTIONS),
+          client.request<{ departments: { id: string; name: string; type: string }[] }>(GET_DEPARTMENTS),
         ]);
         setGradeOptions(grades.grades);
         setTeacherOptions(teachers.teachers);
+        setDepartmentOptions(departments.departments);
+        setOptionsLoaded(true);
       } catch (err) {
         console.error("Failed to load dropdown options:", err);
       }
     })();
   }, []);
 
+  // When editing, pre-select the saved values. This must wait until the
+  // <option>s exist, otherwise the browser ignores the value.
+  useEffect(() => {
+    if (!optionsLoaded || !data) return;
+    setValue("gradeId", data.gradeId ?? "");
+    setValue("supervisorId", data.supervisorId ?? "");
+    setValue("departmentId", data.departmentId ?? "");
+  }, [optionsLoaded, data, setValue]);
+
   const onSubmit = handleSubmit(async (formData) => {
     setSubmitError("");
     setSubmitting(true);
     try {
       const client = await getClientGqlClient();
-      // supervisorId is optional — send undefined rather than an empty
-      // string if nothing was picked, so the backend treats it as unset.
+      // Empty optional picks go as null (never ""), so an edit can clear them.
       const input = {
         ...formData,
-        supervisorId: formData.supervisorId || undefined,
+        supervisorId: formData.supervisorId || null,
+        departmentId: formData.departmentId || null,
       };
       if (type === "create") {
         await client.request(CREATE_CLASS, { input });
@@ -95,9 +114,7 @@ const ClassForm = ({
       }
       onSuccess();
     } catch (err: any) {
-      setSubmitError(
-        getErrorMessage(err, "Something went wrong. Please try again.")
-      );
+      setSubmitError(getErrorMessage(err, "Something went wrong. Please try again."));
     } finally {
       setSubmitting(false);
     }
@@ -111,25 +128,14 @@ const ClassForm = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="Class name" name="name" register={register} error={errors.name} />
-        <InputField
-          label="Capacity"
-          name="capacity"
-          type="number"
-          register={register}
-          error={errors.capacity}
-        />
+        <InputField label="Capacity" name="capacity" type="number" register={register} error={errors.capacity} />
 
         <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Grade</label>
-          <select
-            {...register("gradeId")}
-            className="field"
-          >
+          <select {...register("gradeId")} className="field">
             <option value="">Select a grade</option>
             {gradeOptions.map((g) => (
-              <option value={g.id} key={g.id}>
-                Grade {g.level}
-              </option>
+              <option value={g.id} key={g.id}>Grade {g.level}</option>
             ))}
           </select>
           {errors.gradeId?.message && (
@@ -139,14 +145,21 @@ const ClassForm = ({
 
         <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Supervisor (optional)</label>
-          <select
-            {...register("supervisorId")}
-            className="field"
-          >
+          <select {...register("supervisorId")} className="field">
             <option value="">No supervisor</option>
             {teacherOptions.map((t) => (
-              <option value={t.id} key={t.id}>
-                {t.name}
+              <option value={t.id} key={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1.5 w-full sm:col-span-2">
+          <label className="text-xs text-textMuted">Department / Group (optional)</label>
+          <select {...register("departmentId")} className="field">
+            <option value="">No department</option>
+            {departmentOptions.map((d) => (
+              <option value={d.id} key={d.id}>
+                {d.name} ({d.type === "GROUP" ? "Group" : "Department"})
               </option>
             ))}
           </select>
@@ -155,11 +168,7 @@ const ClassForm = ({
 
       {submitError && <span className="text-red-500 text-sm">{submitError}</span>}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="btn-primary sm:self-end sm:px-8"
-      >
+      <button type="submit" disabled={submitting} className="btn-primary sm:self-end sm:px-8">
         {submitting ? "Saving..." : type === "create" ? "Create" : "Update"}
       </button>
     </form>

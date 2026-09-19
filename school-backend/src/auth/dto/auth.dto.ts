@@ -33,7 +33,14 @@ export class RegisterInput {
   @Field({ nullable: true })
   @IsOptional()
   @IsString()
-  phone?: string;
+    phone?: string;
+
+  // Required for public sign-up (which school the person is joining).
+  // Ignored when an institution admin creates the account.
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  institutionSlug?: string;
 }
 
 @InputType()

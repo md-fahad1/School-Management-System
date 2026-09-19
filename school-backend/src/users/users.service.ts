@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -60,7 +60,12 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const { name, surname } = await this.loadProfile(userId, user.role);
+    // The platform owner (SUPER_ADMIN) has no profile table, so there is
+    // nothing to look up — return fixed display names instead of crashing.
+    const { name, surname } =
+      user.role === Role.SUPER_ADMIN
+        ? { name: 'Super', surname: 'Admin' }
+        : await this.loadProfile(userId, user.role);
 
     return {
       id: user.id,
@@ -80,6 +85,10 @@ export class UsersService {
       return this.getMe(userId);
     }
 
+    if (role === Role.SUPER_ADMIN && (input.name !== undefined || input.surname !== undefined)) {
+      throw new BadRequestException('The platform owner account has no editable name');
+    }
+
     if (input.phone !== undefined) {
       const owner = await this.prisma.user.findFirst({
         where: { phone: input.phone, NOT: { id: userId } },
@@ -91,7 +100,7 @@ export class UsersService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      if (input.name !== undefined || input.surname !== undefined) {
+      if (role !== Role.SUPER_ADMIN && (input.name !== undefined || input.surname !== undefined)) {
         await (tx as any)[ROLE_DELEGATE[role]].update({
           where: { userId },
           data: {
@@ -112,7 +121,8 @@ export class UsersService {
     await this.prisma.user.update({ where: { id: userId }, data: { img: imageUrl } });
     return this.getMe(userId);
   }
-    async updateNotificationPreferences(userId: string, input: UpdateNotificationPreferencesInput) {
+
+  async updateNotificationPreferences(userId: string, input: UpdateNotificationPreferencesInput) {
     await this.prisma.user.update({
       where: { id: userId },
       data: { emailNotifications: input.emailNotifications },

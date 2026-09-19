@@ -19,6 +19,7 @@ enum Role {
   LIBRARIAN
   PRINCIPAL
   TRANSPORT_STAFF
+  SUPER_ADMIN
 }
 
 enum Sex {
@@ -27,6 +28,7 @@ enum Sex {
 }
 
 enum Day {
+  SUNDAY
   MONDAY
   TUESDAY
   WEDNESDAY
@@ -34,6 +36,7 @@ enum Day {
   FRIDAY
   SATURDAY
 }
+
 enum LoanStatus {
   BORROWED
   RETURNED
@@ -47,6 +50,7 @@ enum FeeFrequency {
   YEARLY
   ONE_TIME
 }
+
 enum DiscountType {
   PERCENTAGE
   FIXED
@@ -91,49 +95,67 @@ enum LeaveStatus {
   CANCELLED
 }
 
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+  TRANSFERRED
+  SUSPENDED
+  DROPPED
+  EXPELLED
+  ALUMNI
+}
+
 // Base auth/user record. Each role has a linked profile table for
 // role-specific fields, keeping the auth table lean.
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  email     String   @unique
-   phone     String?  @unique
-  password  String
-  emailVerified Boolean  @default(false)
-  phoneVerified Boolean  @default(false)
-  img           String?
-   emailNotifications Boolean @default(true)
-  role      Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  username           String   @unique
+  email              String   @unique
+  phone              String?  @unique
+  password           String
+  emailVerified      Boolean  @default(false)
+  phoneVerified      Boolean  @default(false)
+  img                String?
+  emailNotifications Boolean  @default(true)
+  role               Role
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  admin      Admin?
-  teacher    Teacher?
-  student    Student?
-  parent     Parent?
-  accountant Accountant?
-  librarian  Librarian?
-  principal  Principal?
-  transportStaff TransportStaff?
+  admin           Admin?
+  teacher         Teacher?
+  student         Student?
+  parent          Parent?
+  accountant      Accountant?
+  librarian       Librarian?
+  principal       Principal?
+  transportStaff  TransportStaff?
+  institutionId   String?
+  institution     Institution?     @relation(fields: [institutionId], references: [id])
+  customRoleId    String?
+  customRole      CustomRole?      @relation(fields: [customRoleId], references: [id])
+  userPermissions UserPermission[]
 
-   sentMessages     Message[]      @relation("SentMessages")
-  receivedMessages Message[]      @relation("ReceivedMessages")
-  announcements    Announcement[] @relation("AnnouncementAuthor")
-    paymentsReceived Payment[] @relation("PaymentsReceived")
-  refreshTokens    RefreshToken[]
-  auditLogs        AuditLog[]
+  sentMessages            Message[]                @relation("SentMessages")
+  receivedMessages        Message[]                @relation("ReceivedMessages")
+  announcements           Announcement[]           @relation("AnnouncementAuthor")
+  paymentsReceived        Payment[]                @relation("PaymentsReceived")
+  refreshTokens           RefreshToken[]
+  auditLogs               AuditLog[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
-    borrowedBooks BookLoan[] @relation("BorrowedBooks")
-  issuedBooks   BookLoan[] @relation("IssuedBooks")
+  borrowedBooks           BookLoan[]               @relation("BorrowedBooks")
+  issuedBooks             BookLoan[]               @relation("IssuedBooks")
 
   staffAttendances StaffAttendance[]
 
   leavesApplied  Leave[] @relation("LeaveApplicant")
   leavesApproved Leave[] @relation("LeaveApprover")
 
+  @@index([institutionId])
   @@map("users")
 }
+
 model RefreshToken {
   id                  String    @id @default(uuid())
   tokenHash           String    @unique
@@ -150,20 +172,24 @@ model RefreshToken {
   @@index([userId])
   @@map("refresh_tokens")
 }
+
 model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action    String
-  success   Boolean
-  ip        String?
-  userAgent String?
-  metadata  Json?
-  createdAt DateTime @default(now())
+  id            String       @id @default(uuid())
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action        String
+  success       Boolean
+  ip            String?
+  userAgent     String?
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+  institutionId String?
+  institution   Institution? @relation(fields: [institutionId], references: [id])
 
   @@index([userId])
   @@index([action])
-@@map("audit_logs")
+  @@index([institutionId])
+  @@map("audit_logs")
 }
 
 // Opaque random token (hashed before storage, same pattern as
@@ -196,14 +222,15 @@ model EmailVerificationToken {
 }
 
 model Admin {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name   String
+  id      String @id @default(uuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name    String
   surname String
 
   @@map("admins")
 }
+
 model Accountant {
   id      String @id @default(uuid())
   userId  String @unique
@@ -233,6 +260,7 @@ model Principal {
 
   @@map("principals")
 }
+
 model TransportStaff {
   id      String @id @default(uuid())
   userId  String @unique
@@ -246,27 +274,31 @@ model TransportStaff {
 }
 
 model Vehicle {
-  id            String   @id @default(uuid())
-  vehicleNumber String   @unique
+  id            String  @id @default(uuid())
+  vehicleNumber String
   type          String
   capacity      Int
   driverName    String
   route         String?
-  status        String   @default("ACTIVE")
+  status        String  @default("ACTIVE")
 
   transportStaffId String?
-  transportStaff    TransportStaff? @relation(fields: [transportStaffId], references: [id])
+  transportStaff   TransportStaff? @relation(fields: [transportStaffId], references: [id])
+  institutionId    String
+  institution      Institution     @relation(fields: [institutionId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  @@unique([institutionId, vehicleNumber])
+  @@index([institutionId])
+  @@index([transportStaffId])
   @@map("vehicles")
 }
 
 model Teacher {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   surname   String
   phone     String?
@@ -275,11 +307,11 @@ model Teacher {
   bloodType String?
   sex       Sex?
   birthday  DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
-  subjects  Subject[]
-  lessons   Lesson[]
-  classes   Class[]    @relation("ClassSupervisor")
+  subjects Subject[]
+  lessons  Lesson[]
+  classes  Class[]   @relation("ClassSupervisor")
 
   teacherAttendances TeacherAttendance[]
 
@@ -300,6 +332,7 @@ model Student {
   bloodType String?
   sex       Sex?
   birthday  DateTime?
+  status    StudentStatus @default(ACTIVE)
   createdAt DateTime  @default(now())
 
   parentId String
@@ -311,12 +344,16 @@ model Student {
   gradeId String
   grade   Grade  @relation(fields: [gradeId], references: [id])
 
-  attendances Attendance[]
-  results     Result[]
-  invoices Invoice[]
+  attendances  Attendance[]
+  results      Result[]
+  invoices     Invoice[]
   scholarships Scholarship[]
 
   @@index([name(ops: raw("gin_trgm_ops")), surname(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([parentId])
+  @@index([classId])
+  @@index([gradeId])
+   @@index([status])
   @@map("students")
 }
 
@@ -336,20 +373,28 @@ model Parent {
 }
 
 model Grade {
-  id    String @id @default(uuid())
-  level Int    @unique
+  id    String         @id @default(uuid())
+  level Int
+  name  String?
+  stage EducationLevel @default(SCHOOL)
 
-  students Student[]
-  classes  Class[]
+  students      Student[]
+  classes       Class[]
   feeStructures FeeStructure[]
+  institutionId String
+  institution   Institution    @relation(fields: [institutionId], references: [id])
 
+  @@unique([institutionId, level])
+  @@index([institutionId])
   @@map("grades")
 }
 
 model Class {
-  id       String @id @default(uuid())
-  name     String @unique
-  capacity Int
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  id           String      @id @default(uuid())
+  name         String
+  capacity     Int
 
   gradeId String
   grade   Grade  @relation(fields: [gradeId], references: [id])
@@ -361,17 +406,28 @@ model Class {
   lessons       Lesson[]
   events        Event[]
   announcements Announcement[]
+  institutionId String
+  institution   Institution    @relation(fields: [institutionId], references: [id])
 
+  @@unique([institutionId, name])
+  @@index([institutionId])
+  @@index([gradeId])
+  @@index([supervisorId])
+  @@index([departmentId])
   @@map("classes")
 }
 
 model Subject {
   id   String @id @default(uuid())
-  name String @unique
+  name String
 
-  teachers Teacher[]
-  lessons  Lesson[]
+  teachers      Teacher[]
+  lessons       Lesson[]
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
 
+  @@unique([institutionId, name])
+  @@index([institutionId])
   @@map("subjects")
 }
 
@@ -395,14 +451,17 @@ model Lesson {
   assignments Assignment[]
   attendances Attendance[]
 
+  @@index([subjectId])
+  @@index([classId])
+  @@index([teacherId])
   @@map("lessons")
 }
 
 model Exam {
   id        String   @id @default(uuid())
   title     String
-  fullMarks Int @default(100)
-  passMarks Int @default(33)
+  fullMarks Int      @default(100)
+  passMarks Int      @default(33)
   startTime DateTime
   endTime   DateTime
 
@@ -411,14 +470,15 @@ model Exam {
 
   results Result[]
 
+  @@index([lessonId])
   @@map("exams")
 }
 
 model Assignment {
-  id       String   @id @default(uuid())
-  title    String
-    fullMarks Int @default(100)
-  passMarks Int @default(33)
+  id        String   @id @default(uuid())
+  title     String
+  fullMarks Int      @default(100)
+  passMarks Int      @default(33)
   startDate DateTime
   dueDate   DateTime
 
@@ -427,6 +487,7 @@ model Assignment {
 
   results Result[]
 
+  @@index([lessonId])
   @@map("assignments")
 }
 
@@ -443,6 +504,9 @@ model Result {
   studentId String
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  @@index([studentId])
+  @@index([examId])
+  @@index([assignmentId])
   @@map("results")
 }
 
@@ -457,6 +521,9 @@ model Attendance {
   lessonId String
   lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
+  @@index([studentId])
+  @@index([lessonId])
+  @@index([date])
   @@map("attendances")
 }
 
@@ -518,6 +585,8 @@ model Leave {
   approvedById String?
   approvedBy   User?   @relation("LeaveApprover", fields: [approvedById], references: [id])
 
+  @@index([applicantId])
+  @@index([status])
   @@map("leaves")
 }
 
@@ -528,9 +597,13 @@ model Event {
   startTime   DateTime
   endTime     DateTime
 
-  classId String?
-  class   Class?  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId       String?
+  class         Class?      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
 
+  @@index([institutionId])
+  @@index([classId])
   @@map("events")
 }
 
@@ -540,12 +613,16 @@ model Announcement {
   description String
   date        DateTime @default(now())
 
-  classId String?
-  class   Class?  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId       String?
+  class         Class?      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  authorId      String?
+  author        User?       @relation("AnnouncementAuthor", fields: [authorId], references: [id])
 
-  authorId String?
-  author   User?   @relation("AnnouncementAuthor", fields: [authorId], references: [id])
-
+  @@index([institutionId])
+  @@index([classId])
+  @@index([authorId])
   @@map("announcements")
 }
 
@@ -561,15 +638,16 @@ model Message {
   receiverId String
   receiver   User   @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
+  @@index([senderId])
+  @@index([receiverId, read])
   @@map("messages")
 }
-
 
 model Book {
   id              String   @id @default(uuid())
   title           String
   author          String
-  isbn            String   @unique
+  isbn            String
   category        String?
   coverImage      String?
   totalCopies     Int      @default(1)
@@ -577,8 +655,12 @@ model Book {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  loans BookLoan[]
+  loans         BookLoan[]
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
 
+  @@unique([institutionId, isbn])
+  @@index([institutionId])
   @@map("books")
 }
 
@@ -599,8 +681,12 @@ model BookLoan {
   issuedById String
   issuedBy   User   @relation("IssuedBooks", fields: [issuedById], references: [id])
 
+  @@index([bookId])
+  @@index([borrowerId])
+  @@index([status])
   @@map("book_loans")
 }
+
 model FeeStructure {
   id        String       @id @default(uuid())
   name      String
@@ -612,25 +698,29 @@ model FeeStructure {
   gradeId String
   grade   Grade  @relation(fields: [gradeId], references: [id])
 
-  invoices Invoice[]
+  invoices      Invoice[]
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
 
   @@unique([name, gradeId])
+  @@index([institutionId])
+  @@index([gradeId])
   @@map("fee_structures")
 }
 
 model Invoice {
-  id         String        @id @default(uuid())
-  period     String        // e.g. "September 2026" or "Term 1 2026"
-  amount     Float
-  amountPaid Float         @default(0)
-  discountAmount Float     @default(0)
+  id             String        @id @default(uuid())
+  period         String // e.g. "September 2026" or "Term 1 2026"
+  amount         Float
+  amountPaid     Float         @default(0)
+  discountAmount Float         @default(0)
   discountReason String?
-  fineAmount     Float     @default(0)
+  fineAmount     Float         @default(0)
   fineReason     String?
-  dueDate    DateTime
-  status     PaymentStatus @default(PENDING)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  dueDate        DateTime
+  status         PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id])
@@ -641,6 +731,7 @@ model Invoice {
   payments Payment[]
 
   @@index([studentId, status])
+  @@index([feeStructureId])
   @@map("invoices")
 }
 
@@ -658,8 +749,11 @@ model Payment {
   receivedById String
   receivedBy   User   @relation("PaymentsReceived", fields: [receivedById], references: [id])
 
+  @@index([invoiceId])
+  @@index([receivedById])
   @@map("payments")
 }
+
 model Scholarship {
   id        String       @id @default(uuid())
   name      String
@@ -677,4 +771,176 @@ model Scholarship {
 
   @@index([studentId])
   @@map("scholarships")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique // e.g. "student:create"
+  module      String // e.g. "student"
+  action      String // e.g. "create"
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions CustomRolePermission[]
+  userPermissions UserPermission[]
+
+  @@index([module])
+  @@map("permissions")
+}
+
+model CustomRole {
+  id          String   @id @default(uuid())
+   name        String
+  institutionId String?
+  institution   Institution? @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  description String?
+  isSystem    Boolean  @default(false)
+  baseRole    Role?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions CustomRolePermission[]
+  users       User[]
+
+   @@unique([institutionId, name])
+  @@index([institutionId])
+  @@map("custom_roles")
+}
+
+model CustomRolePermission {
+  id           String     @id @default(uuid())
+  customRoleId String
+  customRole   CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([customRoleId, permissionId])
+  @@map("custom_role_permissions")
+}
+
+model UserPermission {
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  granted      Boolean    @default(true) // true = extra grant, false = explicit revoke override
+
+  @@unique([userId, permissionId])
+  @@map("user_permissions")
+}
+
+enum InstitutionType {
+  SCHOOL
+  COLLEGE
+  SCHOOL_AND_COLLEGE
+  MADRASA
+  OTHER
+}
+
+enum InstitutionStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+}
+
+model Institution {
+  id              String            @id @default(uuid())
+  name            String
+  slug            String            @unique
+  type            InstitutionType   @default(SCHOOL)
+  status          InstitutionStatus @default(ACTIVE)
+  eiin            String?
+  logo            String?
+  phone           String?
+  email           String?
+  address         String?
+  website         String?
+  establishedYear Int?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  users         User[]
+  grades        Grade[]
+  classes       Class[]
+  subjects      Subject[]
+  books         Book[]
+  feeStructures FeeStructure[]
+  vehicles      Vehicle[]
+  events        Event[]
+  announcements Announcement[]
+  auditLogs     AuditLog[]
+  academicYears AcademicYear[]
+   departments   Department[]
+  customRoles   CustomRole[]
+
+  @@map("institutions")
+}
+
+enum EducationLevel {
+  SCHOOL
+  COLLEGE
+}
+
+enum DepartmentType {
+  GROUP
+  DEPARTMENT
+}
+
+enum TermType {
+  TERM
+  SEMESTER
+  TRIMESTER
+}
+
+// Science / Humanities / Business Studies (school groups) or
+// CSE / Physics / English (college departments).
+model Department {
+  id            String         @id @default(uuid())
+  institutionId String
+  institution   Institution    @relation(fields: [institutionId], references: [id])
+  name          String
+  code          String?
+  type          DepartmentType @default(DEPARTMENT)
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  classes Class[]
+
+  @@unique([institutionId, name])
+  @@index([institutionId])
+  @@map("departments")
+}
+
+model AcademicYear {
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  name          String // e.g. "2026" or "2026-2027"
+  startDate     DateTime
+  endDate       DateTime
+  isCurrent     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  terms Term[]
+
+  @@unique([institutionId, name])
+  @@index([institutionId])
+  @@map("academic_years")
+}
+
+// Term / Semester / Trimester inside an academic year.
+model Term {
+  id             String       @id @default(uuid())
+  name           String // e.g. "1st Semester"
+  type           TermType     @default(TERM)
+  startDate      DateTime
+  endDate        DateTime
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  @@index([academicYearId])
+  @@map("terms")
 }

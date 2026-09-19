@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventInput, UpdateEventInput } from './dto/event.dto';
-
+import { requireInstitutionId } from '../tenant/tenant-context';
 interface RequestUser {
   id: string;
   role: Role;
@@ -31,7 +31,7 @@ export class EventsService {
   }
 
   create(input: CreateEventInput) {
-    return this.prisma.event.create({ data: input });
+    return this.prisma.event.create({ data: { ...input, institutionId: requireInstitutionId() } });
   }
 
   async update(id: string, input: UpdateEventInput) {

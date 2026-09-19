@@ -4,6 +4,7 @@ import MenuGroup from "./MenuGroup";
 
 // Every role that exists in the backend.
 const ALL_ROLES = [
+  "super_admin",
   "admin",
   "teacher",
   "student",
@@ -16,6 +17,7 @@ const ALL_ROLES = [
 
 // Where each role's dashboard lives (same map as middleware.ts).
 const ROLE_HOME = {
+  super_admin: "/super-admin",
   admin: "/admin",
   teacher: "/teacher",
   student: "/student",
@@ -57,6 +59,8 @@ const menuItems = [
         label: "Academics",
         visible: ["admin", "teacher"],
         children: [
+                    { icon: "calendar", label: "Academic Years", href: "/admin/academic-years", visible: ["admin"] },
+          { icon: "department", label: "Departments", href: "/admin/departments", visible: ["admin"] },
           { icon: "subject", label: "Subjects", href: "/list/subjects", visible: ["admin"] },
           { icon: "grade", label: "Grades", href: "/list/grades", visible: ["admin"] },
           { icon: "class", label: "Classes", href: "/list/classes", visible: ["admin", "teacher"] },
@@ -105,7 +109,9 @@ const menuItems = [
         visible: ["admin"],
         children: [
           { icon: "createStaff", label: "Create Staff", href: "/admin/create-staff", visible: ["admin"] },
+          { icon: "settings", label: "Institution", href: "/admin/institution", visible: ["admin"] },
           { icon: "audit", label: "Audit Log", href: "/list/audit-logs", visible: ["admin"] },
+          { icon: "roles", label: "Roles & Permissions", href: "/admin/roles", visible: ["admin"] },
         ],
       },
     ],

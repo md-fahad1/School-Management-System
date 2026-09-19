@@ -86,6 +86,12 @@ const ENTRIES: Record<string, Entry> = {
     table: "event",
     roles: ["admin"],
   },
+    "/admin/departments": {
+    title: "No departments or groups yet",
+    hint: "Add a group (Science, Humanities) or a department (CSE, Physics) so classes can be organised.",
+    table: "department",
+    roles: ["admin"],
+  },
   "/list/audit-logs": {
     title: "No activity recorded yet",
     hint: "When someone creates, edits or deletes something, it will be listed here.",

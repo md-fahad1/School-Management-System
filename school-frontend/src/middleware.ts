@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { isExpired } from "@/lib/jwt";
+import { forwardedHeaders } from "@/lib/forwardHeaders";
 
 // Dashboard sections that require a signed-in session at all.
 const PROTECTED_PREFIXES = [
   "/admin",
+  "/super-admin",
   "/teacher",
   "/student",
   "/parent",
@@ -21,6 +23,7 @@ const PROTECTED_PREFIXES = [
 // These correspond to real backend roles (see Role enum in the
 // NestJS schema) — role-mismatch redirects apply to all of them.
 const ROLE_HOME: Record<string, string> = {
+  super_admin: "/super-admin",
   admin: "/admin",
   teacher: "/teacher",
   student: "/student",
@@ -63,11 +66,14 @@ interface RefreshResult {
  * Returns null on any failure (expired/revoked/network error) so the
  * caller can fall through to "treat as logged out".
  */
-async function tryRefresh(refreshToken: string): Promise<RefreshResult | null> {
+async function tryRefresh(
+  refreshToken: string,
+  incoming: Headers,
+): Promise<RefreshResult | null> {
   try {
     const res = await fetch(GRAPHQL_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: forwardedHeaders(incoming),
       body: JSON.stringify({
         query: REFRESH_TOKEN_MUTATION,
         variables: { input: { refreshToken } },
@@ -114,7 +120,7 @@ export async function middleware(request: NextRequest) {
   // valid session instead of bouncing to /signin for a 15-minute-old
   // (but otherwise still-logged-in) visitor.
   if ((!token || isExpired(token)) && refreshTokenCookie && (isProtected || isAuthPage)) {
-    const refreshed = await tryRefresh(refreshTokenCookie);
+    const refreshed = await tryRefresh(refreshTokenCookie, request.headers);
 
     if (refreshed) {
       token = refreshed.accessToken;

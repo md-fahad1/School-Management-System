@@ -2,6 +2,15 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AcademicYear {
+  endDate: DateTime!
+  id: ID!
+  isCurrent: Boolean!
+  name: String!
+  startDate: DateTime!
+  terms: [Term!]
+}
+
 type Announcement {
   authorId: ID
   classId: ID
@@ -29,6 +38,11 @@ input ApplyLeaveInput {
   leaveType: LeaveType!
   reason: String!
   startDate: String!
+}
+
+input AssignUserRoleInput {
+  customRoleId: ID
+  userId: ID!
 }
 
 type Assignment {
@@ -138,12 +152,21 @@ input ChangePasswordInput {
 
 type Class {
   capacity: Int!
+  departmentId: ID
+  departmentName: String
   gradeId: ID!
   gradeLevel: Float
   id: ID!
   name: String!
   supervisorId: ID
   supervisorName: String
+}
+
+input CreateAcademicYearInput {
+  endDate: String!
+  isCurrent: Boolean
+  name: String!
+  startDate: String!
 }
 
 input CreateAnnouncementInput {
@@ -179,9 +202,23 @@ input CreateBookInput {
 
 input CreateClassInput {
   capacity: Int!
+  departmentId: ID
   gradeId: ID!
   name: String!
   supervisorId: ID
+}
+
+input CreateCustomRoleInput {
+  description: String
+  name: String!
+  permissionKeys: [String!]!
+}
+
+input CreateDepartmentInput {
+  code: String
+  description: String
+  name: String!
+  type: DepartmentType
 }
 
 input CreateEventInput {
@@ -210,6 +247,19 @@ input CreateFeeStructureInput {
 
 input CreateGradeInput {
   level: Int!
+  name: String
+  stage: EducationLevel
+}
+
+input CreateInstitutionInput {
+  adminEmail: String!
+  adminName: String!
+  adminPassword: String!
+  adminSurname: String!
+  adminUsername: String!
+  name: String!
+  slug: String!
+  type: InstitutionType
 }
 
 input CreateLessonInput {
@@ -262,6 +312,7 @@ input CreateStudentInput {
   password: String!
   phone: String
   sex: Sex
+  status: StudentStatus
   surname: String!
   username: String!
 }
@@ -286,6 +337,14 @@ input CreateTeacherInput {
   username: String!
 }
 
+input CreateTermInput {
+  academicYearId: ID!
+  endDate: String!
+  name: String!
+  startDate: String!
+  type: TermType
+}
+
 input CreateVehicleInput {
   capacity: Int!
   driverName: String!
@@ -294,6 +353,15 @@ input CreateVehicleInput {
   transportStaffId: ID
   type: String!
   vehicleNumber: String!
+}
+
+type CustomRole {
+  baseRole: Role
+  description: String
+  id: ID!
+  isSystem: Boolean!
+  name: String!
+  permissions: [Permission!]!
 }
 
 type DailyAttendance {
@@ -320,6 +388,7 @@ enum Day {
   FRIDAY
   MONDAY
   SATURDAY
+  SUNDAY
   THURSDAY
   TUESDAY
   WEDNESDAY
@@ -331,9 +400,28 @@ input DecideLeaveInput {
   status: LeaveStatus!
 }
 
+type Department {
+  classCount: Float
+  code: String
+  description: String
+  id: ID!
+  name: String!
+  type: DepartmentType!
+}
+
+enum DepartmentType {
+  DEPARTMENT
+  GROUP
+}
+
 enum DiscountType {
   FIXED
   PERCENTAGE
+}
+
+enum EducationLevel {
+  COLLEGE
+  SCHOOL
 }
 
 type Event {
@@ -403,6 +491,8 @@ input GenerateInvoiceInput {
 type Grade {
   id: ID!
   level: Int!
+  name: String
+  stage: EducationLevel!
 }
 
 enum HrAttendanceStatus {
@@ -421,6 +511,36 @@ type ImportFailure {
 type ImportResult {
   created: Int!
   failed: [ImportFailure!]!
+}
+
+type Institution {
+  address: String
+  createdAt: DateTime!
+  eiin: String
+  email: String
+  establishedYear: Int
+  id: ID!
+  logo: String
+  name: String!
+  phone: String
+  slug: String!
+  status: InstitutionStatus!
+  type: InstitutionType!
+  website: String
+}
+
+enum InstitutionStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+}
+
+enum InstitutionType {
+  COLLEGE
+  MADRASA
+  OTHER
+  SCHOOL
+  SCHOOL_AND_COLLEGE
 }
 
 type Invoice {
@@ -560,23 +680,29 @@ type Message {
 }
 
 type Mutation {
+  addTerm(input: CreateTermInput!): Term!
   applyInvoiceDiscount(input: ApplyDiscountInput!, invoiceId: ID!): Invoice!
   applyInvoiceFine(input: ApplyFineInput!, invoiceId: ID!): Invoice!
   applyLeave(input: ApplyLeaveInput!): Leave!
+  assignUserRole(input: AssignUserRoleInput!): Boolean!
   bulkMarkAttendance(input: BulkMarkAttendanceInput!): [Attendance!]!
   bulkMarkStaffAttendance(input: BulkMarkStaffAttendanceInput!): [StaffAttendance!]!
   bulkMarkTeacherAttendance(input: BulkMarkTeacherAttendanceInput!): [TeacherAttendance!]!
   cancelLeave(id: ID!): Leave!
   changePassword(input: ChangePasswordInput!): Boolean!
+  createAcademicYear(input: CreateAcademicYearInput!): AcademicYear!
   createAnnouncement(input: CreateAnnouncementInput!): Announcement!
   createAssignment(input: CreateAssignmentInput!): Assignment!
   createAttendance(input: CreateAttendanceInput!): Attendance!
   createBook(input: CreateBookInput!): Book!
   createClass(input: CreateClassInput!): Class!
+  createCustomRole(input: CreateCustomRoleInput!): CustomRole!
+  createDepartment(input: CreateDepartmentInput!): Department!
   createEvent(input: CreateEventInput!): Event!
   createExam(input: CreateExamInput!): Exam!
   createFeeStructure(input: CreateFeeStructureInput!): FeeStructure!
   createGrade(input: CreateGradeInput!): Grade!
+  createInstitution(input: CreateInstitutionInput!): Institution!
   createLesson(input: CreateLessonInput!): Lesson!
   createParent(input: CreateParentInput!): Parent!
   createResult(input: CreateResultInput!): Result!
@@ -600,11 +726,14 @@ type Mutation {
   recordPayment(input: RecordPaymentInput!): Payment!
   refreshToken(input: RefreshTokenInput!): AuthPayload!
   register(input: RegisterInput!): AuthPayload!
+  removeAcademicYear(id: ID!): Boolean!
   removeAnnouncement(id: ID!): Boolean!
   removeAssignment(id: ID!): Boolean!
   removeAttendance(id: ID!): Boolean!
   removeBook(id: ID!): Boolean!
   removeClass(id: ID!): Boolean!
+  removeCustomRole(id: ID!): Boolean!
+  removeDepartment(id: ID!): Boolean!
   removeEvent(id: ID!): Boolean!
   removeExam(id: ID!): Boolean!
   removeFeeStructure(id: ID!): Boolean!
@@ -617,29 +746,38 @@ type Mutation {
   removeStudent(id: ID!): Boolean!
   removeSubject(id: ID!): Boolean!
   removeTeacher(id: ID!): Boolean!
+  removeTerm(id: ID!): Boolean!
   removeVehicle(id: ID!): Boolean!
   requestPasswordReset(input: RequestPasswordResetInput!): Boolean!
   resendVerificationEmail(input: ResendVerificationInput!): Boolean!
   resetPassword(input: ResetPasswordInput!): Boolean!
   returnBook(input: ReturnBookInput!): BookLoan!
   sendMessage(input: SendMessageInput!): Message!
+  setCurrentAcademicYear(id: ID!): AcademicYear!
+  setInstitutionStatus(id: ID!, status: InstitutionStatus!): Institution!
+  setUserPermission(input: SetUserPermissionInput!): Boolean!
+  updateAcademicYear(id: ID!, input: UpdateAcademicYearInput!): AcademicYear!
   updateAnnouncement(id: ID!, input: UpdateAnnouncementInput!): Announcement!
   updateAssignment(id: ID!, input: UpdateAssignmentInput!): Assignment!
   updateAttendance(id: ID!, input: UpdateAttendanceInput!): Attendance!
   updateAvatar(input: UpdateAvatarInput!): Me!
   updateBook(id: ID!, input: UpdateBookInput!): Book!
   updateClass(id: ID!, input: UpdateClassInput!): Class!
+  updateCustomRole(id: ID!, input: UpdateCustomRoleInput!): CustomRole!
+  updateDepartment(id: ID!, input: UpdateDepartmentInput!): Department!
   updateEvent(id: ID!, input: UpdateEventInput!): Event!
   updateExam(id: ID!, input: UpdateExamInput!): Exam!
   updateFeeStructure(id: ID!, input: UpdateFeeStructureInput!): FeeStructure!
   updateGrade(id: ID!, input: UpdateGradeInput!): Grade!
   updateLesson(id: ID!, input: UpdateLessonInput!): Lesson!
+  updateMyInstitution(input: UpdateInstitutionInput!): Institution!
   updateMyNotificationPreferences(input: UpdateNotificationPreferencesInput!): Me!
   updateParent(id: ID!, input: UpdateParentInput!): Parent!
   updateProfile(input: UpdateProfileInput!): Me!
   updateResult(id: ID!, input: UpdateResultInput!): Result!
   updateScholarship(id: ID!, input: UpdateScholarshipInput!): Scholarship!
   updateStudent(id: ID!, input: UpdateStudentInput!): Student!
+  updateStudentStatus(id: ID!, input: UpdateStudentStatusInput!): Student!
   updateSubject(id: ID!, input: UpdateSubjectInput!): Subject!
   updateTeacher(id: ID!, input: UpdateTeacherInput!): Teacher!
   updateVehicle(id: ID!, input: UpdateVehicleInput!): Vehicle!
@@ -683,7 +821,17 @@ enum PaymentStatus {
   PENDING
 }
 
+type Permission {
+  action: String!
+  description: String
+  id: ID!
+  key: String!
+  module: String!
+}
+
 type Query {
+  academicYear(id: ID!): AcademicYear!
+  academicYears: [AcademicYear!]!
   announcement(id: ID!): Announcement!
   announcements(skip: Float, take: Float): [Announcement!]!
   assignment(id: ID!): Assignment!
@@ -697,8 +845,13 @@ type Query {
   class(id: ID!): Class!
   classes(search: String, skip: Float, take: Float): [Class!]!
   conversation(skip: Float, take: Float, userId: ID!): [Message!]!
+  currentAcademicYear: AcademicYear
+  customRole(id: ID!): CustomRole!
+  customRoles: [CustomRole!]!
   dashboardCounts: DashboardCounts!
   defaulters(gradeId: ID): [Invoice!]!
+  department(id: ID!): Department!
+  departments(search: String): [Department!]!
   event(id: ID!): Event!
   events(skip: Float, take: Float): [Event!]!
   exam(id: ID!): Exam!
@@ -710,6 +863,7 @@ type Query {
   grade(id: ID!): Grade!
   grades: [Grade!]!
   inbox(skip: Float, take: Float): [Message!]!
+  institutions(skip: Float, take: Float): [Institution!]!
   invoice(id: ID!): Invoice!
   invoices(skip: Int, status: PaymentStatus, studentId: ID, take: Int): [Invoice!]!
   leave(id: ID!): Leave!
@@ -718,15 +872,17 @@ type Query {
   lessons(skip: Float, take: Float): [Lesson!]!
   me: Me!
   myChildren: [Student!]!
+  myInstitution: Institution!
   myVehicles: [Vehicle!]!
   parent(id: ID!): Parent!
   parents(search: String, skip: Float, take: Float): [Parent!]!
+  permissions: [Permission!]!
   result(id: ID!): Result!
   results(skip: Float, take: Float): [Result!]!
   scholarships(studentId: ID): [Scholarship!]!
   staffAttendances(date: String, skip: Float, take: Float, userId: ID): [StaffAttendance!]!
   student(id: ID!): Student!
-  students(search: String, skip: Float, take: Float): [Student!]!
+  students(search: String, skip: Float, status: StudentStatus, take: Float): [Student!]!
   subject(id: ID!): Subject!
   subjects(search: String, skip: Float, take: Float): [Subject!]!
   teacher(id: ID!): Teacher!
@@ -752,6 +908,7 @@ input RefreshTokenInput {
 
 input RegisterInput {
   email: String!
+  institutionSlug: String
   name: String!
   password: String!
   phone: String
@@ -802,6 +959,7 @@ enum Role {
   PARENT
   PRINCIPAL
   STUDENT
+  SUPER_ADMIN
   TEACHER
   TRANSPORT_STAFF
 }
@@ -832,6 +990,12 @@ type SearchResult {
 input SendMessageInput {
   content: String!
   receiverId: ID!
+}
+
+input SetUserPermissionInput {
+  granted: Boolean!
+  permissionKey: String!
+  userId: ID!
 }
 
 enum Sex {
@@ -867,8 +1031,20 @@ type Student {
   parentName: String
   phone: String
   sex: Sex
+  status: StudentStatus!
   surname: String!
   userId: ID
+}
+
+enum StudentStatus {
+  ACTIVE
+  ALUMNI
+  DROPPED
+  EXPELLED
+  GRADUATED
+  INACTIVE
+  SUSPENDED
+  TRANSFERRED
 }
 
 type Subject {
@@ -903,6 +1079,27 @@ type TeacherAttendance {
   status: HrAttendanceStatus!
   teacherId: ID!
   teacherName: String
+}
+
+type Term {
+  academicYearId: ID!
+  endDate: DateTime!
+  id: ID!
+  name: String!
+  startDate: DateTime!
+  type: TermType!
+}
+
+enum TermType {
+  SEMESTER
+  TERM
+  TRIMESTER
+}
+
+input UpdateAcademicYearInput {
+  endDate: String
+  name: String
+  startDate: String
 }
 
 input UpdateAnnouncementInput {
@@ -942,9 +1139,23 @@ input UpdateBookInput {
 
 input UpdateClassInput {
   capacity: Int
+  departmentId: ID
   gradeId: ID
   name: String
   supervisorId: ID
+}
+
+input UpdateCustomRoleInput {
+  description: String
+  name: String
+  permissionKeys: [String!]
+}
+
+input UpdateDepartmentInput {
+  code: String
+  description: String
+  name: String
+  type: DepartmentType
 }
 
 input UpdateEventInput {
@@ -973,6 +1184,19 @@ input UpdateFeeStructureInput {
 
 input UpdateGradeInput {
   level: Int
+  name: String
+  stage: EducationLevel
+}
+
+input UpdateInstitutionInput {
+  address: String
+  eiin: String
+  email: String
+  establishedYear: Int
+  logo: String
+  name: String
+  phone: String
+  website: String
 }
 
 input UpdateLessonInput {
@@ -1035,8 +1259,14 @@ input UpdateStudentInput {
   password: String
   phone: String
   sex: Sex
+  status: StudentStatus
   surname: String
   username: String
+}
+
+input UpdateStudentStatusInput {
+  reason: String
+  status: StudentStatus!
 }
 
 input UpdateSubjectInput {

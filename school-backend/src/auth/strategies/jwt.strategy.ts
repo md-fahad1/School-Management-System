@@ -8,6 +8,7 @@ export interface JwtPayload {
   sub: string;
   username: string;
   role: string;
+  institutionId?: string;
   jti: string;
   exp: number;
 }
@@ -34,6 +35,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
+        // Tokens issued before multi-tenancy have no institutionId. Fail closed:
+    // force a fresh login instead of letting the request run unscoped.
+    if (payload.role !== 'SUPER_ADMIN' && !payload.institutionId) {
+      throw new UnauthorizedException('Session outdated, please log in again');
+    }
+
     // Access tokens are stateless by design, but logout needs to be able
     // to kill one immediately rather than waiting out its (short) natural
     // expiry — so every request checks a Redis blacklist keyed by jti.
@@ -49,7 +56,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: payload.sub,
       username: payload.username,
-      role: payload.role,
+           role: payload.role,
+      institutionId: payload.institutionId,
       jti: payload.jti,
       exp: payload.exp,
     };

@@ -6,15 +6,18 @@ import { Subject } from './entities/subject.entity';
 import { CreateSubjectInput, UpdateSubjectInput } from './dto/subject.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Subject)
-@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@UseGuards(GqlJwtAuthGuard, RolesGuard, PermissionsGuard)
 export class SubjectsResolver {
   constructor(private subjectsService: SubjectsService) {}
 
   @Query(() => [Subject])
+  @RequirePermissions('subject:view')
   subjects(
     @Args('search', { nullable: true }) search?: string,
     @Args('skip', { nullable: true }) skip?: number,
@@ -30,12 +33,14 @@ export class SubjectsResolver {
 
   @Mutation(() => Subject)
   @Roles(Role.ADMIN)
+  @RequirePermissions('subject:create')
   createSubject(@Args('input') input: CreateSubjectInput, @CurrentUser() user: { id: string }) {
     return this.subjectsService.create(input, user.id);
   }
 
   @Mutation(() => Subject)
   @Roles(Role.ADMIN)
+  @RequirePermissions('subject:update')
   updateSubject(
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateSubjectInput,
@@ -46,6 +51,7 @@ export class SubjectsResolver {
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN)
+  @RequirePermissions('subject:delete')
   removeSubject(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
     return this.subjectsService.remove(id, user.id);
   }

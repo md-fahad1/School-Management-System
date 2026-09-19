@@ -6,15 +6,18 @@ import { Announcement } from './entities/announcement.entity';
 import { CreateAnnouncementInput, UpdateAnnouncementInput } from './dto/announcement.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Announcement)
-@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@UseGuards(GqlJwtAuthGuard, RolesGuard, PermissionsGuard)
 export class AnnouncementsResolver {
   constructor(private announcementsService: AnnouncementsService) {}
 
   @Query(() => [Announcement])
+  @RequirePermissions('announcement:view')
   announcements(
     @CurrentUser() user: { id: string; role: Role },
     @Args('skip', { nullable: true }) skip?: number,

@@ -6,15 +6,18 @@ import { Exam } from './entities/exam.entity';
 import { CreateExamInput, UpdateExamInput } from './dto/exam.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RequirePermissions } from '../common/decorators/require-permissions.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Resolver(() => Exam)
-@UseGuards(GqlJwtAuthGuard, RolesGuard)
+@UseGuards(GqlJwtAuthGuard, RolesGuard, PermissionsGuard)
 export class ExamsResolver {
   constructor(private examsService: ExamsService) {}
 
   @Query(() => [Exam])
+  @RequirePermissions('exam:view')
   exams(
     @CurrentUser() user: { id: string; role: Role },
     @Args('skip', { nullable: true }) skip?: number,
@@ -30,12 +33,14 @@ export class ExamsResolver {
 
   @Mutation(() => Exam)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('exam:create')
   createExam(@Args('input') input: CreateExamInput, @CurrentUser() user: { id: string }) {
     return this.examsService.create(input, user.id);
   }
 
   @Mutation(() => Exam)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('exam:update')
   updateExam(
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateExamInput,
@@ -46,6 +51,7 @@ export class ExamsResolver {
 
   @Mutation(() => Boolean)
   @Roles(Role.ADMIN, Role.TEACHER)
+  @RequirePermissions('exam:delete')
   removeExam(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
     return this.examsService.remove(id, user.id);
   }

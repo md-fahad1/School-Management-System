@@ -2,16 +2,24 @@ import Navbar from "@/components/Navbar";
 import Menu from "@/components/Menu";
 import Sidebar from "@/components/Sidebar";
 import { SidebarProvider } from "@/components/SidebarContext";
+import { getMyInstitution } from "@/lib/graphql/fetchers";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const institution = await getMyInstitution();
+
   return (
     <SidebarProvider>
       <div className="h-screen flex">
-        <Sidebar menu={<Menu />} />
+        <Sidebar
+          menu={<Menu />}
+          institutionName={institution?.name}
+          institutionLogo={institution?.logo}
+          institutionType={institution?.type}
+        />
         {/* This column itself no longer scrolls — only the inner
             content area below Navbar does. That keeps Navbar pinned
             at the top instead of scrolling away with the page. */}

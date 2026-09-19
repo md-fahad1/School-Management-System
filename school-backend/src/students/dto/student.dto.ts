@@ -1,6 +1,8 @@
 import { InputType, Field, ID, PartialType } from '@nestjs/graphql';
 import { IsDateString, IsEmail, IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 import { Sex } from '../../common/enums/sex.enum';
+import { StudentStatus } from '../../common/enums/student-status.enum';
+
 
 @InputType()
 export class CreateStudentInput {
@@ -55,6 +57,11 @@ export class CreateStudentInput {
   @IsDateString()
   birthday?: string;
 
+  @Field(() => StudentStatus, { nullable: true })
+  @IsOptional()
+  @IsEnum(StudentStatus)
+  status?: StudentStatus;
+
   @Field(() => ID)
   @IsUUID()
   classId!: string;
@@ -70,3 +77,15 @@ export class CreateStudentInput {
 
 @InputType()
 export class UpdateStudentInput extends PartialType(CreateStudentInput) {}
+
+@InputType()
+export class UpdateStudentStatusInput {
+  @Field(() => StudentStatus)
+  @IsEnum(StudentStatus)
+  status!: StudentStatus;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
@@ -36,9 +36,17 @@ import { TransportModule } from './transport/transport.module';
 import { SearchModule } from './search/search.module';
 import { ExportModule } from './export/export.module';
 import { ReportsModule } from './reports/reports.module';
+import { InstitutionsModule } from './institutions/institutions.module';
+import { AcademicYearsModule } from './academic-years/academic-years.module';
+import { DepartmentsModule } from './departments/departments.module';
+import { TenantInterceptor } from './tenant/tenant.interceptor';
+import { PermissionsModule } from './permissions/permissions.module';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+      ConfigModule.forRoot({ isGlobal: true }),
+        InstitutionsModule,
+    AcademicYearsModule,
+    DepartmentsModule,
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60_000, limit: 60 },],
     }),
@@ -82,10 +90,12 @@ import { ReportsModule } from './reports/reports.module';
      TransportModule,
       SearchModule,
       ExportModule,
-       ReportsModule
+       ReportsModule,
+        PermissionsModule
 
   ],
    providers: [
+    { provide: APP_INTERCEPTOR, useClass: TenantInterceptor },
     {
       provide: APP_GUARD,
       useClass: GqlThrottlerGuard,

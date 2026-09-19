@@ -11,6 +11,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { getErrorMessage } from "@/lib/errors";
 import PasswordInput from "@/components/PasswordInput";
+import { roleHome } from "@/lib/roleHome";
 const SignInForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,7 +58,7 @@ const SignInForm = () => {
       // (e.g. a deep link to /list/exams), falling back to their
       // role's dashboard home.
       const from = searchParams.get("from");
-      router.push(from || `/${role.toLowerCase()}`);
+      router.push(from || roleHome(role));
     } catch (err) {
       setError(
         getErrorMessage(err, "Invalid username or password")

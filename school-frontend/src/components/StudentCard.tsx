@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import FormModal from "./FormModal";
+import { Eye } from "lucide-react";
 
 type Student = {
   id: string;
@@ -82,7 +83,7 @@ const StudentCard = ({ item, role }: { item: Student; role: string }) => {
       <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
         <Link href={`/list/students/${item.id}`}>
           <button className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border text-textPrimary hover:bg-accentLight transition-colors">
-            <Image src="/view.png" alt="" width={14} height={14} />
+            <Eye size={14} />
             View
           </button>
         </Link>

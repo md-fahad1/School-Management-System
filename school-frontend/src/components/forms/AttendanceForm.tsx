@@ -8,6 +8,7 @@ import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
 import { GET_STUDENTS, GET_LESSONS } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const CREATE_ATTENDANCE = gql`
   mutation CreateAttendance($input: CreateAttendanceInput!) {
@@ -102,7 +103,7 @@ const AttendanceForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -115,7 +116,7 @@ const AttendanceForm = ({
         {type === "create" ? "Mark attendance" : "Update attendance"}
       </h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField
           label="Date"
           name="date"
@@ -124,22 +125,22 @@ const AttendanceForm = ({
           error={errors.date}
         />
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Status</label>
           <select
             {...register("present")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="true">Present</option>
             <option value="false">Absent</option>
           </select>
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Student</label>
           <select
             {...register("studentId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a student</option>
             {studentOptions.map((s) => (
@@ -149,15 +150,15 @@ const AttendanceForm = ({
             ))}
           </select>
           {errors.studentId?.message && (
-            <p className="text-xs text-red-400">{errors.studentId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.studentId.message.toString()}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Lesson</label>
           <select
             {...register("lessonId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a lesson</option>
             {lessonOptions.map((l) => (
@@ -167,7 +168,7 @@ const AttendanceForm = ({
             ))}
           </select>
           {errors.lessonId?.message && (
-            <p className="text-xs text-red-400">{errors.lessonId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.lessonId.message.toString()}</p>
           )}
         </div>
       </div>
@@ -177,7 +178,7 @@ const AttendanceForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Save" : "Update"}
       </button>

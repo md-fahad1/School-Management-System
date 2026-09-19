@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { RECORD_PAYMENT } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   amount: z.coerce.number().min(0.01, { message: "Amount must be greater than 0" }),
@@ -49,7 +50,7 @@ const RecordPaymentForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -61,7 +62,7 @@ const RecordPaymentForm = ({
       <h1 className="text-xl font-semibold">Record a payment</h1>
       <p className="text-sm text-gray-500">Remaining balance: ${balance.toFixed(2)}</p>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField
           label="Amount"
           name="amount"
@@ -71,11 +72,11 @@ const RecordPaymentForm = ({
           inputProps={{ step: "0.01" }}
         />
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Method</label>
           <select
             {...register("method")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="CASH">Cash</option>
             <option value="CARD">Card</option>
@@ -98,7 +99,7 @@ const RecordPaymentForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Recording..." : "Record payment"}
       </button>

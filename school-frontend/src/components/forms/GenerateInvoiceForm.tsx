@@ -11,6 +11,7 @@ import {
   GET_STUDENT_OPTIONS,
   GET_FEE_STRUCTURE_OPTIONS,
 } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   studentId: z.string().min(1, { message: "Select a student" }),
@@ -67,7 +68,7 @@ const GenerateInvoiceForm = ({ onSuccess }: { onSuccess: () => void }) => {
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -78,12 +79,12 @@ const GenerateInvoiceForm = ({ onSuccess }: { onSuccess: () => void }) => {
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">Generate an invoice</h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
-        <div className="flex flex-col gap-2 w-full md:w-[45%]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Student</label>
           <select
             {...register("studentId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
             defaultValue=""
           >
             <option value="" disabled>
@@ -96,15 +97,15 @@ const GenerateInvoiceForm = ({ onSuccess }: { onSuccess: () => void }) => {
             ))}
           </select>
           {errors.studentId?.message && (
-            <p className="text-xs text-red-400">{errors.studentId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.studentId.message.toString()}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-[45%]">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Fee structure (optional)</label>
           <select
             {...register("feeStructureId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
             defaultValue=""
           >
             <option value="">Custom amount</option>
@@ -138,7 +139,7 @@ const GenerateInvoiceForm = ({ onSuccess }: { onSuccess: () => void }) => {
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Generating..." : "Generate invoice"}
       </button>

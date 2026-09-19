@@ -67,7 +67,7 @@ const ProfileEditForm = ({
 
   return (
     <form className="flex flex-col gap-6" onSubmit={onSubmit}>
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="First name" name="name" register={register} error={errors.name} />
         <InputField label="Last name" name="surname" register={register} error={errors.surname} />
         <InputField

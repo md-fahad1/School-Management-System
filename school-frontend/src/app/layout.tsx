@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Rubik, Roboto } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/redux/Provider";
-
+import { ToastProvider } from "@/components/ui/ToastProvider";
 // Load the fonts
 
 const rubik = Rubik({
@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={` ${rubik.variable} ${roboto.variable}`}>
       <body>
-        <ReduxProvider>{children}</ReduxProvider>
+        <ReduxProvider><ToastProvider>{children}</ToastProvider></ReduxProvider>
       </body>
     </html>
   );

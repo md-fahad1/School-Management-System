@@ -1,66 +1,34 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { getClientGqlClient } from "@/lib/graphql/client";
+import { getErrorMessage } from "@/lib/errors";
+import Modal from "./ui/Modal";
+import { useToast } from "./ui/ToastProvider";
 
-const FormLoading = () => (
-  <div className="flex items-center justify-center gap-3 py-16 text-sm text-textSecondary">
-    <span className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-accent" />
-    Loading form...
-  </div>
-);
+// Form ta load hote hote ekta chhoto grey box dekhabe ("Loading..." text er bodole).
+const loading = () => <div className="animate-pulse h-40 bg-bg rounded-xl" />;
+
 // USE LAZY LOADING
-const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
-  loading: () => <FormLoading />,
-});
-const StudentForm = dynamic(() => import("./forms/StudentForm"), {
-  loading: () => <FormLoading />,
-});
-const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
-  loading: () => <FormLoading />,
-});
-const ClassForm = dynamic(() => import("./forms/ClassForm"), {
-  loading: () => <FormLoading />,
-});
-const ParentForm = dynamic(() => import("./forms/ParentForm"), {
-  loading: () => <FormLoading />,
-});
-const LessonForm = dynamic(() => import("./forms/LessonForm"), {
-  loading: () => <FormLoading />,
-});
-const EventForm = dynamic(() => import("./forms/EventForm"), {
-  loading: () => <FormLoading />,
-});
-const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"), {
-  loading: () => <FormLoading />,
-});
-const ExamForm = dynamic(() => import("./forms/ExamForm"), {
-  loading: () => <FormLoading />,
-});
-const AssignmentForm = dynamic(() => import("./forms/AssignmentForm"), {
-  loading: () => <FormLoading />,
-});
-const ResultForm = dynamic(() => import("./forms/ResultForm"), {
-  loading: () => <FormLoading />,
-});
-const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
-  loading: () => <FormLoading />,
-});
-const BookForm = dynamic(() => import("./forms/BookForm"), {
-  loading: () => <FormLoading />,
-});
-const FeeStructureForm = dynamic(() => import("./forms/FeeStructureForm"), {
-  loading: () => <FormLoading />,
-});
-const GradeForm = dynamic(() => import("./forms/GradeForm"), {
-  loading: () => <FormLoading />,
-});
-const VehicleForm = dynamic(() => import("./forms/VehicleForm"), {
-  loading: () => <FormLoading />,
-});
+const TeacherForm = dynamic(() => import("./forms/TeacherForm"), { loading });
+const StudentForm = dynamic(() => import("./forms/StudentForm"), { loading });
+const SubjectForm = dynamic(() => import("./forms/SubjectForm"), { loading });
+const ClassForm = dynamic(() => import("./forms/ClassForm"), { loading });
+const ParentForm = dynamic(() => import("./forms/ParentForm"), { loading });
+const LessonForm = dynamic(() => import("./forms/LessonForm"), { loading });
+const EventForm = dynamic(() => import("./forms/EventForm"), { loading });
+const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"), { loading });
+const ExamForm = dynamic(() => import("./forms/ExamForm"), { loading });
+const AssignmentForm = dynamic(() => import("./forms/AssignmentForm"), { loading });
+const ResultForm = dynamic(() => import("./forms/ResultForm"), { loading });
+const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), { loading });
+const BookForm = dynamic(() => import("./forms/BookForm"), { loading });
+const FeeStructureForm = dynamic(() => import("./forms/FeeStructureForm"), { loading });
+const GradeForm = dynamic(() => import("./forms/GradeForm"), { loading });
+const VehicleForm = dynamic(() => import("./forms/VehicleForm"), { loading });
 
 const forms: {
   [key: string]: (type: "create" | "update", data: any, onSuccess: () => void) => JSX.Element;
@@ -79,9 +47,10 @@ const forms: {
   attendance: (type, data, onSuccess) => <AttendanceForm type={type} data={data} onSuccess={onSuccess} />,
   book: (type, data, onSuccess) => <BookForm type={type} data={data} onSuccess={onSuccess} />,
   feeStructure: (type, data, onSuccess) => <FeeStructureForm type={type} data={data} onSuccess={onSuccess} />,
-    grade: (type, data, onSuccess) => <GradeForm type={type} data={data} onSuccess={onSuccess} />,
-      vehicle: (type, data, onSuccess) => <VehicleForm type={type} data={data} onSuccess={onSuccess} />,
+  grade: (type, data, onSuccess) => <GradeForm type={type} data={data} onSuccess={onSuccess} />,
+  vehicle: (type, data, onSuccess) => <VehicleForm type={type} data={data} onSuccess={onSuccess} />,
 };
+
 // One remove mutation per table, all following the same
 // `remove<Entity>(id: ID!): Boolean` shape the backend already exposes.
 // Add a line here as each module gets wired up — that's the only
@@ -101,23 +70,23 @@ const REMOVE_MUTATIONS: { [key: string]: string } = {
   attendance: `mutation($id: ID!) { removeAttendance(id: $id) }`,
   book: `mutation($id: ID!) { removeBook(id: $id) }`,
   feeStructure: `mutation($id: ID!) { removeFeeStructure(id: $id) }`,
-    grade: `mutation($id: ID!) { removeGrade(id: $id) }`,
-      vehicle: `mutation($id: ID!) { removeVehicle(id: $id) }`,
+  grade: `mutation($id: ID!) { removeGrade(id: $id) }`,
+  vehicle: `mutation($id: ID!) { removeVehicle(id: $id) }`,
 };
 
-// One icon + color per action, used for the trigger button instead of
-// the old /create.png, /update.png, /delete.png images.
-const actionMeta = {
-  create: { Icon: Plus, bg: "bg-accent", iconColor: "text-white" },
-  update: { Icon: Pencil, bg: "bg-infoLight", iconColor: "text-info" },
-  delete: { Icon: Trash2, bg: "bg-dangerLight", iconColor: "text-danger" },
-} as const;
+// Button, title ar message e je nam dekhabe (camelCase table name er bodole).
+const entityLabel: { [key: string]: string } = {
+  feeStructure: "fee structure",
+  attendance: "attendance record",
+};
+const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 const FormModal = ({
   table,
   type,
   data,
   id,
+  itemName,
 }: {
   table:
     | "teacher"
@@ -139,41 +108,28 @@ const FormModal = ({
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
+  /** Optional: delete popup e nam dekhabe, jemon "Rahim Uddin". */
+  itemName?: string;
 }) => {
   const router = useRouter();
-  const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
-  const iconSize = type === "create" ? 16 : 14;
-  const { Icon, bg, iconColor } = actionMeta[type];
-  const isDelete = type === "delete";
-  // "feeStructure" -> "fee structure" for friendlier copy
-  const tableLabel = table.replace(/([A-Z])/g, " $1").toLowerCase();
+  const toast = useToast();
+  const label = entityLabel[table] ?? table;
 
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
-  // Esc closes the modal and the page behind it stops scrolling.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    const prevOverflow = document.body.style.overflow;
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open]);
+  const close = useCallback(() => {
+    setOpen(false);
+    setDeleteError("");
+  }, []);
 
-  const handleDelete = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleDelete = async () => {
     setDeleteError("");
 
     const mutation = REMOVE_MUTATIONS[table];
     if (!mutation || !id) {
-      setDeleteError(`Delete isn't wired up for "${table}" yet.`);
+      setDeleteError(`Deleting a ${label} isn't available yet.`);
       return;
     }
 
@@ -181,111 +137,106 @@ const FormModal = ({
     try {
       const client = await getClientGqlClient();
       await client.request(mutation, { id });
-      setOpen(false);
-      // List pages are Server Components that fetch on each request —
-      // this re-runs that fetch so the deleted row disappears without
-      // a full page reload.
+      close();
+      toast.success(`${cap(label)} deleted.`);
+      // List page Server Component, tai refresh korle deleted row chole jay.
       router.refresh();
-    } catch (err: any) {
-      setDeleteError(
-        err?.response?.errors?.[0]?.message ?? "Failed to delete. Please try again."
-      );
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, `Couldn't delete this ${label}. Please try again.`));
     } finally {
       setDeleting(false);
     }
   };
 
-  const renderContent = () => {
-    if (type === "delete" && id) {
-      return (
-        <form onSubmit={handleDelete} className="flex flex-col items-center gap-4 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-dangerLight text-danger">
-            <Trash2 size={22} />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-textPrimary capitalize">
-              Delete {tableLabel}?
-            </h2>
-            <p className="mt-1 text-sm text-textSecondary">
-              This can&apos;t be undone. All data linked to this {tableLabel} will be
-              permanently removed.
-            </p>
-          </div>
-          {deleteError && (
-            <p className="w-full rounded-lg bg-dangerLight px-3 py-2 text-sm text-danger">
-              {deleteError}
-            </p>
-          )}
-          <div className="mt-2 flex w-full gap-3">
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="flex-1 rounded-lg border border-border py-2.5 text-sm font-medium text-textPrimary transition-colors hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={deleting}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-danger py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            >
-              <Trash2 size={16} />
-              {deleting ? "Deleting..." : "Delete"}
-            </button>
-          </div>
-        </form>
-      );
-    }
-
-    if (type === "create" || type === "update") {
-      return forms[table]
-        ? forms[table](type, data, () => {
-            setOpen(false);
-            router.refresh();
-          })
-        : "Form not found!";
-    }
-
-    return "Form not found!";
+  const onFormSuccess = () => {
+    close();
+    toast.success(type === "create" ? `${cap(label)} added successfully.` : `${cap(label)} updated.`);
+    router.refresh();
   };
 
   return (
     <>
-      <button
-        className={`${size} flex items-center justify-center rounded-full ${bg} ${iconColor} hover:opacity-80 transition`}
-        onClick={() => setOpen(true)}
-        title={type}
-      >
-        <Icon size={iconSize} />
-      </button>
-      {open && (
-        <div
-          className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          // Close on backdrop click, but not when a text selection drag
-          // started inside the card ends outside it.
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
-          }}
+      {/* ---------- Je button ta page e dekha jay ---------- */}
+      {type === "create" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white hover:opacity-90 whitespace-nowrap"
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            className={`modal-card relative w-full ${
-              isDelete ? "max-w-sm" : "modal-form max-w-2xl"
-            } max-h-[90vh] overflow-y-auto rounded-2xl bg-cardBg p-6 shadow-2xl sm:p-8`}
-          >
-            {renderContent()}
-            <button
-              type="button"
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-textMuted transition-colors hover:bg-gray-100 hover:text-textPrimary"
-              onClick={() => setOpen(false)}
-              aria-label="Close"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </div>
+          <Plus size={16} />
+          Add {cap(label)}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          title={`${type === "update" ? "Edit" : "Delete"} ${label}`}
+          aria-label={`${type === "update" ? "Edit" : "Delete"} ${label}`}
+          className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+            type === "update"
+              ? "bg-infoLight text-info hover:bg-info hover:text-white"
+              : "bg-dangerLight text-danger hover:bg-danger hover:text-white"
+          }`}
+        >
+          {type === "update" ? <Pencil size={14} /> : <Trash2 size={14} />}
+        </button>
       )}
+
+      {/* ---------- Popup ---------- */}
+      <Modal
+        open={open}
+        onClose={close}
+        title={
+          type === "create"
+            ? `Add a new ${label}`
+            : type === "update"
+            ? `Edit ${label}`
+            : `Delete this ${label}?`
+        }
+      >
+        {type === "delete" ? (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-textSecondary">
+              {itemName ? (
+                <>
+                  You're about to delete <b className="text-textPrimary">{itemName}</b>.{" "}
+                </>
+              ) : null}
+              This can't be undone, and related data may be removed too.
+            </p>
+
+            {deleteError && (
+              <p role="alert" className="rounded-lg bg-dangerLight text-danger text-sm px-3 py-2">
+                {deleteError}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={close}
+                disabled={deleting}
+                className="rounded-lg border border-border bg-cardBg px-4 py-2.5 text-sm font-medium text-textPrimary hover:bg-bg disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-2 rounded-lg bg-danger px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+              >
+                <Trash2 size={16} />
+                {deleting ? "Deleting..." : "Yes, delete"}
+              </button>
+            </div>
+          </div>
+        ) : forms[table] ? (
+          <div className="modal-form">{forms[table](type, data, onFormSuccess)}</div>
+        ) : (
+          <p className="text-sm text-textSecondary">This form isn't available yet.</p>
+        )}
+      </Modal>
     </>
   );
 };

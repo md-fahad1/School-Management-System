@@ -5,6 +5,7 @@ import { Mail, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { REQUEST_PASSWORD_RESET } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -27,7 +28,7 @@ const ForgotPassword = () => {
       await client.request(REQUEST_PASSWORD_RESET, { input: { email } });
       setSubmitted(true);
     } catch (err) {
-      setError(err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again.");
+      setError(getErrorMessage(err, "Something went wrong. Please try again."));
     } finally {
       setLoading(false);
     }

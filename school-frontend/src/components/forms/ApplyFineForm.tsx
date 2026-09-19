@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { APPLY_INVOICE_FINE } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   amount: z.coerce.number().min(0, { message: "Amount must be 0 or more" }),
@@ -34,7 +35,7 @@ const ApplyFineForm = ({ invoiceId, onSuccess }: { invoiceId: string; onSuccess:
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -45,7 +46,7 @@ const ApplyFineForm = ({ invoiceId, onSuccess }: { invoiceId: string; onSuccess:
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">Apply a fine</h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField
           label="Fine amount"
           name="amount"
@@ -62,7 +63,7 @@ const ApplyFineForm = ({ invoiceId, onSuccess }: { invoiceId: string; onSuccess:
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Applying..." : "Apply fine"}
       </button>

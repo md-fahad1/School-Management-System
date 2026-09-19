@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { CREATE_SUBJECT, UPDATE_SUBJECT, GET_TEACHER_OPTIONS } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   name: z.string().min(2, { message: "Subject name must be at least 2 characters" }),
@@ -71,7 +72,7 @@ const SubjectForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -84,7 +85,7 @@ const SubjectForm = ({
         {type === "create" ? "Create a new subject" : "Update subject"}
       </h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField
           label="Subject name"
           name="name"
@@ -92,13 +93,13 @@ const SubjectForm = ({
           error={errors.name}
         />
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Teachers</label>
           <select
             multiple
             {...register("teacherIds")}
             defaultValue={data?.teachers ?? []}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full h-24"
+            className="field h-24"
           >
             {teacherOptions.map((t) => (
               <option value={t.id} key={t.id}>
@@ -114,7 +115,7 @@ const SubjectForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Create" : "Update"}
       </button>

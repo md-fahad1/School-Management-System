@@ -3,10 +3,10 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import ModalShell, { ModalLoading } from "./ModalShell";
+import Modal from "./ui/Modal";
 
 const ApplyDiscountForm = dynamic(() => import("./forms/ApplyDiscountForm"), {
-  loading: () => <ModalLoading />,
+  loading: () => <div className="animate-pulse h-40 bg-bg rounded-xl" />,
 });
 
 const ApplyDiscountModal = ({ invoiceId, amount }: { invoiceId: string; amount: number }) => {
@@ -16,23 +16,23 @@ const ApplyDiscountModal = ({ invoiceId, amount }: { invoiceId: string; amount: 
   return (
     <>
       <button
+        type="button"
         className="text-xs bg-lamaYellow px-3 py-1 rounded-md hover:opacity-80 transition"
         onClick={() => setOpen(true)}
       >
         Discount
       </button>
-      {open && (
-        <ModalShell onClose={() => setOpen(false)}>
-          <ApplyDiscountForm
-            invoiceId={invoiceId}
-            amount={amount}
-            onSuccess={() => {
-              setOpen(false);
-              router.refresh();
-            }}
-          />
-        </ModalShell>
-      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title="Apply a discount">
+        <ApplyDiscountForm
+          invoiceId={invoiceId}
+          amount={amount}
+          onSuccess={() => {
+            setOpen(false);
+            router.refresh();
+          }}
+        />
+      </Modal>
     </>
   );
 };

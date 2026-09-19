@@ -24,7 +24,7 @@ const config: Config = {
         sidebarActiveBg: "var(--color-sidebar-active-bg)",
         sidebarBorder: "var(--color-sidebar-border)",
         sidebarSectionLabel: "var(--color-sidebar-section-label)",
-
+        bg: "rgb(var(--color-bg-rgb) / <alpha-value>)",
         // Brand / primary
         primary: "var(--color-primary)",
         primaryDark: "var(--color-primary-dark)",

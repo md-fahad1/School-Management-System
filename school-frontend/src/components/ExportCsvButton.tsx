@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Cookies from "js-cookie";
+import { useToast } from "./ui/ToastProvider";
 
 const API_BASE = (process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/graphql").replace(
   "/graphql",
@@ -10,6 +11,7 @@ const API_BASE = (process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/
 
 const ExportCsvButton = ({ endpoint, filename }: { endpoint: string; filename: string }) => {
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const handleExport = async () => {
     setLoading(true);
@@ -28,9 +30,10 @@ const ExportCsvButton = ({ endpoint, filename }: { endpoint: string; filename: s
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      toast.success(`${filename} downloaded.`);
     } catch (err) {
       console.error("CSV export failed:", err);
-      alert("Export failed. Please try again.");
+      toast.error("Export failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -38,6 +41,7 @@ const ExportCsvButton = ({ endpoint, filename }: { endpoint: string; filename: s
 
   return (
     <button
+      type="button"
       onClick={handleExport}
       disabled={loading}
       className="bg-lamaSky px-4 py-2 rounded-md text-sm disabled:opacity-60"

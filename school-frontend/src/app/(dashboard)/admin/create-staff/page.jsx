@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { CREATE_STAFF_ACCOUNT } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const ROLE_OPTIONS = ["ADMIN", "ACCOUNTANT", "LIBRARIAN", "PRINCIPAL", "TEACHER", "TRANSPORT_STAFF"];
 
@@ -38,7 +39,7 @@ const CreateStaffPage = () => {
       setSuccess(`Account created: ${data.createStaffAccount.username} (${data.createStaffAccount.role})`);
       setForm(initialForm);
     } catch (err) {
-      setError(err?.response?.errors?.[0]?.message ?? "Failed to create account");
+      setError(getErrorMessage(err, "Failed to create account"));
     } finally {
       setLoading(false);
     }

@@ -100,12 +100,6 @@ const TeacherListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
             {role === "admin" && <FormModal table="teacher" type="create" />}
             {role === "admin" && (
               <ExportCsvButton endpoint="teachers.csv" filename="teachers.csv" />

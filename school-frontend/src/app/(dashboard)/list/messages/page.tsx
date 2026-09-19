@@ -10,7 +10,7 @@ import {
   MARK_MESSAGE_READ,
 } from "@/lib/graphql/queries";
 import Cookies from "js-cookie";
-
+import { getErrorMessage } from "@/lib/errors";
 type Message = {
   id: string;
   content: string;
@@ -119,7 +119,7 @@ const MessagesPage = () => {
       }
       setNewRecipientId("");
     } catch (err: any) {
-      setError(err?.response?.errors?.[0]?.message ?? "Failed to send message.");
+      setError(getErrorMessage(err, "Failed to send message."));
     }
   };
 

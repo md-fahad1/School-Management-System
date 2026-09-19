@@ -9,6 +9,7 @@ import { getClientGqlClient } from "@/lib/graphql/client";
 import { LOGIN } from "@/lib/graphql/queries";
 import { useAppDispatch } from "@/redux/hooks";
 import { setCredentials } from "@/redux/slices/authSlice";
+import { getErrorMessage } from "@/lib/errors";
 
 const SignInForm = () => {
   const router = useRouter();
@@ -59,7 +60,7 @@ const SignInForm = () => {
       router.push(from || `/${role.toLowerCase()}`);
     } catch (err) {
       setError(
-        err?.response?.errors?.[0]?.message ?? "Invalid username or password"
+        getErrorMessage(err, "Invalid username or password")
       );
     } finally {
       setLoading(false);

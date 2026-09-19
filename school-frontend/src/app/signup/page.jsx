@@ -9,6 +9,7 @@ import { getClientGqlClient } from "@/lib/graphql/client";
 import { REGISTER } from "@/lib/graphql/queries";
 import { useAppDispatch } from "@/redux/hooks";
 import { setCredentials } from "@/redux/slices/authSlice";
+import { getErrorMessage } from "@/lib/errors";
 
 const SignUp = () => {
   const router = useRouter();
@@ -51,7 +52,7 @@ const SignUp = () => {
       router.push(`/${role.toLowerCase()}`);
     } catch (err) {
       setError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setLoading(false);

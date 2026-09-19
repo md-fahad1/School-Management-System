@@ -9,7 +9,7 @@ import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { CHANGE_PASSWORD } from "@/lib/graphql/queries";
 import { performLogout } from "@/lib/auth/logout";
-
+import { getErrorMessage } from "@/lib/errors";
 const schema = z
   .object({
     currentPassword: z.string().min(1, { message: "Enter your current password" }),
@@ -59,7 +59,7 @@ const ChangePasswordForm = () => {
       router.push("/signin?passwordChanged=1");
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -99,7 +99,7 @@ const ChangePasswordForm = () => {
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60 w-fit px-6"
+        className="btn-primary sm:self-end sm:px-8 w-fit px-6"
       >
         {submitting ? "Updating..." : "Update password"}
       </button>

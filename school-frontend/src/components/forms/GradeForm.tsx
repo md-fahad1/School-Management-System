@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { CREATE_GRADE, UPDATE_GRADE } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   level: z.coerce.number().int().min(1, { message: "Grade level must be at least 1" }),
@@ -50,7 +51,7 @@ const GradeForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -63,7 +64,7 @@ const GradeForm = ({
         {type === "create" ? "Create a new grade" : "Update grade"}
       </h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField
           label="Grade level"
           name="level"
@@ -78,7 +79,7 @@ const GradeForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Create" : "Update"}
       </button>

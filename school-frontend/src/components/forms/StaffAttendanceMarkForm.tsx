@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { GET_USERS, MARK_STAFF_ATTENDANCE } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 // These are the non-teaching roles this form covers. Add a role here
 // the moment it exists as its own Role enum value on the backend.
@@ -64,7 +65,7 @@ const StaffAttendanceMarkForm = ({ onSuccess }: { onSuccess: () => void }) => {
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -75,12 +76,12 @@ const StaffAttendanceMarkForm = ({ onSuccess }: { onSuccess: () => void }) => {
     <form className="flex flex-col gap-8" onSubmit={onSubmit}>
       <h1 className="text-xl font-semibold">Mark staff attendance</h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
-        <div className="flex flex-col gap-2 w-full md:w-[45%]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Staff member</label>
           <select
             {...register("userId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
             defaultValue=""
           >
             <option value="" disabled>
@@ -93,17 +94,17 @@ const StaffAttendanceMarkForm = ({ onSuccess }: { onSuccess: () => void }) => {
             ))}
           </select>
           {errors.userId?.message && (
-            <p className="text-xs text-red-400">{errors.userId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.userId.message.toString()}</p>
           )}
         </div>
 
         <InputField label="Date" name="date" type="date" register={register} error={errors.date} />
 
-        <div className="flex flex-col gap-2 w-full md:w-[45%]">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Status</label>
           <select
             {...register("status")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
             defaultValue="PRESENT"
           >
             <option value="PRESENT">Present</option>
@@ -122,7 +123,7 @@ const StaffAttendanceMarkForm = ({ onSuccess }: { onSuccess: () => void }) => {
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : "Save attendance"}
       </button>

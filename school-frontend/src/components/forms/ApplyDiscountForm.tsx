@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { APPLY_INVOICE_DISCOUNT } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   type: z.enum(["PERCENTAGE", "FIXED"]),
@@ -43,7 +44,7 @@ const ApplyDiscountForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -55,12 +56,12 @@ const ApplyDiscountForm = ({
       <h1 className="text-xl font-semibold">Apply a discount</h1>
       <p className="text-sm text-gray-500">Invoice amount: ${amount.toFixed(2)}</p>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-2 w-full md:w-1/3">
           <label className="text-xs text-textMuted">Type</label>
           <select
             {...register("type")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="PERCENTAGE">Percentage (%)</option>
             <option value="FIXED">Fixed amount</option>
@@ -84,7 +85,7 @@ const ApplyDiscountForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Applying..." : "Apply discount"}
       </button>

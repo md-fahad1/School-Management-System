@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { CREATE_FEE_STRUCTURE, UPDATE_FEE_STRUCTURE, GET_GRADES } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -69,7 +70,7 @@ const FeeStructureForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -82,7 +83,7 @@ const FeeStructureForm = ({
         {type === "create" ? "Add a fee structure" : "Update fee structure"}
       </h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="Name" name="name" register={register} error={errors.name} />
         <InputField
           label="Amount"
@@ -92,11 +93,11 @@ const FeeStructureForm = ({
           error={errors.amount}
         />
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Frequency</label>
           <select
             {...register("frequency")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="MONTHLY">Monthly</option>
             <option value="TERM">Term</option>
@@ -105,11 +106,11 @@ const FeeStructureForm = ({
           </select>
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Grade</label>
           <select
             {...register("gradeId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
             defaultValue=""
           >
             <option value="" disabled>
@@ -122,7 +123,7 @@ const FeeStructureForm = ({
             ))}
           </select>
           {errors.gradeId?.message && (
-            <p className="text-xs text-red-400">{errors.gradeId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.gradeId.message.toString()}</p>
           )}
         </div>
       </div>
@@ -132,7 +133,7 @@ const FeeStructureForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Add fee structure" : "Update"}
       </button>

@@ -4,9 +4,12 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { IMPORT_STUDENTS_CSV } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
+import { useToast } from "./ui/ToastProvider";
 
 const ImportCsvButton = () => {
   const router = useRouter();
+  const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<{ created: number; failed: { row: number; error: string }[] } | null>(null);
@@ -23,9 +26,15 @@ const ImportCsvButton = () => {
         importStudentsCsv: { created: number; failed: { row: number; error: string }[] };
       }>(IMPORT_STUDENTS_CSV, { csv: text });
       setSummary(data.importStudentsCsv);
+      if (data.importStudentsCsv.created > 0) {
+        toast.success(`${data.importStudentsCsv.created} student(s) imported.`);
+      }
+      if (data.importStudentsCsv.failed.length > 0) {
+        toast.error(`${data.importStudentsCsv.failed.length} row(s) could not be imported.`);
+      }
       router.refresh();
-    } catch (err: any) {
-      alert(err?.message ?? "Import failed");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Import failed. Please check your file and try again."));
     } finally {
       setLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

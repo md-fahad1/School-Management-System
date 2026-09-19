@@ -8,6 +8,7 @@ import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
 import { GET_SUBJECTS, GET_CLASSES, GET_TEACHER_OPTIONS } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const CREATE_LESSON = gql`
   mutation CreateLesson($input: CreateLessonInput!) {
@@ -103,7 +104,7 @@ const LessonForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -116,14 +117,14 @@ const LessonForm = ({
         {type === "create" ? "Create a new lesson" : "Update lesson"}
       </h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="Lesson name" name="name" register={register} error={errors.name} />
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Day</label>
           <select
             {...register("day")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a day</option>
             {DAYS.map((d) => (
@@ -133,7 +134,7 @@ const LessonForm = ({
             ))}
           </select>
           {errors.day?.message && (
-            <p className="text-xs text-red-400">{errors.day.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.day.message.toString()}</p>
           )}
         </div>
 
@@ -152,11 +153,11 @@ const LessonForm = ({
           error={errors.endTime}
         />
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Subject</label>
           <select
             {...register("subjectId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a subject</option>
             {subjectOptions.map((s) => (
@@ -166,15 +167,15 @@ const LessonForm = ({
             ))}
           </select>
           {errors.subjectId?.message && (
-            <p className="text-xs text-red-400">{errors.subjectId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.subjectId.message.toString()}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Class</label>
           <select
             {...register("classId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a class</option>
             {classOptions.map((c) => (
@@ -184,15 +185,15 @@ const LessonForm = ({
             ))}
           </select>
           {errors.classId?.message && (
-            <p className="text-xs text-red-400">{errors.classId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.classId.message.toString()}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Teacher</label>
           <select
             {...register("teacherId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a teacher</option>
             {teacherOptions.map((t) => (
@@ -202,7 +203,7 @@ const LessonForm = ({
             ))}
           </select>
           {errors.teacherId?.message && (
-            <p className="text-xs text-red-400">{errors.teacherId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.teacherId.message.toString()}</p>
           )}
         </div>
       </div>
@@ -212,7 +213,7 @@ const LessonForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Create" : "Update"}
       </button>

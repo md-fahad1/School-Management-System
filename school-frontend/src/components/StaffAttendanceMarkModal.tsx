@@ -3,10 +3,11 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
+import Modal from "./ui/Modal";
 
 const StaffAttendanceMarkForm = dynamic(() => import("./forms/StaffAttendanceMarkForm"), {
-  loading: () => <h1>Loading...</h1>,
+  loading: () => <div className="animate-pulse h-40 bg-bg rounded-xl" />,
 });
 
 const StaffAttendanceMarkModal = () => {
@@ -16,30 +17,22 @@ const StaffAttendanceMarkModal = () => {
   return (
     <>
       <button
-        className="w-8 h-8 flex items-center justify-center rounded-full bg-brandPurple text-white hover:opacity-80 transition"
+        type="button"
+        className="inline-flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white hover:opacity-90 whitespace-nowrap"
         onClick={() => setOpen(true)}
-        title="Mark attendance"
       >
         <Plus size={16} />
+        Mark Attendance
       </button>
-      {open && (
-        <div className="w-screen h-screen absolute left-0 top-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
-            <StaffAttendanceMarkForm
-              onSuccess={() => {
-                setOpen(false);
-                router.refresh();
-              }}
-            />
-            <div
-              className="absolute top-4 right-4 cursor-pointer text-gray-500 hover:text-brandInk"
-              onClick={() => setOpen(false)}
-            >
-              <X size={18} />
-            </div>
-          </div>
-        </div>
-      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title="Mark staff attendance">
+        <StaffAttendanceMarkForm
+          onSuccess={() => {
+            setOpen(false);
+            router.refresh();
+          }}
+        />
+      </Modal>
     </>
   );
 };

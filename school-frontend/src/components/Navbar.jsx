@@ -6,16 +6,23 @@ import { useEffect, useRef, useState } from "react";
 import GlobalSearch from "./GlobalSearch";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { Menu as MenuIcon, Mail, Bell, ChevronDown, Calendar } from "lucide-react";
+import { Menu as MenuIcon, Mail, Bell, Calendar } from "lucide-react";
 import { getClientGqlClient } from "@/lib/graphql/client";
-import { LOGOUT, GET_ME } from "@/lib/graphql/queries";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { logout } from "@/redux/slices/authSlice";
+import { GET_ME } from "@/lib/graphql/queries";
+import { performLogout } from "@/lib/auth/logout";
+import { useAppSelector } from "@/redux/hooks";
 import { useSidebar } from "./SidebarContext";
+
+// Academic year .env theke ashe (NEXT_PUBLIC_ACADEMIC_YEAR="2026").
+// Na thakle current year dekhabe. Code change korte hobe na.
+const ACADEMIC_YEAR =
+  process.env.NEXT_PUBLIC_ACADEMIC_YEAR ?? String(new Date().getFullYear());
+
+// Ei role gulor jonno Messages ar Announcements page ache (Menu.jsx er moto).
+const COMMS_ROLES = ["admin", "teacher", "student", "parent"];
 
 const Navbar = () => {
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const { toggleMobile } = useSidebar();
 
@@ -54,41 +61,34 @@ const Navbar = () => {
     loadMe();
   }, []);
 
-  // Close the dropdown on outside click.
+  // Close the dropdown on outside click or Escape.
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
     };
+    const handleKey = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, []);
 
+  // Sidebar er Logout er moto same routine (server session revoke +
+  // httpOnly refresh cookie clear + local session clear).
   const handleLogout = async () => {
-    const refreshToken = Cookies.get("refreshToken");
-
-    // Best-effort: revoke the session server-side (kills the refresh
-    // token + blacklists the current access token). If this fails
-    // (network down, already expired, etc.) we still clear the local
-    // session below — a logout should never get "stuck".
-    if (refreshToken) {
-      try {
-        const client = await getClientGqlClient();
-        await client.request(LOGOUT, { input: { refreshToken } });
-      } catch (err) {
-        console.error("Server-side logout failed, clearing local session anyway:", err);
-      }
-    }
-
-    Cookies.remove("token");
-    Cookies.remove("refreshToken");
-    Cookies.remove("role");
-    Cookies.remove("userId");
-    Cookies.remove("username");
-    dispatch(logout());
+    await performLogout();
     router.push("/signin");
   };
+
+  const canSeeComms = COMMS_ROLES.includes(displayRole);
+  // "transport_staff" -> "transport staff"
+  const roleLabel = displayRole.replace(/_/g, " ");
 
   return (
     <div className="flex items-center gap-3 p-3 md:p-4 bg-cardBg border-b border-border">
@@ -109,44 +109,42 @@ const Navbar = () => {
       <div className="hidden lg:flex items-center gap-2 text-sm text-textSecondary shrink-0 ml-auto mr-2">
         <Calendar size={16} className="text-textMuted" />
         <span>
-          Academic Year: <span className="font-medium text-textPrimary">2024/2025</span>
+          Academic Year: <span className="font-medium text-textPrimary">{ACADEMIC_YEAR}</span>
         </span>
       </div>
 
       {/* ICONS AND USER */}
       <div className="flex items-center gap-2 md:gap-4 justify-end shrink-0 lg:ml-0 ml-auto">
-        <button
-          type="button"
-          aria-label="Messages"
-          className="relative w-9 h-9 flex items-center justify-center rounded-full bg-infoLight text-info hover:opacity-80 transition-opacity"
-        >
-          <Mail size={17} />
-        </button>
+        {canSeeComms && (
+          <>
+            <Link
+              href="/list/messages"
+              title="Messages"
+              aria-label="Messages"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-infoLight text-info hover:opacity-80 transition-opacity"
+            >
+              <Mail size={17} />
+            </Link>
 
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative w-9 h-9 flex items-center justify-center rounded-full bg-accentLight text-accent hover:opacity-80 transition-opacity"
-        >
-          <Bell size={17} />
-          <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-danger text-white rounded-full text-[10px] font-medium ring-2 ring-cardBg">
-            1
-          </span>
-        </button>
-
-        <button
-          type="button"
-          className="hidden sm:flex items-center gap-1 text-sm text-textSecondary hover:text-textPrimary"
-        >
-          EN
-          <ChevronDown size={14} />
-        </button>
+            <Link
+              href="/list/announcements"
+              title="Announcements"
+              aria-label="Announcements"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-accentLight text-accent hover:opacity-80 transition-opacity"
+            >
+              <Bell size={17} />
+            </Link>
+          </>
+        )}
 
         {/* PROFILE DROPDOWN */}
         <div className="relative" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((prev) => !prev)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label="Account menu"
             className="flex items-center gap-2"
           >
             <div className="hidden sm:flex flex-col items-end">
@@ -154,7 +152,7 @@ const Navbar = () => {
                 {fullName || displayName}
               </span>
               <span className="text-[10px] text-textMuted text-right capitalize">
-                {displayRole}
+                {roleLabel}
               </span>
             </div>
             <Image
@@ -167,26 +165,33 @@ const Navbar = () => {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-cardBg rounded-xl shadow-lg ring-1 ring-border z-50 overflow-hidden">
+            <div
+              role="menu"
+              className="absolute right-0 top-full mt-2 w-48 bg-cardBg rounded-xl shadow-lg ring-1 ring-border z-50 overflow-hidden"
+            >
               <div className="px-4 py-3 border-b border-border">
                 <p className="text-sm font-medium text-textPrimary truncate">{fullName || displayName}</p>
-                <p className="text-xs text-textMuted capitalize">{displayRole}</p>
+                <p className="text-xs text-textMuted capitalize">{roleLabel}</p>
               </div>
               <Link
                 href="/profile"
+                role="menuitem"
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-sm text-textSecondary hover:bg-accentLight hover:text-textPrimary"
               >
                 My Profile
               </Link>
               <Link
-                 href="/settings"
+                href="/settings"
+                role="menuitem"
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-sm text-textSecondary hover:bg-accentLight hover:text-textPrimary"
               >
                 Settings
               </Link>
               <button
+                type="button"
+                role="menuitem"
                 onClick={() => {
                   setMenuOpen(false);
                   handleLogout();

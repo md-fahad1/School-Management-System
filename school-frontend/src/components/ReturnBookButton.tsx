@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { RETURN_BOOK } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
+import { useToast } from "./ui/ToastProvider";
 
 const ReturnBookButton = ({ loanId }: { loanId: string }) => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   const handleReturn = async () => {
     if (!confirm("Mark this book as returned?")) return;
@@ -16,9 +19,10 @@ const ReturnBookButton = ({ loanId }: { loanId: string }) => {
     try {
       const client = await getClientGqlClient();
       await client.request(RETURN_BOOK, { input: { loanId } });
+      toast.success("Book marked as returned.");
       router.refresh();
-    } catch (err: any) {
-      alert(err?.response?.errors?.[0]?.message ?? "Failed to return book.");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Couldn't return this book."));
     } finally {
       setLoading(false);
     }
@@ -26,6 +30,7 @@ const ReturnBookButton = ({ loanId }: { loanId: string }) => {
 
   return (
     <button
+      type="button"
       onClick={handleReturn}
       disabled={loading}
       className="text-xs bg-lamaSky px-3 py-1 rounded-md disabled:opacity-60 flex items-center gap-1"

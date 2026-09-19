@@ -10,6 +10,7 @@ body {
   --color-sidebar-active-bg: #1e2c54;
   --color-sidebar-border: #1f2a4d;
   --color-sidebar-section-label: #5b6588;
+  --color-bg-rgb: 244 246 251;
 
   /* Brand / primary actions */
   --color-primary: #17255a;
@@ -46,6 +47,21 @@ body {
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed; }
+  .btn-primary   { @apply btn bg-primary text-white hover:bg-primaryDark; }
+  .btn-accent    { @apply btn bg-accent text-white hover:opacity-90; }
+  .btn-secondary { @apply btn bg-cardBg text-textPrimary border border-border hover:bg-bg; }
+  .btn-danger    { @apply btn bg-danger text-white hover:opacity-90; }
+
+  .field { @apply w-full rounded-lg border border-border bg-cardBg p-2.5 text-sm text-textPrimary outline-none transition-colors placeholder:text-textMuted focus:border-accent focus:ring-2 focus:ring-accentLight disabled:bg-bg disabled:text-textMuted; }
+  .field-error { @apply border-danger focus:border-danger focus:ring-dangerLight; }
+}
+
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
 body {
   @apply bg-[var(--color-bg)] text-[var(--color-text-primary)];
 }
@@ -249,3 +265,4 @@ body {
 @media (max-width: 639px) {
   .modal-form form > button[type="submit"] { align-self: stretch; }
 }
+.modal-form form > h1:first-child { display: none; }

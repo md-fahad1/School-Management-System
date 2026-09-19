@@ -1,18 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
-import MenuLink from "./MenuLink";
+import MenuLink, { isPathActive } from "./MenuLink";
+import MenuIcon from "./MenuIcon";
 import { useSidebar } from "./SidebarContext";
-
-// See MenuLink.tsx: subject.png / result.png have an opaque white
-// background, so they need a different filter to avoid a white box.
-const iconFilter = (src: string) =>
-  src === "/subject.png" || src === "/result.png"
-    ? "invert mix-blend-screen"
-    : "brightness-0 invert";
 
 type MenuItem = { icon: string; label: string; href: string };
 
@@ -29,7 +22,7 @@ const MenuGroup = ({
   const { mobileOpen } = useSidebar();
   const labelClass = mobileOpen ? "block" : "hidden lg:block";
   const justifyClass = mobileOpen ? "justify-between" : "justify-center lg:justify-between";
-  const hasActiveChild = childrenItems.some((c) => pathname.startsWith(c.href));
+  const hasActiveChild = childrenItems.some((c) => isPathActive(pathname, c.href));
 
   // Opens by default if the user is already on a page inside this
   // group (e.g. refreshing /list/teachers keeps "People" expanded).
@@ -39,6 +32,8 @@ const MenuGroup = ({
     <div className="flex flex-col">
       <button
         type="button"
+        title={label}
+        aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
         className={`flex items-center ${justifyClass} gap-4 py-2.5 px-3 rounded-lg transition-colors w-full ${
           hasActiveChild
@@ -47,22 +42,12 @@ const MenuGroup = ({
         } hover:bg-sidebarBgHover hover:text-sidebarTextActive`}
       >
         <span className="flex items-center gap-4">
-          <Image
-            src={icon}
-            alt=""
-            width={20}
-            height={20}
-            className={`${iconFilter(icon)} ${
-              hasActiveChild ? "opacity-100" : "opacity-70"
-            }`}
-          />
+          <MenuIcon name={icon} size={20} />
           <span className={labelClass}>{label}</span>
         </span>
         <ChevronDown
           size={14}
-          className={`${labelClass} shrink-0 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`${labelClass} shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
 

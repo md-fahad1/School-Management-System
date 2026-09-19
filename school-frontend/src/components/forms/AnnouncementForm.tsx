@@ -8,6 +8,7 @@ import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
 import { GET_CLASSES } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const CREATE_ANNOUNCEMENT = gql`
   mutation CreateAnnouncement($input: CreateAnnouncementInput!) {
@@ -90,7 +91,7 @@ const AnnouncementForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -103,14 +104,14 @@ const AnnouncementForm = ({
         {type === "create" ? "Create a new announcement" : "Update announcement"}
       </h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="Title" name="title" register={register} error={errors.title} />
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Class (optional)</label>
           <select
             {...register("classId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">School-wide (all classes)</option>
             {classOptions.map((c) => (
@@ -126,10 +127,10 @@ const AnnouncementForm = ({
           <textarea
             {...register("description")}
             rows={3}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           />
           {errors.description?.message && (
-            <p className="text-xs text-red-400">{errors.description.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.description.message.toString()}</p>
           )}
         </div>
       </div>
@@ -139,7 +140,7 @@ const AnnouncementForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Create" : "Update"}
       </button>

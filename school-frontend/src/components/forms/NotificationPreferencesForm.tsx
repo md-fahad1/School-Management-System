@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { UPDATE_MY_NOTIFICATION_PREFERENCES } from "@/lib/graphql/queries";
-
+import { getErrorMessage } from "@/lib/errors";
 const NotificationPreferencesForm = ({ initialEmailNotifications }: { initialEmailNotifications: boolean }) => {
   const [emailNotifications, setEmailNotifications] = useState(initialEmailNotifications);
   const [saving, setSaving] = useState(false);
@@ -22,7 +22,7 @@ const NotificationPreferencesForm = ({ initialEmailNotifications }: { initialEma
     } catch (err: any) {
       setEmailNotifications(!next); // revert on failure
       setError(
-        err?.response?.errors?.[0]?.message ?? "Failed to save. Please try again."
+        getErrorMessage(err, "Failed to save. Please try again.")
       );
     } finally {
       setSaving(false);

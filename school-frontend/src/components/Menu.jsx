@@ -2,82 +2,110 @@ import { cookies } from "next/headers";
 import MenuLink from "./MenuLink";
 import MenuGroup from "./MenuGroup";
 
+// Every role that exists in the backend.
+const ALL_ROLES = [
+  "admin",
+  "teacher",
+  "student",
+  "parent",
+  "principal",
+  "accountant",
+  "librarian",
+  "transport_staff",
+];
+
+// Where each role's dashboard lives (same map as middleware.ts).
+const ROLE_HOME = {
+  admin: "/admin",
+  teacher: "/teacher",
+  student: "/student",
+  parent: "/parent",
+  principal: "/principal",
+  accountant: "/accountant",
+  librarian: "/librarian",
+  transport_staff: "/transport-staf",
+};
+
+// `icon` is an icon NAME (see MenuIcon.tsx), not an image path.
+// href "__HOME__" is replaced with the current user's own dashboard.
+//
 // Each top-level entry is either a plain link ({ href, ... }) or a
-// collapsible group ({ children: [...] }) — grouping keeps the sidebar
-// short instead of listing every page flat, and each group only opens
-// when the user clicks it (or is already on one of its pages).
+// collapsible group ({ children: [...] }).
 const menuItems = [
   {
     title: "MENU",
     items: [
       {
-        icon: "/home.png",
+        icon: "dashboard",
         label: "Dashboard",
-        href: "/admin",
-        visible: ["admin", "teacher", "student", "parent"],
+        href: "__HOME__",
+        exact: true,
+        visible: ALL_ROLES,
       },
       {
-        icon: "/teacher.png",
+        icon: "people",
         label: "People",
         visible: ["admin", "teacher"],
         children: [
-          { icon: "/teacher.png", label: "Teachers", href: "/list/teachers", visible: ["admin", "teacher"] },
-          { icon: "/student.png", label: "Students", href: "/list/students", visible: ["admin", "teacher"] },
-          { icon: "/parent.png", label: "Parents", href: "/list/parents", visible: ["admin", "teacher"] },
+          { icon: "teacher", label: "Teachers", href: "/list/teachers", visible: ["admin", "teacher"] },
+          { icon: "student", label: "Students", href: "/list/students", visible: ["admin", "teacher"] },
+          { icon: "parent", label: "Parents", href: "/list/parents", visible: ["admin", "teacher"] },
         ],
       },
       {
-        icon: "/subject.png",
+        icon: "academics",
         label: "Academics",
         visible: ["admin", "teacher"],
         children: [
-          { icon: "/subject.png", label: "Subjects", href: "/list/subjects", visible: ["admin"] },
-          { icon: "/subject.png", label: "Grades", href: "/list/grades", visible: ["admin"] },
-          { icon: "/class.png", label: "Classes", href: "/list/classes", visible: ["admin", "teacher"] },
-          { icon: "/lesson.png", label: "Lessons", href: "/list/lessons", visible: ["admin", "teacher"] },
+          { icon: "subject", label: "Subjects", href: "/list/subjects", visible: ["admin"] },
+          { icon: "grade", label: "Grades", href: "/list/grades", visible: ["admin"] },
+          { icon: "class", label: "Classes", href: "/list/classes", visible: ["admin", "teacher"] },
+          { icon: "lesson", label: "Lessons", href: "/list/lessons", visible: ["admin", "teacher"] },
         ],
       },
       {
-        icon: "/exam.png",
+        icon: "exam",
         label: "Examinations",
         visible: ["admin", "teacher", "student", "parent"],
         children: [
-          { icon: "/exam.png", label: "Exams", href: "/list/exams", visible: ["admin", "teacher", "student", "parent"] },
-          { icon: "/assignment.png", label: "Assignments", href: "/list/assignments", visible: ["admin", "teacher", "student", "parent"] },
-          { icon: "/result.png", label: "Results", href: "/list/results", visible: ["admin", "teacher", "student", "parent"] },
+          { icon: "exam", label: "Exams", href: "/list/exams", visible: ["admin", "teacher", "student", "parent"] },
+          { icon: "assignment", label: "Assignments", href: "/list/assignments", visible: ["admin", "teacher", "student", "parent"] },
+          { icon: "result", label: "Results", href: "/list/results", visible: ["admin", "teacher", "student", "parent"] },
         ],
       },
       {
-        icon: "/attendance.png",
+        icon: "attendance",
         label: "Attendance",
         visible: ["admin", "teacher", "student", "parent", "principal", "accountant", "librarian"],
         children: [
-          { icon: "/attendance.png", label: "Student Attendance", href: "/list/attendance", visible: ["admin", "teacher", "student", "parent"] },
-          { icon: "/attendance.png", label: "Teacher Attendance", href: "/list/teacher-attendance", visible: ["admin", "principal", "teacher"] },
-          { icon: "/attendance.png", label: "Staff Attendance", href: "/list/staff-attendance", visible: ["admin", "principal", "accountant", "librarian"] },
+          { icon: "attendance", label: "Student Attendance", href: "/list/attendance", visible: ["admin", "teacher", "student", "parent"] },
+          { icon: "attendance", label: "Teacher Attendance", href: "/list/teacher-attendance", visible: ["admin", "principal", "teacher"] },
+          { icon: "attendance", label: "Staff Attendance", href: "/list/staff-attendance", visible: ["admin", "principal", "accountant", "librarian"] },
         ],
       },
-      { icon: "/finance.png", label: "Fees", href: "/list/fees", visible: ["admin", "student", "parent"] },
-      { icon: "/subject.png", label: "Library", href: "/list/library", visible: ["admin", "teacher", "student", "parent"] },
-      { icon: "/setting.png", label: "Vehicles", href: "/list/vehicles", visible: ["admin", "principal", "transport_staff"] },
-      { icon: "/calendar.png", label: "Leave", href: "/list/leave", visible: ["admin", "teacher", "principal", "accountant", "librarian", "student", "parent"] },
+      // accountant added: the backend already allows ADMIN + ACCOUNTANT on fees.
+      { icon: "fees", label: "Fees", href: "/list/fees", visible: ["admin", "accountant", "student", "parent"] },
+      // librarian added so the librarian can reach the library from the sidebar.
+      { icon: "library", label: "Library", href: "/list/library", visible: ["admin", "librarian", "teacher", "student", "parent"] },
+      { icon: "vehicle", label: "Vehicles", href: "/list/vehicles", visible: ["admin", "principal", "transport_staff"] },
+      { icon: "leave", label: "Leave", href: "/list/leave", visible: ["admin", "teacher", "principal", "accountant", "librarian", "student", "parent"] },
       {
-        icon: "/message.png",
+        icon: "message",
         label: "Communication",
         visible: ["admin", "teacher", "student", "parent"],
         children: [
-          { icon: "/message.png", label: "Messages", href: "/list/messages", visible: ["admin", "teacher", "student", "parent"] },
-          { icon: "/announcement.png", label: "Announcements", href: "/list/announcements", visible: ["admin", "teacher", "student", "parent"] },
-          { icon: "/calendar.png", label: "Events", href: "/list/events", visible: ["admin", "teacher", "student", "parent"] },
+          { icon: "message", label: "Messages", href: "/list/messages", visible: ["admin", "teacher", "student", "parent"] },
+          { icon: "announcement", label: "Announcements", href: "/list/announcements", visible: ["admin", "teacher", "student", "parent"] },
+          { icon: "event", label: "Events", href: "/list/events", visible: ["admin", "teacher", "student", "parent"] },
         ],
       },
       {
-        icon: "/setting.png",
+        icon: "admin",
         label: "Administration",
         visible: ["admin"],
         children: [
-          { icon: "/setting.png", label: "Create Staff", href: "/admin/create-staff", visible: ["admin"] },
-          { icon: "/setting.png", label: "Audit Log", href: "/list/audit-logs", visible: ["admin"] },
+          { icon: "createStaff", label: "Create Staff", href: "/admin/create-staff", visible: ["admin"] },
+          { icon: "audit", label: "Audit Log", href: "/list/audit-logs", visible: ["admin"] },
         ],
       },
     ],
@@ -85,9 +113,9 @@ const menuItems = [
   {
     title: "OTHER",
     items: [
-      { icon: "/profile.png", label: "Profile", href: "/profile", visible: ["admin", "teacher", "student", "parent"] },
-      { icon: "/setting.png", label: "Settings", href: "/settings", visible: ["admin", "teacher", "student", "parent"] },
-      { icon: "/logout.png", label: "Logout", href: "/logout", action: "logout", visible: ["admin", "teacher", "student", "parent"] },
+      { icon: "profile", label: "Profile", href: "/profile", visible: ALL_ROLES },
+      { icon: "settings", label: "Settings", href: "/settings", visible: ALL_ROLES },
+      { icon: "logout", label: "Logout", href: "/logout", action: "logout", visible: ALL_ROLES },
     ],
   },
 ];
@@ -96,9 +124,14 @@ const Menu = () => {
   // Falls back to "admin" only if no session cookie is present yet
   // (e.g. first load before login) so the nav still renders sensibly.
   const role = cookies().get("role")?.value ?? "admin";
+  const home = ROLE_HOME[role] ?? "/";
+
+  // Swap the "__HOME__" placeholder for this user's own dashboard URL.
+  const resolve = (item) =>
+    item.href === "__HOME__" ? { ...item, href: home } : item;
 
   return (
-    <div className="mt-4 text-sm">
+    <nav className="mt-4 text-sm" aria-label="Main navigation">
       {menuItems.map((section) => {
         // Pre-filter so an empty section (no visible items for this
         // role) doesn't render a bare "MENU"/"OTHER" heading with
@@ -110,7 +143,7 @@ const Menu = () => {
               if (visibleChildren.length === 0) return null;
               return { ...item, children: visibleChildren };
             }
-            return item.visible.includes(role) ? item : null;
+            return item.visible.includes(role) ? resolve(item) : null;
           })
           .filter(Boolean);
 
@@ -136,7 +169,7 @@ const Menu = () => {
           </div>
         );
       })}
-    </div>
+    </nav>
   );
 };
 

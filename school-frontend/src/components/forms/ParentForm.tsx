@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
+import { getErrorMessage } from "@/lib/errors";
 
 const CREATE_PARENT = gql`
   mutation CreateParent($input: CreateParentInput!) {
@@ -90,7 +91,7 @@ const ParentForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -105,8 +106,8 @@ const ParentForm = ({
 
       {type === "create" && (
         <>
-          <span className="text-xs text-gray-400 font-medium">Login Information</span>
-          <div className="flex justify-between flex-wrap gap-4">
+          <span className="text-xs font-semibold uppercase tracking-wide text-textSecondary border-b border-border pb-2">Login Information</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InputField
               label="Username"
               name="username"
@@ -131,8 +132,8 @@ const ParentForm = ({
         </>
       )}
 
-      <span className="text-xs text-gray-400 font-medium">Personal Information</span>
-      <div className="flex justify-between flex-wrap gap-4">
+      <span className="text-xs font-semibold uppercase tracking-wide text-textSecondary border-b border-border pb-2">Personal Information</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="First Name" name="name" register={register} error={errors.name} />
         <InputField label="Last Name" name="surname" register={register} error={errors.surname} />
         <InputField label="Phone" name="phone" register={register} error={errors.phone} />
@@ -144,7 +145,7 @@ const ParentForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Create" : "Update"}
       </button>

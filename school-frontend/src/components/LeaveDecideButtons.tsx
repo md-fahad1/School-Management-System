@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { DECIDE_LEAVE, CANCEL_LEAVE } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
+import { useToast } from "./ui/ToastProvider";
 
 const LeaveDecideButtons = ({
   id,
@@ -17,6 +19,7 @@ const LeaveDecideButtons = ({
   isOwn: boolean;
 }) => {
   const router = useRouter();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
 
   if (status !== "PENDING") return null;
@@ -26,9 +29,10 @@ const LeaveDecideButtons = ({
     try {
       const client = await getClientGqlClient();
       await client.request(DECIDE_LEAVE, { input: { id, status: newStatus } });
+      toast.success(newStatus === "APPROVED" ? "Leave approved." : "Leave rejected.");
       router.refresh();
     } catch (err) {
-      console.error("Failed to decide leave:", err);
+      toast.error(getErrorMessage(err, "Couldn't update this leave request."));
     } finally {
       setLoading(false);
     }
@@ -39,9 +43,10 @@ const LeaveDecideButtons = ({
     try {
       const client = await getClientGqlClient();
       await client.request(CANCEL_LEAVE, { id });
+      toast.success("Leave request cancelled.");
       router.refresh();
     } catch (err) {
-      console.error("Failed to cancel leave:", err);
+      toast.error(getErrorMessage(err, "Couldn't cancel this leave request."));
     } finally {
       setLoading(false);
     }
@@ -52,16 +57,18 @@ const LeaveDecideButtons = ({
       {canDecide && (
         <>
           <button
+            type="button"
             disabled={loading}
             onClick={() => decide("APPROVED")}
-            className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700 disabled:opacity-60"
+            className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:opacity-80 disabled:opacity-60"
           >
             Approve
           </button>
           <button
+            type="button"
             disabled={loading}
             onClick={() => decide("REJECTED")}
-            className="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700 disabled:opacity-60"
+            className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:opacity-80 disabled:opacity-60"
           >
             Reject
           </button>
@@ -69,9 +76,10 @@ const LeaveDecideButtons = ({
       )}
       {isOwn && (
         <button
+          type="button"
           disabled={loading}
           onClick={cancel}
-          className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700 disabled:opacity-60"
+          className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:opacity-80 disabled:opacity-60"
         >
           Cancel
         </button>

@@ -7,6 +7,7 @@ import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { CREATE_VEHICLE, UPDATE_VEHICLE } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   vehicleNumber: z.string().min(1, { message: "Vehicle number is required" }),
@@ -60,7 +61,7 @@ const VehicleForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -73,18 +74,18 @@ const VehicleForm = ({
         {type === "create" ? "Add a new vehicle" : "Update vehicle"}
       </h1>
 
-      <div className="flex justify-between flex-wrap gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="Vehicle number" name="vehicleNumber" register={register} error={errors.vehicleNumber} />
         <InputField label="Type (Bus / Van)" name="type" register={register} error={errors.type} />
         <InputField label="Capacity" name="capacity" type="number" register={register} error={errors.capacity} />
         <InputField label="Driver name" name="driverName" register={register} error={errors.driverName} />
         <InputField label="Route" name="route" register={register} error={errors.route} />
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Status</label>
           <select
             {...register("status")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="ACTIVE">Active</option>
             <option value="MAINTENANCE">Maintenance</option>
@@ -98,7 +99,7 @@ const VehicleForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Create" : "Update"}
       </button>

@@ -8,6 +8,7 @@ import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
 import { GET_CLASSES, GET_GRADES, GET_PARENT_OPTIONS } from "@/lib/graphql/queries";
+import { getErrorMessage } from "@/lib/errors";
 
 const CREATE_STUDENT = gql`
   mutation CreateStudent($input: CreateStudentInput!) {
@@ -121,7 +122,7 @@ const StudentForm = ({
       onSuccess();
     } catch (err: any) {
       setSubmitError(
-        err?.response?.errors?.[0]?.message ?? "Something went wrong. Please try again."
+        getErrorMessage(err, "Something went wrong. Please try again.")
       );
     } finally {
       setSubmitting(false);
@@ -136,8 +137,8 @@ const StudentForm = ({
 
       {type === "create" && (
         <>
-          <span className="text-xs text-gray-400 font-medium">Login Information</span>
-          <div className="flex justify-between flex-wrap gap-4">
+          <span className="text-xs font-semibold uppercase tracking-wide text-textSecondary border-b border-border pb-2">Login Information</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InputField
               label="Username"
               name="username"
@@ -162,21 +163,21 @@ const StudentForm = ({
         </>
       )}
 
-      <span className="text-xs text-gray-400 font-medium">Personal Information</span>
-      <div className="flex justify-between flex-wrap gap-4">
+      <span className="text-xs font-semibold uppercase tracking-wide text-textSecondary border-b border-border pb-2">Personal Information</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="First Name" name="name" register={register} error={errors.name} />
         <InputField label="Last Name" name="surname" register={register} error={errors.surname} />
         <InputField label="Phone" name="phone" register={register} error={errors.phone} />
         <InputField label="Address" name="address" register={register} error={errors.address} />
       </div>
 
-      <span className="text-xs text-gray-400 font-medium">Enrollment</span>
-      <div className="flex justify-between flex-wrap gap-4">
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+      <span className="text-xs font-semibold uppercase tracking-wide text-textSecondary border-b border-border pb-2">Enrollment</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Class</label>
           <select
             {...register("classId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a class</option>
             {classOptions.map((c) => (
@@ -186,15 +187,15 @@ const StudentForm = ({
             ))}
           </select>
           {errors.classId?.message && (
-            <p className="text-xs text-red-400">{errors.classId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.classId.message.toString()}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Grade</label>
           <select
             {...register("gradeId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a grade</option>
             {gradeOptions.map((g) => (
@@ -204,15 +205,15 @@ const StudentForm = ({
             ))}
           </select>
           {errors.gradeId?.message && (
-            <p className="text-xs text-red-400">{errors.gradeId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.gradeId.message.toString()}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Parent</label>
           <select
             {...register("parentId")}
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
+            className="field"
           >
             <option value="">Select a parent</option>
             {parentOptions.map((p) => (
@@ -222,7 +223,7 @@ const StudentForm = ({
             ))}
           </select>
           {errors.parentId?.message && (
-            <p className="text-xs text-red-400">{errors.parentId.message.toString()}</p>
+            <p className="text-xs text-danger">{errors.parentId.message.toString()}</p>
           )}
         </div>
       </div>
@@ -232,7 +233,7 @@ const StudentForm = ({
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-400 text-white p-2 rounded-md disabled:opacity-60"
+        className="btn-primary sm:self-end sm:px-8"
       >
         {submitting ? "Saving..." : type === "create" ? "Create" : "Update"}
       </button>

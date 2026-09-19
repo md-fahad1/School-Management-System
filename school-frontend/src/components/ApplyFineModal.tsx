@@ -3,10 +3,10 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import ModalShell, { ModalLoading } from "./ModalShell";
+import Modal from "./ui/Modal";
 
 const ApplyFineForm = dynamic(() => import("./forms/ApplyFineForm"), {
-  loading: () => <ModalLoading />,
+  loading: () => <div className="animate-pulse h-40 bg-bg rounded-xl" />,
 });
 
 const ApplyFineModal = ({ invoiceId }: { invoiceId: string }) => {
@@ -21,17 +21,16 @@ const ApplyFineModal = ({ invoiceId }: { invoiceId: string }) => {
       >
         Fine
       </button>
-      {open && (
-        <ModalShell onClose={() => setOpen(false)}>
-          <ApplyFineForm
-            invoiceId={invoiceId}
-            onSuccess={() => {
-              setOpen(false);
-              router.refresh();
-            }}
-          />
-        </ModalShell>
-      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title="Apply a fine">
+        <ApplyFineForm
+          invoiceId={invoiceId}
+          onSuccess={() => {
+            setOpen(false);
+            router.refresh();
+          }}
+        />
+      </Modal>
     </>
   );
 };

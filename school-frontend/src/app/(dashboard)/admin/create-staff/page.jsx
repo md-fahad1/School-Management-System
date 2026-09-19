@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { CREATE_STAFF_ACCOUNT } from "@/lib/graphql/queries";
 import { getErrorMessage } from "@/lib/errors";
+import PasswordInput from "@/components/PasswordInput";
 
 const ROLE_OPTIONS = ["ADMIN", "ACCOUNTANT", "LIBRARIAN", "PRINCIPAL", "TEACHER", "TRANSPORT_STAFF"];
 

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { RESET_PASSWORD } from "@/lib/graphql/queries";
+import PasswordInput from "@/components/PasswordInput";
 
 const ResetPasswordForm = () => {
   const router = useRouter();

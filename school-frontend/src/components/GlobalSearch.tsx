@@ -77,7 +77,7 @@ const GlobalSearch = () => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          className="w-full p-2.5 bg-transparent outline-none placeholder:text-textMuted"
+          className="w-full p-2.5 bg-transparent outline-none text-base md:text-sm placeholder:text-textMuted"
         />
       </div>
 

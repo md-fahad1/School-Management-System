@@ -87,6 +87,8 @@ const FormModal = ({
   data,
   id,
   itemName,
+   trigger,
+  triggerClassName,
 }: {
   table:
     | "teacher"
@@ -110,6 +112,9 @@ const FormModal = ({
   id?: number | string;
   /** Optional: delete popup e nam dekhabe, jemon "Rahim Uddin". */
   itemName?: string;
+   trigger?: React.ReactNode;
+  /** trigger er button er CSS class. */
+  triggerClassName?: string;
 }) => {
   const router = useRouter();
   const toast = useToast();
@@ -159,13 +164,21 @@ const FormModal = ({
       {/* ---------- Je button ta page e dekha jay ---------- */}
       {type === "create" ? (
         <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white hover:opacity-90 whitespace-nowrap"
-        >
-          <Plus size={16} />
-          Add {cap(label)}
-        </button>
+  type="button"
+  onClick={() => setOpen(true)}
+  className={
+    trigger
+      ? triggerClassName ?? ""
+      : "inline-flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-white hover:opacity-90 whitespace-nowrap"
+  }
+>
+  {trigger ?? (
+    <>
+      <Plus size={16} />
+      Add {cap(label)}
+    </>
+  )}
+</button>
       ) : (
         <button
           type="button"

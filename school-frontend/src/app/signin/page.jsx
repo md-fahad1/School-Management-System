@@ -10,7 +10,7 @@ import { LOGIN } from "@/lib/graphql/queries";
 import { useAppDispatch } from "@/redux/hooks";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { getErrorMessage } from "@/lib/errors";
-
+import PasswordInput from "@/components/PasswordInput";
 const SignInForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -130,14 +130,14 @@ const SignInForm = () => {
               </label>
               <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                 <Lock className="text-textMuted mr-2" size={18} />
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <PasswordInput
+  placeholder="Enter your password"
+  autoComplete="current-password"
+  className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  required
+/>
               </div>
               <div className="text-right mt-1.5">
                 <Link href="/forgot-password" className="text-xs text-accent hover:underline">
@@ -146,7 +146,11 @@ const SignInForm = () => {
               </div>
             </div>
 
-            {error && <p className="text-sm text-danger">{error}</p>}
+           {error && (
+  <p role="alert" className="rounded-lg bg-dangerLight text-danger text-sm px-3 py-2">
+    {error}
+  </p>
+)}
 
             <button
               type="submit"

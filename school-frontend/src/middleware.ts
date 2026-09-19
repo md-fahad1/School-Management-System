@@ -13,6 +13,9 @@ const PROTECTED_PREFIXES = [
   "/principal",
   "/transport-staf",
   "/list",
+   "/help",
+  "/profile",   // optional but recommended
+  "/settings",
 ];
 
 // These correspond to real backend roles (see Role enum in the

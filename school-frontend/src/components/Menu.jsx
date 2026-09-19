@@ -115,6 +115,7 @@ const menuItems = [
     items: [
       { icon: "profile", label: "Profile", href: "/profile", visible: ALL_ROLES },
       { icon: "settings", label: "Settings", href: "/settings", visible: ALL_ROLES },
+      { icon: "help", label: "Help", href: "/help", visible: ALL_ROLES },
       { icon: "logout", label: "Logout", href: "/logout", action: "logout", visible: ALL_ROLES },
     ],
   },

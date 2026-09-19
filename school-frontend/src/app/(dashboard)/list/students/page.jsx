@@ -11,6 +11,7 @@ import { Eye, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import ExportCsvButton from "@/components/ExportCsvButton";
 import ImportCsvButton from "@/components/ImportCsvButton";
 import StudentCard from "@/components/StudentCard";
+import { Eye } from "lucide-react";
 const columns = [
   { header: "Info", accessor: "info" },
   { header: "Student ID", accessor: "studentId", className: "hidden md:table-cell" },
@@ -86,19 +87,14 @@ const StudentListPage = async ({ searchParams }) => {
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-              <SlidersHorizontal size={14} className="text-textSecondary" />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-              <ArrowUpDown size={14} className="text-textSecondary" />
-            </button>
-            {role === "admin" && (
-  <div className="flex items-center gap-4">
-    <ImportCsvButton />
-    <ExportCsvButton endpoint="students.csv" filename="students.csv" />
-  </div>
-)}
-          </div>
+  {role === "admin" && (
+    <div className="flex flex-wrap items-center gap-2">
+      <ImportCsvButton />
+      <ExportCsvButton endpoint="students.csv" filename="students.csv" />
+      <FormModal table="student" type="create" />
+    </div>
+  )}
+</div>
         </div>
       </div>
       <Table

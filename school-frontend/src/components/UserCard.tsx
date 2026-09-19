@@ -1,5 +1,5 @@
-import Image from "next/image";
-import { GraduationCap, Users, UserRound, ShieldCheck, MoreVertical } from "lucide-react";
+import Link from "next/link";
+import { GraduationCap, Users, UserRound, ShieldCheck, ChevronRight } from "lucide-react";
 
 const iconMap: { [key: string]: React.ElementType } = {
   student: GraduationCap,
@@ -15,29 +15,53 @@ const badgeMap: { [key: string]: string } = {
   admin: "bg-accentLight text-accent",
 };
 
-const UserCard = ({ type, count = 0 }: { type: string; count?: number }) => {
+type Props = {
+  type: string;
+  count?: number;
+  /** Dile poura card ta click-able hoy. Na dile ager moto sadharon card. */
+  href?: string;
+  /** Card er niche ja lekha dekhabe (default: "View all"). */
+  linkLabel?: string;
+};
+
+const UserCard = ({ type, count = 0, href, linkLabel = "View all" }: Props) => {
   const Icon = iconMap[type] ?? GraduationCap;
   const badgeClass = badgeMap[type] ?? "bg-infoLight text-info";
+  const base =
+    "rounded-2xl bg-cardBg border border-border p-4 flex-1 min-w-[150px] shadow-sm";
 
-  return (
-    <div className="rounded-2xl bg-cardBg border border-border p-4 flex-1 min-w-[150px] shadow-sm">
+  const content = (
+    <>
       <div className="flex justify-between items-start">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${badgeClass}`}>
           <Icon size={20} />
         </div>
-        <button
-          type="button"
-          className="text-textMuted hover:text-textSecondary"
-          aria-label="More options"
-        >
-          <MoreVertical size={16} />
-        </button>
+        {href && (
+          <ChevronRight
+            size={18}
+            className="text-textMuted transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+            aria-hidden="true"
+          />
+        )}
       </div>
       <h1 className="text-2xl font-semibold mt-3 text-textPrimary">
         {count.toLocaleString()}
       </h1>
       <h2 className="capitalize text-sm text-textSecondary mt-0.5">Total {type}s</h2>
-    </div>
+      {href && <p className="text-xs font-medium text-accent mt-2">{linkLabel}</p>}
+    </>
+  );
+
+  if (!href) return <div className={base}>{content}</div>;
+
+  return (
+    <Link
+      href={href}
+      aria-label={`${linkLabel}: ${type}s`}
+      className={`${base} group block transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md`}
+    >
+      {content}
+    </Link>
   );
 };
 

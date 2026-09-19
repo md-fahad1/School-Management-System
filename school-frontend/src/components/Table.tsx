@@ -1,5 +1,5 @@
 import React from "react";
-
+import EmptyState from "./EmptyState";
 const Table = ({
   columns,
   renderRow,
@@ -33,9 +33,9 @@ const Table = ({
           <tbody>
             {data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="py-8 text-center text-sm text-textMuted">
-                  No records found.
-                </td>
+               <td colSpan={columns.length}>
+  <EmptyState />
+</td>
               </tr>
             ) : (
               data.map((item) => renderRow(item))
@@ -47,7 +47,7 @@ const Table = ({
       {/* MOBILE — card list, no horizontal scroll */}
       <div className="md:hidden flex flex-col gap-3 mt-4">
         {data.length === 0 ? (
-          <p className="py-8 text-center text-sm text-textMuted">No records found.</p>
+          <EmptyState />
         ) : (
           data.map((item, idx) => {
             if (renderCard) {

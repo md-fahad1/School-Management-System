@@ -104,8 +104,9 @@ const ResetPasswordForm = () => {
                 <label className="block mb-1.5 text-textSecondary text-sm">New Password</label>
                 <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                   <Lock className="text-textMuted mr-2" size={18} />
-                  <input
-                    type="password"
+                 <PasswordInput
+  autoComplete="new-password"
+  name="password"
                     placeholder="At least 6 characters, letters + numbers"
                     className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                     value={newPassword}

@@ -44,7 +44,7 @@ const ExportCsvButton = ({ endpoint, filename }: { endpoint: string; filename: s
       type="button"
       onClick={handleExport}
       disabled={loading}
-      className="bg-lamaSky px-4 py-2 rounded-md text-sm disabled:opacity-60"
+      className="bg-lamaSky btn-secondary px-4 py-2 rounded-md text-sm disabled:opacity-60"
     >
       {loading ? "Exporting..." : "Export CSV"}
     </button>

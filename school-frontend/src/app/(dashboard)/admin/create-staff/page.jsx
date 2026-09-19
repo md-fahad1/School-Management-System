@@ -124,9 +124,9 @@ const CreateStaffPage = () => {
 
         <div>
           <label className="block mb-1 text-sm text-gray-700">Temporary password</label>
-          <input
-            type="password"
-            name="password"
+         <PasswordInput
+  autoComplete="new-password"
+  name="password"
             value={form.password}
             onChange={handleChange}
             className="w-full px-3 py-2 bg-gray-50 border rounded outline-none text-sm"

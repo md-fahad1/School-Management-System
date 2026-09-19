@@ -29,7 +29,7 @@ const TeacherCard = ({ item, role }: { item: Teacher; role: string }) => {
     <div className="bg-cardBg border border-border rounded-2xl p-4 shadow-sm flex flex-col gap-4">
       {/* Header: avatar, name, email, teacher ID badge (top-right) */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           {item.photo ? (
             <Image
               src={item.photo}
@@ -43,9 +43,9 @@ const TeacherCard = ({ item, role }: { item: Teacher; role: string }) => {
               {initials(item.name)}
             </div>
           )}
-          <div>
-            <h3 className="font-semibold text-textPrimary">{item.name}</h3>
-            <p className="text-xs text-textMuted">{item.email ?? "-"}</p>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-textPrimary truncate">{item.name}</h3>
+            <p className="text-xs text-textMuted truncate">{item.email ?? "-"}</p>
           </div>
         </div>
         <span className="text-xs px-2 py-1 rounded-full bg-infoLight text-info font-medium shrink-0">

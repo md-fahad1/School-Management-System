@@ -26,6 +26,7 @@ import {
   User,
   Settings,
   LogOut,
+    LifeBuoy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -59,6 +60,7 @@ const icons: Record<string, LucideIcon> = {
   profile: User,
   settings: Settings,
   logout: LogOut,
+   help: LifeBuoy,
 };
 
 const MenuIcon = ({

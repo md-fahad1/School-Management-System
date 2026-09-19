@@ -20,7 +20,7 @@ export const isPathActive = (pathname: string, href: string, exact?: boolean) =>
 const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { mobileOpen } = useSidebar();
+  const { mobileOpen, closeMobile } = useSidebar();
   const labelClass = mobileOpen ? "block" : "hidden lg:block";
   const justifyClass = mobileOpen ? "justify-start" : "justify-center lg:justify-start";
   const isActive = isPathActive(pathname, item.href, item.exact);
@@ -32,6 +32,7 @@ const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }
         type="button"
         title={item.label}
         onClick={async () => {
+          closeMobile();
           await performLogout();
           router.push("/signin");
         }}
@@ -48,6 +49,7 @@ const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }
       href={item.href}
       title={item.label}
       aria-current={isActive ? "page" : undefined}
+      onClick={closeMobile}
       className={`flex items-center ${justifyClass} gap-4 rounded-lg transition-colors ${
         nested ? "py-2 px-3 text-[13px]" : "py-2.5 px-3"
       } ${

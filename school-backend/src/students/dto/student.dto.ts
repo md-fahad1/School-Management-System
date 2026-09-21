@@ -62,6 +62,26 @@ export class CreateStudentInput {
   @IsEnum(StudentStatus)
   status?: StudentStatus;
 
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  admissionNumber?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  registrationNumber?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  emergencyContactName?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  emergencyContactPhone?: string;
+
   @Field(() => ID)
   @IsUUID()
   classId!: string;

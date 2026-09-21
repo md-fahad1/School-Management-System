@@ -26,7 +26,7 @@ export class StudentsResolver {
   }
 
   @Query(() => [Student])
-  @Roles(Role.ADMIN, Role.TEACHER)
+  @Roles(Role.ADMIN, Role.TEACHER, Role.PRINCIPAL)
   @RequirePermissions('student:view')
   students(
     @Args('search', { nullable: true }) search?: string,

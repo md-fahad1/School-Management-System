@@ -34,6 +34,18 @@ export class Student {
   @Field(() => StudentStatus)
   status!: StudentStatus;
 
+  @Field({ nullable: true })
+  admissionNumber?: string;
+
+  @Field({ nullable: true })
+  registrationNumber?: string;
+
+  @Field({ nullable: true })
+  emergencyContactName?: string;
+
+  @Field({ nullable: true })
+  emergencyContactPhone?: string;
+
   @Field(() => ID)
   classId!: string;
 

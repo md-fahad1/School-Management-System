@@ -1,5 +1,14 @@
 import { InputType, Field, ID, PartialType } from '@nestjs/graphql';
-import { IsBoolean, IsDateString, IsUUID } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 @InputType()
 export class CreateAttendanceInput {
@@ -44,6 +53,13 @@ export class BulkMarkAttendanceInput {
   @IsDateString()
   date: string;
 
+  // Without these decorators the global ValidationPipe (whitelist: true)
+  // strips `entries` entirely, and nested entries would go unvalidated.
   @Field(() => [MarkAttendanceEntry])
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(500)
+  @ValidateNested({ each: true })
+  @Type(() => MarkAttendanceEntry)
   entries: MarkAttendanceEntry[];
 }

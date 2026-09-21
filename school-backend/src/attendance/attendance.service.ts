@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -43,20 +48,55 @@ export class AttendanceService {
 
   // One mutation for a teacher to mark a whole class's attendance for a
   // lesson in one shot, rather than N individual create calls.
-  async bulkMark(input: BulkMarkAttendanceInput) {
-    const created = await this.prisma.$transaction(
-      input.entries.map((entry) =>
-        this.prisma.attendance.create({
-          data: {
-            date: input.date,
-            present: entry.present,
-            studentId: entry.studentId,
-            lessonId: input.lessonId,
-          },
-        }),
-      ),
+  async bulkMark(input: BulkMarkAttendanceInput, user: RequestUser) {
+    const lesson = await this.prisma.lesson.findUnique({ where: { id: input.lessonId } });
+    if (!lesson) throw new NotFoundException(`Lesson ${input.lessonId} not found`);
+
+    // A teacher may only mark attendance for their own lessons.
+    if (user.role === Role.TEACHER) {
+      const teacher = await this.prisma.teacher.findUnique({ where: { userId: user.id } });
+      if (!teacher || lesson.teacherId !== teacher.id) {
+        throw new ForbiddenException('You can only mark attendance for your own lessons');
+      }
+    }
+
+    // Every student must belong to the lesson's class; a repeated student is ignored.
+    const byStudent = new Map(input.entries.map((e) => [e.studentId, e.present]));
+    const studentIds = Array.from(byStudent.keys());
+    const inClass = await this.prisma.student.count({
+      where: { id: { in: studentIds }, classId: lesson.classId },
+    });
+    if (inClass !== studentIds.length) {
+      throw new BadRequestException("Some students do not belong to this lesson's class");
+    }
+
+    // One record per student per lesson per day: saving again updates the
+    // earlier marks instead of creating duplicates.
+    const dayStart = new Date(input.date);
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+
+    const existing = await this.prisma.attendance.findMany({
+      where: {
+        lessonId: input.lessonId,
+        studentId: { in: studentIds },
+        date: { gte: dayStart, lt: dayEnd },
+      },
+    });
+    const existingByStudent = new Map(existing.map((a) => [a.studentId, a.id]));
+
+    return this.prisma.$transaction(
+      studentIds.map((studentId) => {
+        const present = byStudent.get(studentId) as boolean;
+        const existingId = existingByStudent.get(studentId);
+        return existingId
+          ? this.prisma.attendance.update({ where: { id: existingId }, data: { present } })
+          : this.prisma.attendance.create({
+              data: { date: dayStart, present, studentId, lessonId: input.lessonId },
+            });
+      }),
     );
-    return created;
   }
 
   async update(id: string, input: UpdateAttendanceInput) {

@@ -4,6 +4,11 @@ import FormModal from "./FormModal";
 type Subject = {
   id: string;
   name: string;
+  code?: string;
+  type?: string;
+  credit?: number | null;
+  isOptional?: boolean;
+  isFourthSubject?: boolean;
   teachers: string[];
 };
 
@@ -15,7 +20,21 @@ const SubjectCard = ({ item, role }: { item: Subject; role: string }) => {
         <div className="w-11 h-11 rounded-full bg-accentLight flex items-center justify-center shrink-0">
           <BookOpen size={20} className="text-accent" />
         </div>
-        <h3 className="font-semibold text-textPrimary text-base">{item.name}</h3>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-textPrimary text-base">{item.name}</h3>
+            {(item.isOptional || item.isFourthSubject) && (
+              <span className="text-[10px] text-textMuted bg-bg rounded-md px-2 py-1">
+                {item.isFourthSubject ? "4th subject" : "Optional"}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-textMuted">
+            {item.code ? `${item.code} · ` : ""}
+            {item.type ?? "THEORY"}
+            {item.credit != null ? ` · ${item.credit} credit` : ""}
+          </p>
+        </div>
       </div>
 
       {/* Teachers as tags */}

@@ -1,6 +1,5 @@
 import React from "react";
 import FormModal from "@/components/FormModal";
-import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import { getGrades } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
@@ -40,7 +39,7 @@ const GradeListPage = async () => {
   );
 
   return (
-    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
+    <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">All Grades</h1>
@@ -58,7 +57,6 @@ const GradeListPage = async () => {
         data={gradesData}
       />
       {/* PAGINATION */}
-      <Pagination />
     </div>
   );
 };

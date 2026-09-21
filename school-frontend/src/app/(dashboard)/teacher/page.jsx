@@ -1,9 +1,11 @@
 import Announcements from "@/components/Announcements";
 import BigCalendar from "@/components/BigCalender";
-import { getMySchedule } from "@/lib/graphql/fetchers";
+import { getMySchedule, getAnnouncements } from "@/lib/graphql/fetchers";
 
 const TeacherPage = async () => {
   const schedule = await getMySchedule();
+  const announcementsPage = await getAnnouncements();
+  const announcements = announcementsPage.rows;
 
   return (
     <div className="flex-1 p-4 flex gap-4 flex-col xl:flex-row">
@@ -16,7 +18,7 @@ const TeacherPage = async () => {
       </div>
       {/* RIGHT */}
       <div className="w-full xl:w-1/3 flex flex-col gap-8">
-        <Announcements />
+        <Announcements items={announcements} />
       </div>
     </div>
   );

@@ -1,8 +1,10 @@
 import FormModal from "@/components/FormModal";
+import Link from "next/link";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { getAttendances } from "@/lib/graphql/fetchers";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 import { cookies } from "next/headers";
 import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import AttendanceCard from "@/components/AttendanceCard";
@@ -53,9 +55,10 @@ const columns = [
   },
 ];
 
-const AttendanceListPage = async () => {
+const AttendanceListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
-  const attendanceData = await getAttendances();
+  const page = parsePage(searchParams?.page);
+  const { rows: attendanceData, hasNextPage } = await getAttendances(page);
 
   const renderRow = (item: AttendanceRow) => (
     <tr
@@ -90,7 +93,7 @@ const AttendanceListPage = async () => {
   );
 
   return (
-    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
+    <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">All Attendance</h1>
@@ -104,7 +107,15 @@ const AttendanceListPage = async () => {
               <ArrowUpDown size={14} className="text-textSecondary" />
             </button>
             {(role === "admin" || role === "teacher") && (
-              <FormModal table="attendance" type="create" />
+              <>
+                <Link
+                  href="/list/attendance/mark"
+                  className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs hover:bg-primaryDark transition-colors"
+                >
+                  Mark class
+                </Link>
+                <FormModal table="attendance" type="create" />
+              </>
             )}
           </div>
         </div>
@@ -117,7 +128,7 @@ const AttendanceListPage = async () => {
         data={attendanceData}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

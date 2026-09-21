@@ -11,6 +11,11 @@ import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
   name: z.string().min(2, { message: "Subject name must be at least 2 characters" }),
+  code: z.string().optional(),
+  type: z.enum(["THEORY", "PRACTICAL", "LAB"]).optional(),
+  credit: z.coerce.number().optional(),
+  isOptional: z.boolean().optional(),
+  isFourthSubject: z.boolean().optional(),
   teacherIds: z.array(z.string()).optional(),
 });
 
@@ -33,6 +38,11 @@ const SubjectForm = ({
     resolver: zodResolver(schema),
     defaultValues: {
       name: data?.name ?? "",
+      code: data?.code && data.code !== "-" ? data.code : "",
+      type: data?.type ?? "THEORY",
+      credit: data?.credit ?? undefined,
+      isOptional: data?.isOptional ?? false,
+      isFourthSubject: data?.isFourthSubject ?? false,
       teacherIds: [],
     },
   });
@@ -92,8 +102,45 @@ const SubjectForm = ({
           register={register}
           error={errors.name}
         />
+        <InputField
+          label="Subject code"
+          name="code"
+          register={register}
+          error={(errors as any).code}
+        />
 
         <div className="flex flex-col gap-1.5 w-full">
+          <label className="text-xs text-textMuted">Type</label>
+          <select {...register("type")} className="field">
+            <option value="THEORY">Theory</option>
+            <option value="PRACTICAL">Practical</option>
+            <option value="LAB">Lab</option>
+          </select>
+        </div>
+
+        <InputField
+          label="Credit"
+          name="credit"
+          type="number"
+          register={register}
+          error={(errors as any).credit}
+        />
+
+        <div className="flex items-center gap-2 pt-6">
+          <input type="checkbox" id="isOptional" {...register("isOptional")} className="h-4 w-4" />
+          <label htmlFor="isOptional" className="text-sm text-textSecondary">
+            Optional subject
+          </label>
+        </div>
+
+        <div className="flex items-center gap-2 pt-6">
+          <input type="checkbox" id="isFourthSubject" {...register("isFourthSubject")} className="h-4 w-4" />
+          <label htmlFor="isFourthSubject" className="text-sm text-textSecondary">
+            4th subject
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-1.5 w-full sm:col-span-2">
           <label className="text-xs text-textMuted">Teachers</label>
           <select
             multiple

@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import FormModal from "./FormModal";
 import { Eye } from "lucide-react";
+import StudentStatusBadge from "./StudentStatusBadge";
+import StudentStatusButton from "./StudentStatusButton";
 
 type Student = {
   id: string;
@@ -15,6 +17,7 @@ type Student = {
   classId?: string;
   gradeId?: string;
   parentId?: string;
+  status?: string;
 };
 
 const initials = (name: string) =>
@@ -51,9 +54,7 @@ const StudentCard = ({ item, role }: { item: Student; role: string }) => {
             </p>
           </div>
         </div>
-        <span className="text-xs px-2 py-1 rounded-full bg-successLight text-success font-medium shrink-0">
-          Active
-        </span>
+        <StudentStatusBadge status={item.status} />
       </div>
 
       {/* Grade — the one info-grid field worth its own row */}
@@ -102,6 +103,7 @@ const StudentCard = ({ item, role }: { item: Student; role: string }) => {
                 parentId: item.parentId,
               }}
             />
+            <StudentStatusButton id={item.id} name={item.name} status={item.status} pill />
             <FormModal table="student" type="delete" id={item.id} />
           </>
         )}

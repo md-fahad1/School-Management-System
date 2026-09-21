@@ -6,6 +6,7 @@ import { getClasses } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import ClassCard from "@/components/ClassCard";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 type Class = {
   id: string;
   name: string;
@@ -46,9 +47,12 @@ const columns = [
   },
 ];
 
-const ClassListPage = async () => {
+const ClassListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
-  const classesData = await getClasses();
+    const page = parsePage(searchParams?.page);
+  const search = searchParams?.search?.trim() || undefined;
+  const { rows: classesData, hasNextPage } = await getClasses(search, page);
+
 
   const renderRow = (item: Class) => (
     <tr
@@ -99,7 +103,7 @@ const ClassListPage = async () => {
         data={classesData}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

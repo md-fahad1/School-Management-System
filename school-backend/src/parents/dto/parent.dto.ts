@@ -1,5 +1,6 @@
 import { InputType, Field, PartialType } from '@nestjs/graphql';
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import { GuardianRelation } from '../../common/enums/guardian-relation.enum';
 
 @InputType()
 export class CreateParentInput {
@@ -33,6 +34,16 @@ export class CreateParentInput {
   @IsOptional()
   @IsString()
   address?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  occupation?: string;
+
+  @Field(() => GuardianRelation, { nullable: true })
+  @IsOptional()
+  @IsEnum(GuardianRelation)
+  relation?: GuardianRelation;
 }
 
 @InputType()

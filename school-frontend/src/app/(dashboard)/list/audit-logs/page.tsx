@@ -1,6 +1,7 @@
 import React from "react";
 import Table from "@/components/Table";
 import Pagination from "@/components/Pagination";
+import { parsePage } from "@/lib/pagination";
 import { getAuditLogs } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -35,14 +36,15 @@ function formatMetadata(raw?: string) {
 const AuditLogPage = async ({
   searchParams,
 }: {
-  searchParams: { action?: string };
+  searchParams: { action?: string; page?: string };
 }) => {
   const role = cookies().get("role")?.value;
   if (role !== "admin") {
     redirect("/");
   }
 
-  const logs = await getAuditLogs({ take: 100, action: searchParams?.action });
+  const page = parsePage(searchParams?.page);
+  const { rows: logs, hasNextPage } = await getAuditLogs({ page, action: searchParams?.action });
 
   const renderRow = (item: {
     id: string;
@@ -73,7 +75,7 @@ const AuditLogPage = async ({
   );
 
   return (
-    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
+    <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">Audit Log</h1>
         <form className="flex gap-2 items-center">
@@ -101,7 +103,7 @@ const AuditLogPage = async ({
         </form>
       </div>
       <Table columns={columns} renderRow={renderRow} data={logs} />
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

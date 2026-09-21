@@ -6,6 +6,7 @@ import { getBookLoans } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import LoanCard from "@/components/LoanCard";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 type Loan = {
   id: string;
   status: string;
@@ -34,9 +35,10 @@ const statusColor: { [key: string]: string } = {
   LOST: "text-red-800",
 };
 
-const LibraryLoansPage = async () => {
+const LibraryLoansPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
-  const loans = await getBookLoans();
+    const page = parsePage(searchParams?.page);
+  const { rows: loans, hasNextPage } = await getBookLoans(undefined, page);
 
   const renderRow = (item: Loan) => (
     <tr
@@ -80,7 +82,7 @@ const LibraryLoansPage = async () => {
         renderCard={(item) => <LoanCard item={item} role={role} />}
         data={loans}
       />
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

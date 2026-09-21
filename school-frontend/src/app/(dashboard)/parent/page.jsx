@@ -1,9 +1,14 @@
 import Announcements from "@/components/Announcements";
 import BigCalendar from "@/components/BigCalender";
-import { getMySchedule, getMyChildren } from "@/lib/graphql/fetchers";
+import { getMySchedule, getMyChildren, getAnnouncements } from "@/lib/graphql/fetchers";
 
 const ParentPage = async () => {
-  const [schedule, children] = await Promise.all([getMySchedule(), getMyChildren()]);
+  const [schedule, children, announcementsPage] = await Promise.all([
+    getMySchedule(),
+    getMyChildren(),
+    getAnnouncements(),
+  ]);
+  const announcements = announcementsPage.rows;
 
   // One name if there's one child, "Emma & Liam" for two, "Emma +2" for more.
   const childrenLabel =
@@ -28,7 +33,7 @@ const ParentPage = async () => {
       </div>
       {/* RIGHT */}
       <div className="w-full xl:w-1/3 flex flex-col gap-8">
-        <Announcements />
+        <Announcements items={announcements} />
       </div>
     </div>
   );

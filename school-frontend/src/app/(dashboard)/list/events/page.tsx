@@ -3,6 +3,7 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { getEvents } from "@/lib/graphql/fetchers";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 import { cookies } from "next/headers";
 import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import EventCard from "@/components/EventCard";
@@ -46,9 +47,10 @@ const columns = [
   },
 ];
 
-const EventListPage = async () => {
+const EventListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
-  const eventsData = await getEvents();
+  const page = parsePage(searchParams?.page);
+  const { rows: eventsData, hasNextPage } = await getEvents(page);
 
   const renderRow = (item: Event) => (
     <tr
@@ -74,7 +76,7 @@ const EventListPage = async () => {
   );
 
   return (
-    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
+    <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">All Events</h1>
@@ -92,14 +94,14 @@ const EventListPage = async () => {
         </div>
       </div>
       {/* LIST */}
-            <Table
+      <Table
         columns={columns}
         renderRow={renderRow}
         renderCard={(item) => <EventCard item={item} role={role} />}
         data={eventsData}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

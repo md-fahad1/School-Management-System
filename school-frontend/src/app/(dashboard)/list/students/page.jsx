@@ -11,10 +11,14 @@ import { Eye, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import ExportCsvButton from "@/components/ExportCsvButton";
 import ImportCsvButton from "@/components/ImportCsvButton";
 import StudentCard from "@/components/StudentCard";
+import StudentStatusBadge from "@/components/StudentStatusBadge";
+import StudentStatusButton from "@/components/StudentStatusButton";
+import StudentStatusFilter from "@/components/StudentStatusFilter";
 const columns = [
   { header: "Info", accessor: "info" },
   { header: "Student ID", accessor: "studentId", className: "hidden md:table-cell" },
   { header: "Grade", accessor: "grade", className: "hidden md:table-cell" },
+  { header: "Status", accessor: "status" },
   { header: "Phone", accessor: "phone", className: "hidden lg:table-cell" },
   { header: "Address", accessor: "address", className: "hidden lg:table-cell" },
   { header: "Actions", accessor: "action" },
@@ -25,7 +29,9 @@ const StudentListPage = async ({ searchParams }) => {
   const search = searchParams?.search ?? undefined;
   const page = Number(searchParams?.page ?? 1) || 1;
 
-  const { students: studentsData, hasNextPage } = await getStudents(search, page);
+  const status = searchParams?.status ?? undefined;
+
+  const { students: studentsData, hasNextPage } = await getStudents(search, page, status);
 
   const renderRow = (item) => (
     <tr
@@ -47,6 +53,9 @@ const StudentListPage = async ({ searchParams }) => {
       </td>
       <td className="hidden md:table-cell">{item.studentId}</td>
       <td className="hidden md:table-cell">{item.grade}</td>
+      <td>
+        <StudentStatusBadge status={item.status} />
+      </td>
       <td className="hidden lg:table-cell">{item.phone}</td>
       <td className="hidden lg:table-cell">{item.address}</td>
       <td>
@@ -71,6 +80,7 @@ const StudentListPage = async ({ searchParams }) => {
                   parentId: item.parentId,
                 }}
               />
+              <StudentStatusButton id={item.id} name={item.name} status={item.status} />
               <FormModal table="student" type="delete" id={item.id} />
             </>
           )}
@@ -85,6 +95,7 @@ const StudentListPage = async ({ searchParams }) => {
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">All Students</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
+          <StudentStatusFilter />
           <div className="flex items-center gap-4 self-end">
   {role === "admin" && (
     <div className="flex flex-wrap items-center gap-2">

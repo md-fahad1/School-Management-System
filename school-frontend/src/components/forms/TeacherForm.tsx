@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import InputField from "../InputField";
+import PhotoUploadField from "../PhotoUploadField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
 import { GET_SUBJECTS } from "@/lib/graphql/queries";
@@ -37,6 +38,10 @@ const createSchema = z.object({
   surname: z.string().min(1, { message: "Last name is required" }),
   phone: z.string().optional(),
   address: z.string().optional(),
+  img: z.string().optional(),
+  bloodType: z.string().optional(),
+  sex: z.enum(["MALE", "FEMALE"]).optional(),
+  birthday: z.string().optional(),
   subjectIds: z.array(z.string()).optional(),
 });
 
@@ -45,6 +50,10 @@ const updateSchema = z.object({
   surname: z.string().min(1, { message: "Last name is required" }),
   phone: z.string().optional(),
   address: z.string().optional(),
+  img: z.string().optional(),
+  bloodType: z.string().optional(),
+  sex: z.enum(["MALE", "FEMALE"]).optional(),
+  birthday: z.string().optional(),
   subjectIds: z.array(z.string()).optional(),
 });
 
@@ -74,6 +83,10 @@ const TeacherForm = ({
         surname: data?.name?.split(" ").slice(1).join(" ") ?? "",
         phone: data?.phone === "-" ? "" : data?.phone,
         address: data?.address === "-" ? "" : data?.address,
+        img: data?.img ?? "",
+        bloodType: data?.bloodType ?? "",
+        sex: data?.sex ?? undefined,
+        birthday: data?.birthday ? data.birthday.slice(0, 10) : "",
         subjectIds: data?.subjectIds ?? [],
       }
     : undefined,
@@ -83,6 +96,7 @@ const TeacherForm = ({
   // Make sure react-hook-form tracks the chip selection like a normal field.
   useEffect(() => {
     register("subjectIds");
+    register("img");
   }, [register]);
   const [subjectOptions, setSubjectOptions] = useState<{ id: string; name: string }[]>([]);
   const [submitError, setSubmitError] = useState("");
@@ -172,6 +186,21 @@ const TeacherForm = ({
           name="address"
           register={register}
           error={errors.address}
+        />
+        <InputField label="Blood Type" name="bloodType" register={register} error={(errors as any).bloodType} />
+        <InputField label="Birthday" name="birthday" type="date" register={register} error={(errors as any).birthday} />
+        <div className="flex flex-col gap-1.5 w-full">
+          <label className="text-xs text-textMuted">Gender</label>
+          <select {...register("sex")} className="field">
+            <option value="">Select gender</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+          </select>
+        </div>
+        <PhotoUploadField
+          label="Photo"
+          value={watch("img")}
+          onChange={(url) => setValue("img", url, { shouldDirty: true })}
         />
          <MultiSelectChips
           label="Subjects"

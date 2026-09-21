@@ -4,6 +4,7 @@ import { Role } from '@prisma/client';
 import { CustomRolesService } from './custom-roles.service';
 import { Permission } from './entities/permission.entity';
 import { CustomRole } from './entities/custom-role.entity';
+import { UserAccess, UserAccessRow } from './entities/user-access.entity';
 import { CreateCustomRoleInput, UpdateCustomRoleInput, AssignUserRoleInput, SetUserPermissionInput } from './dto/permission.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -18,6 +19,25 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @RequirePermissions('role:manage')
 export class PermissionsResolver {
   constructor(private customRolesService: CustomRolesService) {}
+
+  @Query(() => [UserAccessRow])
+  userAccessList(@Args('search', { nullable: true }) search?: string) {
+    return this.customRolesService.listUserAccess(search);
+  }
+
+  @Query(() => UserAccess)
+  userAccess(@Args('userId', { type: () => ID }) userId: string) {
+    return this.customRolesService.getUserAccess(userId);
+  }
+
+  @Mutation(() => Boolean)
+  removeUserPermission(
+    @Args('userId', { type: () => ID }) userId: string,
+    @Args('permissionKey') permissionKey: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.customRolesService.removeUserPermission(userId, permissionKey, user.id);
+  }
 
   @Query(() => [Permission])
   permissions() {

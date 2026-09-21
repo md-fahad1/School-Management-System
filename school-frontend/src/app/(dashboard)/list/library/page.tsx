@@ -6,6 +6,7 @@ import { getBooks } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import BookCard from "@/components/BookCard";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 type Book = {
   id: string;
   title: string;
@@ -25,9 +26,11 @@ const columns = [
   { header: "Actions", accessor: "action" },
 ];
 
-const LibraryListPage = async () => {
+const LibraryListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
-  const books = await getBooks();
+ const page = parsePage(searchParams?.page);
+  const search = searchParams?.search?.trim() || undefined;
+  const { rows: books, hasNextPage } = await getBooks(search, page);
 
   const renderRow = (item: Book) => (
     <tr
@@ -83,7 +86,7 @@ const LibraryListPage = async () => {
         data={books}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

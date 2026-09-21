@@ -58,6 +58,8 @@ export class ParentsService {
             surname: input.surname,
             phone: input.phone,
             address: input.address,
+            occupation: input.occupation,
+            relation: input.relation,
           },
         },
       },
@@ -83,6 +85,8 @@ export class ParentsService {
         surname: input.surname,
         phone: input.phone,
         address: input.address,
+        occupation: input.occupation,
+        relation: input.relation,
       },
     });
 

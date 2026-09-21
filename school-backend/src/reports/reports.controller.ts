@@ -66,7 +66,7 @@ export class ReportsController {
     if (![Role.ADMIN, Role.PRINCIPAL].includes(req.user.role)) {
       throw new ForbiddenException('Only Admin or Principal can issue certificates');
     }
-    const doc = await this.reportsService.createCertificateDocument(studentId, input);
+    const doc = await this.reportsService.createCertificateDocument(studentId, input, req.user);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="certificate-${studentId}.pdf"`,

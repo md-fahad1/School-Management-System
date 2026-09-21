@@ -8,6 +8,7 @@ import { getInvoices } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import InvoiceCard from "@/components/InvoiceCard";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 type Invoice = {
   id: string;
   period: string;
@@ -43,10 +44,11 @@ const statusColor: { [key: string]: string } = {
   CANCELLED: "text-gray-400",
 };
 
-const InvoicesPage = async () => {
+const InvoicesPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
   const canManage = role === "admin" || role === "accountant";
-  const invoices = await getInvoices();
+  const page = parsePage(searchParams?.page);
+  const { rows: invoices, hasNextPage } = await getInvoices(undefined, page);
 
   const renderRow = (item: Invoice) => (
     <tr
@@ -108,7 +110,7 @@ const InvoicesPage = async () => {
         renderCard={(item) => <InvoiceCard item={item} canManage={canManage} />}
         data={invoices}
       />
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

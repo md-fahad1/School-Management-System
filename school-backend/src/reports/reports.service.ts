@@ -8,6 +8,7 @@ import { CreateCertificateDto } from './dto/create-certificate.dto';
 interface RequestUser {
   id: string;
   role: Role;
+  institutionId?: string | null;
 }
 
 const SCHOOL_NAME = process.env.SCHOOL_NAME ?? 'DreamsEdu School';
@@ -36,6 +37,19 @@ export class ReportsService {
     }
 
     throw new ForbiddenException('You are not allowed to access this student\'s documents');
+  }
+
+  // Each institution's own name goes on its documents (falls back to the
+  // SCHOOL_NAME env var, then a generic default).
+  private async schoolName(institutionId?: string | null): Promise<string> {
+    if (institutionId) {
+      const inst = await this.prisma.institution.findUnique({
+        where: { id: institutionId },
+        select: { name: true },
+      });
+      if (inst?.name) return inst.name;
+    }
+    return SCHOOL_NAME;
   }
 
   // ---- Report Card ----
@@ -96,7 +110,13 @@ export class ReportsService {
     const position = ranked.findIndex(([id]) => id === studentId) + 1;
 
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
-    this.renderReportCardHeader(doc, student, examTitle);
+    this.renderReportCardHeader(
+      doc,
+      student,
+      examTitle,
+      'REPORT CARD',
+      await this.schoolName(requester.institutionId),
+    );
 
     doc.moveDown(1);
     const tableTop = doc.y;
@@ -155,7 +175,13 @@ export class ReportsService {
     }
 
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
-    this.renderReportCardHeader(doc, student, examTitle, 'ADMIT CARD');
+    this.renderReportCardHeader(
+      doc,
+      student,
+      examTitle,
+      'ADMIT CARD',
+      await this.schoolName(requester.institutionId),
+    );
 
     doc.moveDown(1);
     const tableTop = doc.y;
@@ -190,7 +216,7 @@ export class ReportsService {
 
   // ---- Certificate (admin/principal only — enforced in the controller) ----
 
-  async createCertificateDocument(studentId: string, input: CreateCertificateDto) {
+  async createCertificateDocument(studentId: string, input: CreateCertificateDto, requester: RequestUser) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
       include: { class: true },
@@ -203,7 +229,7 @@ export class ReportsService {
 
     const doc = new PDFDocument({ size: 'A4', margin: 60, layout: 'landscape' });
 
-    doc.font('Helvetica-Bold').fontSize(10).text(SCHOOL_NAME.toUpperCase(), { align: 'center' });
+    doc.font('Helvetica-Bold').fontSize(10).text((await this.schoolName(requester.institutionId)).toUpperCase(), { align: 'center' });
     doc.moveDown(2);
     doc.font('Helvetica-Bold').fontSize(28).text(input.title, { align: 'center' });
     doc.moveDown(0.5);
@@ -226,8 +252,8 @@ export class ReportsService {
 
   // ---- Shared rendering helpers ----
 
-  private renderReportCardHeader(doc: PDFKit.PDFDocument, student: any, examTitle: string, docTitle = 'REPORT CARD') {
-    doc.font('Helvetica-Bold').fontSize(16).text(SCHOOL_NAME, { align: 'center' });
+  private renderReportCardHeader(doc: PDFKit.PDFDocument, student: any, examTitle: string, docTitle = 'REPORT CARD', schoolName = SCHOOL_NAME) {
+    doc.font('Helvetica-Bold').fontSize(16).text(schoolName, { align: 'center' });
     doc.font('Helvetica').fontSize(11).text(docTitle, { align: 'center' });
     doc.font('Helvetica-Oblique').fontSize(10).text(examTitle, { align: 'center' });
     doc.moveDown(1);

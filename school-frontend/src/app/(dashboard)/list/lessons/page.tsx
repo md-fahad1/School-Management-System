@@ -3,6 +3,7 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import { getLessons } from "@/lib/graphql/fetchers";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 import { cookies } from "next/headers";
 import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import LessonCard from "@/components/LessonCard";
@@ -33,9 +34,10 @@ const columns = [
   },
 ];
 
-const LessonListPage = async () => {
+const LessonListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
-  const lessonsData = await getLessons();
+  const page = parsePage(searchParams?.page);
+  const { rows: lessonsData, hasNextPage } = await getLessons(page);
 
   const renderRow = (item: Lesson) => (
     <tr
@@ -59,7 +61,7 @@ const LessonListPage = async () => {
   );
 
   return (
-    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
+    <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">All Lessons</h1>
@@ -70,21 +72,21 @@ const LessonListPage = async () => {
               <SlidersHorizontal size={14} className="text-textSecondary" />
             </button>
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-                           <ArrowUpDown size={14} className="text-textSecondary" />
+              <ArrowUpDown size={14} className="text-textSecondary" />
             </button>
             {role === "admin" && <FormModal table="lesson" type="create" />}
           </div>
         </div>
       </div>
       {/* LIST */}
-     <Table
+      <Table
         columns={columns}
         renderRow={renderRow}
         renderCard={(item) => <LessonCard item={item} role={role} />}
         data={lessonsData}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

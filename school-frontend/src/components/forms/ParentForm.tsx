@@ -37,6 +37,8 @@ const createSchema = z.object({
   surname: z.string().min(1, { message: "Last name is required" }),
   phone: z.string().optional(),
   address: z.string().optional(),
+  occupation: z.string().optional(),
+  relation: z.enum(["FATHER", "MOTHER", "GUARDIAN", "OTHER"]).optional(),
 });
 
 const updateSchema = z.object({
@@ -44,6 +46,8 @@ const updateSchema = z.object({
   surname: z.string().min(1, { message: "Last name is required" }),
   phone: z.string().optional(),
   address: z.string().optional(),
+  occupation: z.string().optional(),
+  relation: z.enum(["FATHER", "MOTHER", "GUARDIAN", "OTHER"]).optional(),
 });
 
 const ParentForm = ({
@@ -71,6 +75,8 @@ const ParentForm = ({
             surname: data?.name?.split(" ").slice(1).join(" ") ?? "",
             phone: data?.phone === "-" ? "" : data?.phone,
             address: data?.address === "-" ? "" : data?.address,
+            occupation: data?.occupation ?? "",
+            relation: data?.relation ?? undefined,
           }
         : undefined,
   });
@@ -138,6 +144,17 @@ const ParentForm = ({
         <InputField label="Last Name" name="surname" register={register} error={errors.surname} />
         <InputField label="Phone" name="phone" register={register} error={errors.phone} />
         <InputField label="Address" name="address" register={register} error={errors.address} />
+        <InputField label="Occupation" name="occupation" register={register} error={(errors as any).occupation} />
+        <div className="flex flex-col gap-1.5 w-full">
+          <label className="text-xs text-textMuted">Relation to Student</label>
+          <select {...register("relation")} className="field">
+            <option value="">Select relation</option>
+            <option value="FATHER">Father</option>
+            <option value="MOTHER">Mother</option>
+            <option value="GUARDIAN">Guardian</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
       </div>
 
       {submitError && <span className="text-red-500 text-sm">{submitError}</span>}

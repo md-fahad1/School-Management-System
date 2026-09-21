@@ -276,8 +276,10 @@ input CreateParentInput {
   address: String
   email: String!
   name: String!
+  occupation: String
   password: String!
   phone: String
+  relation: GuardianRelation
   surname: String!
   username: String!
 }
@@ -301,16 +303,20 @@ input CreateScholarshipInput {
 
 input CreateStudentInput {
   address: String
+  admissionNumber: String
   birthday: String
   bloodType: String
   classId: ID!
   email: String!
+  emergencyContactName: String
+  emergencyContactPhone: String
   gradeId: ID!
   img: String
   name: String!
   parentId: ID!
   password: String!
   phone: String
+  registrationNumber: String
   sex: Sex
   status: StudentStatus
   surname: String!
@@ -493,6 +499,13 @@ type Grade {
   level: Int!
   name: String
   stage: EducationLevel!
+}
+
+enum GuardianRelation {
+  FATHER
+  GUARDIAN
+  MOTHER
+  OTHER
 }
 
 enum HrAttendanceStatus {
@@ -747,6 +760,7 @@ type Mutation {
   removeSubject(id: ID!): Boolean!
   removeTeacher(id: ID!): Boolean!
   removeTerm(id: ID!): Boolean!
+  removeUserPermission(permissionKey: String!, userId: ID!): Boolean!
   removeVehicle(id: ID!): Boolean!
   requestPasswordReset(input: RequestPasswordResetInput!): Boolean!
   resendVerificationEmail(input: ResendVerificationInput!): Boolean!
@@ -789,7 +803,9 @@ type Parent {
   email: String
   id: ID!
   name: String!
+  occupation: String
   phone: String
+  relation: GuardianRelation
   students: [String!]
   surname: String!
 }
@@ -827,6 +843,11 @@ type Permission {
   id: ID!
   key: String!
   module: String!
+}
+
+type PermissionOverride {
+  granted: Boolean!
+  permissionKey: String!
 }
 
 type Query {
@@ -873,6 +894,7 @@ type Query {
   me: Me!
   myChildren: [Student!]!
   myInstitution: Institution!
+  myPermissions: [String!]!
   myVehicles: [Vehicle!]!
   parent(id: ID!): Parent!
   parents(search: String, skip: Float, take: Float): [Parent!]!
@@ -888,6 +910,8 @@ type Query {
   teacher(id: ID!): Teacher!
   teacherAttendances(date: String, skip: Float, take: Float, teacherId: ID): [TeacherAttendance!]!
   teachers(search: String, skip: Float, take: Float): [Teacher!]!
+  userAccess(userId: ID!): UserAccess!
+  userAccessList(search: String): [UserAccessRow!]!
   users(search: String): [UserSummary!]!
   vehicle(id: ID!): Vehicle!
   vehicles(skip: Float, take: Float): [Vehicle!]!
@@ -1017,11 +1041,14 @@ type StaffAttendance {
 
 type Student {
   address: String
+  admissionNumber: String
   birthday: DateTime
   bloodType: String
   classId: ID!
   className: String
   email: String
+  emergencyContactName: String
+  emergencyContactPhone: String
   gradeId: ID!
   gradeLevel: Float
   id: ID!
@@ -1030,6 +1057,7 @@ type Student {
   parentId: ID!
   parentName: String
   phone: String
+  registrationNumber: String
   sex: Sex
   status: StudentStatus!
   surname: String!
@@ -1217,8 +1245,10 @@ input UpdateParentInput {
   address: String
   email: String
   name: String
+  occupation: String
   password: String
   phone: String
+  relation: GuardianRelation
   surname: String
   username: String
 }
@@ -1248,16 +1278,20 @@ input UpdateScholarshipInput {
 
 input UpdateStudentInput {
   address: String
+  admissionNumber: String
   birthday: String
   bloodType: String
   classId: ID
   email: String
+  emergencyContactName: String
+  emergencyContactPhone: String
   gradeId: ID
   img: String
   name: String
   parentId: ID
   password: String
   phone: String
+  registrationNumber: String
   sex: Sex
   status: StudentStatus
   surname: String
@@ -1297,6 +1331,24 @@ input UpdateVehicleInput {
   transportStaffId: ID
   type: String
   vehicleNumber: String
+}
+
+type UserAccess {
+  baseRole: Role!
+  customRoleId: ID
+  customRoleName: String
+  effectivePermissions: [String!]!
+  overrides: [PermissionOverride!]!
+  userId: ID!
+  username: String!
+}
+
+type UserAccessRow {
+  baseRole: Role!
+  customRoleId: ID
+  customRoleName: String
+  userId: ID!
+  username: String!
 }
 
 type UserSummary {

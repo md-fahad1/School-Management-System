@@ -1,10 +1,13 @@
 import Announcements from "@/components/Announcements";
 import BigCalendar from "@/components/BigCalender";
 import EventCalendar from "@/components/EventCalendar";
-import { getMySchedule } from "@/lib/graphql/fetchers";
+import { getMySchedule, getAnnouncements, getEvents } from "@/lib/graphql/fetchers";
 
 const StudentPage = async () => {
   const schedule = await getMySchedule();
+  const [announcementsPage, eventsPage] = await Promise.all([getAnnouncements(), getEvents()]);
+  const announcements = announcementsPage.rows;
+  const calendarEvents = eventsPage.rows.map((e) => ({ ...e, time: `${e.startTime} - ${e.endTime}` }));
 
   return (
     <div className="p-4 flex gap-4 flex-col xl:flex-row">
@@ -17,8 +20,8 @@ const StudentPage = async () => {
       </div>
       {/* RIGHT */}
       <div className="w-full xl:w-1/3 flex flex-col gap-8">
-        <EventCalendar />
-        <Announcements />
+        <EventCalendar events={calendarEvents} />
+        <Announcements items={announcements} />
       </div>
     </div>
   );

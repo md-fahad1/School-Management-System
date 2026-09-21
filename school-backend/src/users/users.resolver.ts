@@ -2,6 +2,7 @@ import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { UsersService } from './users.service';
+import { PermissionsService } from '../permissions/permissions.service';
 import { UserSummary } from './entities/user-summary.entity';
 import { Me } from './entities/me.entity';
 import {
@@ -15,7 +16,19 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @Resolver(() => UserSummary)
 @UseGuards(GqlJwtAuthGuard)
 export class UsersResolver {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private permissionsService: PermissionsService,
+  ) {}
+
+  // What the signed-in account may do: role defaults or custom role, plus
+  // per-user overrides. The web app uses it to hide sidebar links the
+  // account cannot use.
+  @Query(() => [String])
+  async myPermissions(@CurrentUser() user: { id: string; role: Role }) {
+    const permissions = await this.permissionsService.getPermissionsForUser(user.id, user.role);
+    return Array.from(permissions).sort();
+  }
 
   // Any authenticated user can see this list — it's only used to pick
   // a message recipient, and messaging itself has no role restriction

@@ -103,6 +103,11 @@ export const GET_SUBJECTS = gql`
     subjects(search: $search, skip: $skip, take: $take) {
       id
       name
+      code
+      type
+      credit
+      isOptional
+      isFourthSubject
       teachers
     }
   }
@@ -176,8 +181,9 @@ export const GET_TEACHER = gql`
 /* ---------- Students ---------- */
 
 export const GET_STUDENTS = gql`
-  query Students($search: String, $skip: Float, $take: Float) {
-    students(search: $search, skip: $skip, take: $take) {
+  query Students($search: String, $skip: Float, $take: Float, $status: StudentStatus) {
+    students(search: $search, skip: $skip, take: $take, status: $status) {
+      status
       id
       name
       surname
@@ -198,6 +204,7 @@ export const GET_STUDENTS = gql`
 export const GET_STUDENT = gql`
   query Student($id: ID!) {
     student(id: $id) {
+      status
       id
       name
       surname
@@ -334,7 +341,7 @@ export const GET_ATTENDANCES = gql`
   query Attendances($skip: Float, $take: Float) {
     attendances(skip: $skip, take: $take) {
       id
-      dateFormModal.tsx
+     date
       present
       studentId
       lessonId
@@ -474,7 +481,7 @@ export const SEND_MESSAGE = gql`
 /* ---------- Library ---------- */
 
 export const GET_BOOKS = gql`
-  query Books($search: String, $skip: Float, $take: Float) {
+  query Books($search: String, $skip: Float, $take: Int) {
     books(search: $search, skip: $skip, take: $take) {
       id
       title
@@ -506,7 +513,7 @@ export const UPDATE_BOOK = gql`
 `;
 
 export const GET_BOOK_LOANS = gql`
-  query BookLoans($skip: Float, $take: Float, $status: LoanStatus) {
+  query BookLoans($skip: Float, $take: Int, $status: LoanStatus) {
     bookLoans(skip: $skip, take: $take, status: $status) {
       id
       status
@@ -624,7 +631,7 @@ export const GET_FEE_STRUCTURE_OPTIONS = gql`
 `;
 
 export const GET_INVOICES = gql`
-  query Invoices($skip: Float, $take: Float, $status: PaymentStatus, $studentId: ID) {
+  query Invoices($skip: Float, $take: Int, $status: PaymentStatus, $studentId: ID) {
     invoices(skip: $skip, take: $take, status: $status, studentId: $studentId) {
       id
       period
@@ -1312,5 +1319,108 @@ export const UPDATE_DEPARTMENT = gql`
       id
       name
     }
+  }
+`;
+export const UPDATE_STUDENT_STATUS = gql`
+  mutation UpdateStudentStatus($id: ID!, $input: UpdateStudentStatusInput!) {
+    updateStudentStatus(id: $id, input: $input) {
+      id
+      status
+    }
+  }
+`;
+
+/* ---------- Bulk attendance ---------- */
+
+export const GET_LESSONS_FOR_ATTENDANCE = gql`
+  query LessonsForAttendance {
+    lessons(take: 500) {
+      id
+      name
+      classId
+      className
+      subjectName
+      day
+    }
+  }
+`;
+
+// Only ACTIVE students are listed, so suspended/graduated ones are not marked absent.
+export const GET_ACTIVE_STUDENTS_FOR_ATTENDANCE = gql`
+  query ActiveStudentsForAttendance {
+    students(take: 1000, status: ACTIVE) {
+      id
+      name
+      surname
+      classId
+    }
+  }
+`;
+
+export const BULK_MARK_ATTENDANCE = gql`
+  mutation BulkMarkAttendance($input: BulkMarkAttendanceInput!) {
+    bulkMarkAttendance(input: $input) {
+      id
+      present
+    }
+  }
+`;
+
+export const LOGOUT_ALL_DEVICES = gql`
+  mutation LogoutAllDevices {
+    logoutAllDevices
+  }
+`;
+/* ---------- User access (role assignment + overrides) ---------- */
+
+export const GET_USER_ACCESS_LIST = gql`
+  query UserAccessList($search: String) {
+    userAccessList(search: $search) {
+      userId
+      username
+      baseRole
+      customRoleId
+      customRoleName
+    }
+  }
+`;
+
+export const GET_USER_ACCESS = gql`
+  query UserAccess($userId: ID!) {
+    userAccess(userId: $userId) {
+      userId
+      username
+      baseRole
+      customRoleId
+      customRoleName
+      overrides {
+        permissionKey
+        granted
+      }
+      effectivePermissions
+    }
+  }
+`;
+
+export const ASSIGN_USER_ROLE = gql`
+  mutation AssignUserRole($input: AssignUserRoleInput!) {
+    assignUserRole(input: $input)
+  }
+`;
+
+export const SET_USER_PERMISSION = gql`
+  mutation SetUserPermission($input: SetUserPermissionInput!) {
+    setUserPermission(input: $input)
+  }
+`;
+
+export const REMOVE_USER_PERMISSION = gql`
+  mutation RemoveUserPermission($userId: ID!, $permissionKey: String!) {
+    removeUserPermission(userId: $userId, permissionKey: $permissionKey)
+  }
+`;
+export const MY_PERMISSIONS = gql`
+  query MyPermissions {
+    myPermissions
   }
 `;

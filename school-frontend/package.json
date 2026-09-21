@@ -7,7 +7,8 @@
     "build": "next build",
     "analyze": "cross-env ANALYZE=true next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "validate:gql": "node scripts/validate-graphql.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

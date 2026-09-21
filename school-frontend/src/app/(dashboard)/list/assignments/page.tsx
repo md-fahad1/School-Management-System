@@ -4,6 +4,7 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import AssignmentCard from "@/components/AssignmentCard";
 import { getAssignments } from "@/lib/graphql/fetchers";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 import { cookies } from "next/headers";
 import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 
@@ -40,10 +41,11 @@ const columns = [
   },
 ];
 
-const AssignmentListPage = async () => {
+const AssignmentListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
   const canEdit = role === "admin" || role === "teacher";
-  const assignmentsData = await getAssignments();
+  const page = parsePage(searchParams?.page);
+  const { rows: assignmentsData, hasNextPage } = await getAssignments(page);
 
   const renderRow = (item: Assignment) => (
     <tr
@@ -68,7 +70,7 @@ const AssignmentListPage = async () => {
   );
 
   return (
-    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
+    <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">
@@ -78,10 +80,10 @@ const AssignmentListPage = async () => {
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-                            <SlidersHorizontal size={14} className="text-textSecondary" />
+              <SlidersHorizontal size={14} className="text-textSecondary" />
             </button>
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-warningLight">
-                            <ArrowUpDown size={14} className="text-textSecondary" />
+              <ArrowUpDown size={14} className="text-textSecondary" />
             </button>
             {canEdit && <FormModal table="assignment" type="create" />}
           </div>
@@ -95,7 +97,7 @@ const AssignmentListPage = async () => {
         data={assignmentsData}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

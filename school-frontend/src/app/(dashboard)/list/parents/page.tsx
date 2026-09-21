@@ -6,6 +6,7 @@ import { getParents } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import ParentCard from "@/components/ParentCard";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 type Parent = {
   id: string;
   name: string;
@@ -41,9 +42,11 @@ const columns = [
   },
 ];
 
-const ParentListPage = async () => {
+const ParentListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
-  const parentsData = await getParents();
+   const page = parsePage(searchParams?.page);
+  const search = searchParams?.search?.trim() || undefined;
+  const { rows: parentsData, hasNextPage } = await getParents(search, page);
 
   const renderRow = (item: Parent) => (
     <tr
@@ -100,7 +103,7 @@ const ParentListPage = async () => {
         data={parentsData}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

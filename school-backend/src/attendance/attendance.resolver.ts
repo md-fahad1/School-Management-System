@@ -45,8 +45,11 @@ export class AttendanceResolver {
   @Mutation(() => [Attendance])
   @Roles(Role.ADMIN, Role.TEACHER)
   @RequirePermissions('attendance:create')
-  bulkMarkAttendance(@Args('input') input: BulkMarkAttendanceInput) {
-    return this.attendanceService.bulkMark(input);
+  bulkMarkAttendance(
+    @Args('input') input: BulkMarkAttendanceInput,
+    @CurrentUser() user: { id: string; role: Role },
+  ) {
+    return this.attendanceService.bulkMark(input, user);
   }
 
   @Mutation(() => Attendance)

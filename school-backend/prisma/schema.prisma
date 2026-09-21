@@ -333,6 +333,10 @@ model Student {
   sex       Sex?
   birthday  DateTime?
   status    StudentStatus @default(ACTIVE)
+  admissionNumber       String?
+  registrationNumber    String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
   createdAt DateTime  @default(now())
 
   parentId String
@@ -365,11 +369,20 @@ model Parent {
   surname   String
   phone     String?
   address   String?
+  occupation String?
+  relation   GuardianRelation?
   createdAt DateTime @default(now())
 
   students Student[]
 
   @@map("parents")
+}
+
+enum GuardianRelation {
+  FATHER
+  MOTHER
+  GUARDIAN
+  OTHER
 }
 
 model Grade {

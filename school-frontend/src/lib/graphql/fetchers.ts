@@ -1,5 +1,6 @@
 import "server-only";
 import type { AcademicYearItem, DepartmentItem } from "@/lib/academic";
+import { LARGE_PAGE_SIZE, emptyPage, pageArgs, toPaged } from "@/lib/pagination";
 import { getServerClient, getServerRole } from "./server-client";
 import {
   GET_ANNOUNCEMENTS,
@@ -35,6 +36,7 @@ import {
     GET_VEHICLES,
   GET_MY_VEHICLES,
   ME_QUERY,
+  MY_PERMISSIONS,
   GET_MY_INSTITUTION,
   GET_PERMISSIONS,
   GET_CUSTOM_ROLES,
@@ -119,19 +121,27 @@ export async function getWeeklyAttendance() {
 // list rather than throwing, so a page still renders (with an empty
 // table) if the backend is unreachable, instead of crashing the whole
 // Server Component tree.
-
-export async function getSubjects(search?: string) {
+export async function getSubjects(search?: string, page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ subjects: any[] }>(GET_SUBJECTS, { search });
-    return data.subjects.map((s) => ({
-      id: s.id,
-      name: s.name,
-      teachers: s.teachers ?? [],
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ subjects: any[] }>(GET_SUBJECTS, { search, skip, take });
+    return toPaged(
+      data.subjects.map((x) => (({
+        id: x.id,
+        name: x.name,
+        code: x.code ?? "-",
+        type: x.type ?? "THEORY",
+        credit: x.credit ?? null,
+        isOptional: x.isOptional ?? false,
+        isFourthSubject: x.isFourthSubject ?? false,
+        teachers: x.teachers ?? [],
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getSubjects failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
@@ -139,12 +149,13 @@ export async function getSubjects(search?: string) {
 
 export const STUDENTS_PAGE_SIZE = 10;
 
-export async function getStudents(search?: string, page = 1) {
+export async function getStudents(search?: string, page = 1, status?: string) {
   try {
     const client = getServerClient();
     const safePage = Math.max(1, page);
     const skip = (safePage - 1) * STUDENTS_PAGE_SIZE;
     const data = await client.request<{ students: any[] }>(GET_STUDENTS, {
+      status: status || undefined,
       search,
       skip,
       take: STUDENTS_PAGE_SIZE + 1,
@@ -167,6 +178,7 @@ export async function getStudents(search?: string, page = 1) {
       grade: s.gradeLevel ?? "-",
       parentId: s.parentId,
       parent: s.parentName ?? "-",
+      status: s.status ?? "ACTIVE",
     }));
 
     return { students, hasNextPage, page: safePage };
@@ -197,216 +209,262 @@ export async function getStudent(id: string) {
       gradeLevel: s.gradeLevel ?? "-",
       parentId: s.parentId,
       parentName: s.parentName ?? "-",
+      status: s.status ?? "ACTIVE",
     };
   } catch (err) {
     console.error("getStudent failed:", err);
     return null;
   }
 }
-
-export async function getParents(search?: string) {
+export async function getParents(search?: string, page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ parents: any[] }>(GET_PARENTS, { search });
-    return data.parents.map((p) => ({
-      id: p.id,
-      name: `${p.name} ${p.surname}`,
-      email: p.email,
-      students: p.students ?? [],
-      phone: p.phone ?? "-",
-      address: p.address ?? "-",
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ parents: any[] }>(GET_PARENTS, { search, skip, take });
+    return toPaged(
+      data.parents.map((x) => (({
+        id: x.id,
+        name: `${x.name} ${x.surname}`,
+        email: x.email,
+        students: x.students ?? [],
+        phone: x.phone ?? "-",
+        address: x.address ?? "-",
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getParents failed:", err);
-    return [];
+    return emptyPage();
   }
 }
-export async function getBooks(search?: string) {
+
+export async function getBooks(search?: string, page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ books: any[] }>(GET_BOOKS, { search });
-    return data.books.map((b) => ({
-      id: b.id,
-      title: b.title,
-      author: b.author,
-      isbn: b.isbn,
-      category: b.category ?? "-",
-      totalCopies: b.totalCopies,
-      availableCopies: b.availableCopies,
-    }));
+    const { page: p, skip, take } = pageArgs(page, LARGE_PAGE_SIZE);
+    const data = await client.request<{ books: any[] }>(GET_BOOKS, { search, skip, take });
+    return toPaged(
+      data.books.map((x) => (({
+        id: x.id,
+        title: x.title,
+        author: x.author,
+        isbn: x.isbn,
+        category: x.category ?? "-",
+        totalCopies: x.totalCopies,
+        availableCopies: x.availableCopies,
+      }))),
+      p, LARGE_PAGE_SIZE,
+    );
   } catch (err) {
     console.error("getBooks failed:", err);
-    return [];
+    return emptyPage();
   }
 }
-
-export async function getBookLoans(status?: string) {
+export async function getBookLoans(status?: string, page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ bookLoans: any[] }>(GET_BOOK_LOANS, { status });
-    return data.bookLoans.map((l) => ({
-      id: l.id,
-      status: l.status,
-      borrowedAt: fmtDate(l.borrowedAt),
-      dueDate: fmtDate(l.dueDate),
-      returnedAt: l.returnedAt ? fmtDate(l.returnedAt) : "-",
-      fineAmount: l.fineAmount ?? 0,
-      bookId: l.bookId,
-      borrowerId: l.borrowerId,
-      bookTitle: l.bookTitle ?? "-",
-      borrowerName: l.borrowerName ?? "-",
-    }));
+    const { page: p, skip, take } = pageArgs(page, LARGE_PAGE_SIZE);
+    const data = await client.request<{ bookLoans: any[] }>(GET_BOOK_LOANS, { status, skip, take });
+    return toPaged(
+      data.bookLoans.map((x) => (({
+        id: x.id,
+        status: x.status,
+        borrowedAt: fmtDate(x.borrowedAt),
+        dueDate: fmtDate(x.dueDate),
+        returnedAt: x.returnedAt ? fmtDate(x.returnedAt) : "-",
+        fineAmount: x.fineAmount ?? 0,
+        bookId: x.bookId,
+        borrowerId: x.borrowerId,
+        bookTitle: x.bookTitle ?? "-",
+        borrowerName: x.borrowerName ?? "-",
+      }))),
+      p, LARGE_PAGE_SIZE,
+    );
   } catch (err) {
     console.error("getBookLoans failed:", err);
-    return [];
+    return emptyPage();
   }
 }
-
-export async function getClasses(search?: string) {
+export async function getClasses(search?: string, page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ classes: any[] }>(GET_CLASSES, { search });
-   return data.classes.map((c) => ({
-      id: c.id,
-      name: c.name,
-      capacity: c.capacity,
-      gradeId: c.gradeId,
-      grade: c.gradeLevel ?? "-",
-      supervisorId: c.supervisorId ?? null,
-      supervisor: c.supervisorName ?? "-",
-      departmentId: c.departmentId ?? null,
-      department: c.departmentName ?? "-",
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ classes: any[] }>(GET_CLASSES, { search, skip, take });
+    return toPaged(
+      data.classes.map((x) => (({
+        id: x.id,
+        name: x.name,
+        capacity: x.capacity,
+        gradeId: x.gradeId,
+        grade: x.gradeLevel ?? "-",
+        supervisorId: x.supervisorId ?? null,
+        supervisor: x.supervisorName ?? "-",
+        departmentId: x.departmentId ?? null,
+        department: x.departmentName ?? "-",
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getClasses failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
-export async function getLessons() {
+export async function getLessons(page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ lessons: any[] }>(GET_LESSONS, {});
-    return data.lessons.map((l) => ({
-      id: l.id,
-      subject: l.subjectName ?? "-",
-      class: l.className ?? "-",
-      teacher: l.teacherName ?? "-",
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ lessons: any[] }>(GET_LESSONS, { skip, take });
+    return toPaged(
+      data.lessons.map((x) => (({
+        id: x.id,
+        subject: x.subjectName ?? "-",
+        class: x.className ?? "-",
+        teacher: x.teacherName ?? "-",
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getLessons failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
-export async function getExams() {
+export async function getExams(page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ exams: any[] }>(GET_EXAMS, {});
-    return data.exams.map((e) => ({
-      id: e.id,
-      subject: e.subjectName ?? "-",
-      class: e.className ?? "-",
-      teacher: e.teacherName ?? "-",
-      date: fmtDate(e.startTime),
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ exams: any[] }>(GET_EXAMS, { skip, take });
+    return toPaged(
+      data.exams.map((x) => (({
+        id: x.id,
+        subject: x.subjectName ?? "-",
+        class: x.className ?? "-",
+        teacher: x.teacherName ?? "-",
+        date: fmtDate(x.startTime),
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getExams failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
-export async function getAssignments() {
+export async function getAssignments(page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ assignments: any[] }>(GET_ASSIGNMENTS, {});
-    return data.assignments.map((a) => ({
-      id: a.id,
-      subject: a.subjectName ?? "-",
-      class: a.className ?? "-",
-      teacher: a.teacherName ?? "-",
-      dueDate: fmtDate(a.dueDate),
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ assignments: any[] }>(GET_ASSIGNMENTS, { skip, take });
+    return toPaged(
+      data.assignments.map((x) => (({
+        id: x.id,
+        subject: x.subjectName ?? "-",
+        class: x.className ?? "-",
+        teacher: x.teacherName ?? "-",
+        dueDate: fmtDate(x.dueDate),
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getAssignments failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
-export async function getResults() {
+export async function getResults(page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ results: any[] }>(GET_RESULTS, {});
-    return data.results.map((r) => ({
-      id: r.id,
-      subject: r.subjectName ?? "-",
-      class: r.className ?? "-",
-      teacher: r.teacherName ?? "-",
-      student: r.studentName ?? "-",
-      type: r.type ?? "exam",
-      date: fmtDate(r.date),
-      score: r.score,
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ results: any[] }>(GET_RESULTS, { skip, take });
+    return toPaged(
+      data.results.map((x) => (({
+        id: x.id,
+        subject: x.subjectName ?? "-",
+        class: x.className ?? "-",
+        teacher: x.teacherName ?? "-",
+        student: x.studentName ?? "-",
+        type: x.type ?? "exam",
+        date: fmtDate(x.date),
+        score: x.score,
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getResults failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
-export async function getAttendances() {
+export async function getAttendances(page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ attendances: any[] }>(GET_ATTENDANCES, {});
-    return data.attendances.map((a) => ({
-      id: a.id,
-      date: fmtDate(a.date),
-      present: a.present,
-      studentId: a.studentId,
-      lessonId: a.lessonId,
-      student: a.studentName ?? "-",
-      subject: a.subjectName ?? "-",
-      class: a.className ?? "-",
-      teacher: a.teacherName ?? "-",
-    }));
+    const { page: p, skip, take } = pageArgs(page, LARGE_PAGE_SIZE);
+    const data = await client.request<{ attendances: any[] }>(GET_ATTENDANCES, { skip, take });
+    return toPaged(
+      data.attendances.map((x) => (({
+        id: x.id,
+        date: fmtDate(x.date),
+        present: x.present,
+        studentId: x.studentId,
+        lessonId: x.lessonId,
+        student: x.studentName ?? "-",
+        subject: x.subjectName ?? "-",
+        class: x.className ?? "-",
+        teacher: x.teacherName ?? "-",
+      }))),
+      p, LARGE_PAGE_SIZE,
+    );
   } catch (err) {
     console.error("getAttendances failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
-export async function getEvents() {
+export async function getEvents(page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ events: any[] }>(GET_EVENTS, {});
-    return data.events.map((e) => ({
-      id: e.id,
-      title: e.title,
-      class: e.className ?? "-",
-      date: fmtDate(e.startTime),
-      startTime: fmtTime(e.startTime),
-      endTime: fmtTime(e.endTime),
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ events: any[] }>(GET_EVENTS, { skip, take });
+    return toPaged(
+      data.events.map((x) => (({
+        id: x.id,
+        title: x.title,
+        description: x.description ?? "",
+        class: x.className ?? "-",
+        date: fmtDate(x.startTime),
+        startTime: fmtTime(x.startTime),
+        endTime: fmtTime(x.endTime),
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getEvents failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
-export async function getAnnouncements() {
+export async function getAnnouncements(page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ announcements: any[] }>(GET_ANNOUNCEMENTS, {});
-    return data.announcements.map((a) => ({
-      id: a.id,
-      title: a.title,
-      class: a.className ?? "-",
-      date: fmtDate(a.date),
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ announcements: any[] }>(GET_ANNOUNCEMENTS, { skip, take });
+    return toPaged(
+      data.announcements.map((x) => (({
+        id: x.id,
+        title: x.title,
+        body: x.description ?? "",
+        class: x.className ?? "-",
+        date: fmtDate(x.date),
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getAnnouncements failed:", err);
-    return [];
+    return emptyPage();
   }
 }
+
 
 export const TEACHERS_PAGE_SIZE = 10;
 
@@ -545,29 +603,33 @@ export async function getFeeStructures(gradeId?: string) {
   }
 }
 
-export async function getInvoices(status?: string) {
+export async function getInvoices(status?: string, page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ invoices: any[] }>(GET_INVOICES, { status, take: 100 });
-    return data.invoices.map((i) => ({
-      id: i.id,
-      period: i.period,
-      amount: i.amount,
-      amountPaid: i.amountPaid,
-      discountAmount: i.discountAmount,
-      discountReason: i.discountReason,
-      fineAmount: i.fineAmount,
-      fineReason: i.fineReason,
-      payableAmount: i.payableAmount,
-      balance: i.balance,
-      dueDate: fmtDate(i.dueDate),
-      status: i.status,
-      studentId: i.studentId,
-      studentName: i.studentName ?? "-",
-    }));
+    const { page: p, skip, take } = pageArgs(page, LARGE_PAGE_SIZE);
+    const data = await client.request<{ invoices: any[] }>(GET_INVOICES, { status, skip, take });
+    return toPaged(
+      data.invoices.map((x) => (({
+        id: x.id,
+        period: x.period,
+        amount: x.amount,
+        amountPaid: x.amountPaid,
+        discountAmount: x.discountAmount,
+        discountReason: x.discountReason,
+        fineAmount: x.fineAmount,
+        fineReason: x.fineReason,
+        payableAmount: x.payableAmount,
+        balance: x.balance,
+        dueDate: fmtDate(x.dueDate),
+        status: x.status,
+        studentId: x.studentId,
+        studentName: x.studentName ?? "-",
+      }))),
+      p, LARGE_PAGE_SIZE,
+    );
   } catch (err) {
     console.error("getInvoices failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
@@ -743,14 +805,10 @@ export async function getCustomRole(id: string) {
   }
 }
 
-export async function getAuditLogs(params?: {
-  skip?: number;
-  take?: number;
-  userId?: string;
-  action?: string;
-}) {
+export async function getAuditLogs(params?: { page?: number; userId?: string; action?: string }) {
   try {
     const client = getServerClient();
+    const { page, skip, take } = pageArgs(params?.page ?? 1, LARGE_PAGE_SIZE);
     const data = await client.request<{
       auditLogs: {
         id: string;
@@ -763,15 +821,15 @@ export async function getAuditLogs(params?: {
         createdAt: string;
       }[];
     }>(GET_AUDIT_LOGS, {
-      skip: params?.skip ?? 0,
-      take: params?.take ?? 50,
+      skip,
+      take,
       userId: params?.userId,
       action: params?.action,
     });
-    return data.auditLogs;
+    return toPaged(data.auditLogs, page, LARGE_PAGE_SIZE);
   } catch (err) {
     console.error("getAuditLogs failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 export async function getMyChildren() {
@@ -786,24 +844,28 @@ export async function getMyChildren() {
     return [];
   }
 }
-export async function getVehicles() {
+export async function getVehicles(page = 1) {
   try {
     const client = getServerClient();
-    const data = await client.request<{ vehicles: any[] }>(GET_VEHICLES, {});
-    return data.vehicles.map((v) => ({
-      id: v.id,
-      vehicleNumber: v.vehicleNumber,
-      type: v.type,
-      capacity: v.capacity,
-      driverName: v.driverName,
-      route: v.route ?? "-",
-      status: v.status,
-      transportStaffId: v.transportStaffId,
-      transportStaffName: v.transportStaffName ?? "Unassigned",
-    }));
+    const { page: p, skip, take } = pageArgs(page);
+    const data = await client.request<{ vehicles: any[] }>(GET_VEHICLES, { skip, take });
+    return toPaged(
+      data.vehicles.map((x) => (({
+        id: x.id,
+        vehicleNumber: x.vehicleNumber,
+        type: x.type,
+        capacity: x.capacity,
+        driverName: x.driverName,
+        route: x.route ?? "-",
+        status: x.status,
+        transportStaffId: x.transportStaffId,
+        transportStaffName: x.transportStaffName ?? "Unassigned",
+      }))),
+      p,
+    );
   } catch (err) {
     console.error("getVehicles failed:", err);
-    return [];
+    return emptyPage();
   }
 }
 
@@ -867,5 +929,31 @@ export async function getDepartments(search?: string): Promise<DepartmentItem[]>
   } catch (err) {
     console.error("getDepartments failed:", err);
     return [];
+  }
+}
+export async function getExamTitles(className?: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ exams: any[] }>(GET_EXAMS, { skip: 0, take: 500 });
+    const titles = data.exams
+      .filter((e) => !className || e.className === className)
+      .map((e) => e.title as string)
+      .filter(Boolean);
+    return Array.from(new Set(titles)).sort();
+  } catch (err) {
+    console.error("getExamTitles failed:", err);
+    return [];
+  }
+}
+// null means "could not load"; callers treat that as "don't hide anything"
+// (the backend still enforces every permission).
+export async function getMyPermissions(): Promise<string[] | null> {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ myPermissions: string[] }>(MY_PERMISSIONS, {});
+    return data.myPermissions;
+  } catch (err) {
+    console.error("getMyPermissions failed:", err);
+    return null;
   }
 }

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import InputField from "../InputField";
+import PhotoUploadField from "../PhotoUploadField";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { gql } from "@/lib/graphql/gql";
 import { GET_CLASSES, GET_GRADES, GET_PARENT_OPTIONS } from "@/lib/graphql/queries";
@@ -38,6 +39,14 @@ const createSchema = z.object({
   surname: z.string().min(1, { message: "Last name is required" }),
   phone: z.string().optional(),
   address: z.string().optional(),
+  img: z.string().optional(),
+  bloodType: z.string().optional(),
+  sex: z.enum(["MALE", "FEMALE"]).optional(),
+  birthday: z.string().optional(),
+  admissionNumber: z.string().optional(),
+  registrationNumber: z.string().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
   classId: z.string().min(1, { message: "Class is required" }),
   gradeId: z.string().min(1, { message: "Grade is required" }),
   parentId: z.string().min(1, { message: "Parent is required" }),
@@ -48,6 +57,14 @@ const updateSchema = z.object({
   surname: z.string().min(1, { message: "Last name is required" }),
   phone: z.string().optional(),
   address: z.string().optional(),
+  img: z.string().optional(),
+  bloodType: z.string().optional(),
+  sex: z.enum(["MALE", "FEMALE"]).optional(),
+  birthday: z.string().optional(),
+  admissionNumber: z.string().optional(),
+  registrationNumber: z.string().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
   classId: z.string().min(1, { message: "Class is required" }),
   gradeId: z.string().min(1, { message: "Grade is required" }),
   parentId: z.string().min(1, { message: "Parent is required" }),
@@ -68,6 +85,8 @@ const StudentForm = ({
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
@@ -78,12 +97,26 @@ const StudentForm = ({
         surname: data?.name?.split(" ").slice(1).join(" ") ?? "",
         phone: data?.phone === "-" ? "" : data?.phone,
         address: data?.address === "-" ? "" : data?.address,
+        img: data?.img ?? "",
+        bloodType: data?.bloodType ?? "",
+        sex: data?.sex ?? undefined,
+        birthday: data?.birthday ? data.birthday.slice(0, 10) : "",
+        admissionNumber: data?.admissionNumber ?? "",
+        registrationNumber: data?.registrationNumber ?? "",
+        emergencyContactName: data?.emergencyContactName ?? "",
+        emergencyContactPhone: data?.emergencyContactPhone ?? "",
         classId: data?.classId ?? "",
         gradeId: data?.gradeId ?? "",
         parentId: data?.parentId ?? "",
       }
     : undefined,
   });
+
+  // Make sure react-hook-form tracks the uploaded photo URL like a
+  // normal field, since PhotoUploadField isn't a plain <input>.
+  useEffect(() => {
+    register("img");
+  }, [register]);
 
   const [classOptions, setClassOptions] = useState<{ id: string; name: string }[]>([]);
   const [gradeOptions, setGradeOptions] = useState<{ id: string; level: number }[]>([]);
@@ -169,6 +202,29 @@ const StudentForm = ({
         <InputField label="Last Name" name="surname" register={register} error={errors.surname} />
         <InputField label="Phone" name="phone" register={register} error={errors.phone} />
         <InputField label="Address" name="address" register={register} error={errors.address} />
+        <InputField label="Blood Type" name="bloodType" register={register} error={(errors as any).bloodType} />
+        <InputField label="Birthday" name="birthday" type="date" register={register} error={(errors as any).birthday} />
+        <div className="flex flex-col gap-1.5 w-full">
+          <label className="text-xs text-textMuted">Gender</label>
+          <select {...register("sex")} className="field">
+            <option value="">Select gender</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+          </select>
+        </div>
+        <PhotoUploadField
+          label="Photo"
+          value={watch("img")}
+          onChange={(url) => setValue("img", url, { shouldDirty: true })}
+        />
+      </div>
+
+      <span className="text-xs font-semibold uppercase tracking-wide text-textSecondary border-b border-border pb-2">Admission &amp; Emergency Contact</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <InputField label="Admission Number" name="admissionNumber" register={register} error={(errors as any).admissionNumber} />
+        <InputField label="Registration Number" name="registrationNumber" register={register} error={(errors as any).registrationNumber} />
+        <InputField label="Emergency Contact Name" name="emergencyContactName" register={register} error={(errors as any).emergencyContactName} />
+        <InputField label="Emergency Contact Phone" name="emergencyContactPhone" register={register} error={(errors as any).emergencyContactPhone} />
       </div>
 
       <span className="text-xs font-semibold uppercase tracking-wide text-textSecondary border-b border-border pb-2">Enrollment</span>

@@ -7,10 +7,26 @@ import { getSubjects } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import SubjectCard from "@/components/SubjectCard";
+import { parsePage } from "@/lib/pagination";
 const columns = [
   {
     header: "Subject Name",
     accessor: "name",
+  },
+  {
+    header: "Code",
+    accessor: "code",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Type",
+    accessor: "type",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Credit",
+    accessor: "credit",
+    className: "hidden md:table-cell",
   },
   {
     header: "Teachers",
@@ -23,16 +39,28 @@ const columns = [
   },
 ];
 
-const SubjectListPage = async () => {
+const SubjectListPage = async ({ searchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
-  const subjectsData = await getSubjects();
+  const page = parsePage(searchParams?.page);
+  const search = searchParams?.search?.trim() || undefined;
+  const { rows: subjectsData, hasNextPage } = await getSubjects(search, page);
 
   const renderRow = (item) => (
     <tr
       key={item.id}
       className="border-b border-border even:bg-bg/50 text-sm hover:bg-accentLight transition-colors"
     >
-      <td className="flex items-center gap-4 p-4">{item.name}</td>
+      <td className="flex items-center gap-4 p-4">
+        {item.name}
+        {(item.isOptional || item.isFourthSubject) && (
+          <span className="text-[10px] text-textMuted bg-bg rounded-md px-2 py-1">
+            {item.isFourthSubject ? "4th subject" : "Optional"}
+          </span>
+        )}
+      </td>
+      <td className="hidden md:table-cell">{item.code}</td>
+      <td className="hidden md:table-cell">{item.type}</td>
+      <td className="hidden md:table-cell">{item.credit ?? "-"}</td>
       <td className="hidden md:table-cell">{item.teachers.join(",")}</td>
       <td>
         <div className="flex items-center gap-2">
@@ -73,7 +101,7 @@ const SubjectListPage = async () => {
         data={subjectsData}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

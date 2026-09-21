@@ -4,6 +4,7 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import ExamCard from "@/components/ExamCard";
 import { getExams } from "@/lib/graphql/fetchers";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 import { cookies } from "next/headers";
 import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 
@@ -40,10 +41,11 @@ const columns = [
   },
 ];
 
-const ExamListPage = async () => {
+const ExamListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
   const canEdit = role === "admin" || role === "teacher";
-  const examsData = await getExams();
+  const page = parsePage(searchParams?.page);
+  const { rows: examsData, hasNextPage } = await getExams(page);
 
   const renderRow = (item: Exam) => (
     <tr
@@ -68,7 +70,7 @@ const ExamListPage = async () => {
   );
 
   return (
-    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
+    <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">All Exams</h1>
@@ -93,7 +95,7 @@ const ExamListPage = async () => {
         data={examsData}
       />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

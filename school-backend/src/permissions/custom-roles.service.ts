@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService, AuditAction } from '../audit/audit.service';
+import { PermissionsService } from './permissions.service';
 import { CreateCustomRoleInput, UpdateCustomRoleInput, AssignUserRoleInput, SetUserPermissionInput } from './dto/permission.dto';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class CustomRolesService {
   constructor(
     private prisma: PrismaService,
     private auditService: AuditService,
+    private permissionsService: PermissionsService,
   ) {}
 
   listPermissions() {
@@ -111,6 +113,80 @@ export class CustomRolesService {
       action: AuditAction.ROLE_DELETE,
       success: true,
       metadata: { roleId: id, name: role.name },
+    });
+
+    return true;
+  }
+
+  // Every account in the institution with its base role and assigned custom role.
+  async listUserAccess(search?: string) {
+    const users = await this.prisma.user.findMany({
+      where: search ? { username: { contains: search, mode: 'insensitive' } } : {},
+      take: 200,
+      orderBy: { username: 'asc' },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        customRoleId: true,
+        customRole: { select: { name: true } },
+      },
+    });
+    return users.map((u) => ({
+      userId: u.id,
+      username: u.username,
+      baseRole: u.role,
+      customRoleId: u.customRoleId,
+      customRoleName: u.customRole?.name ?? null,
+    }));
+  }
+
+  async getUserAccess(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        customRoleId: true,
+        customRole: { select: { name: true } },
+        userPermissions: { select: { granted: true, permission: { select: { key: true } } } },
+      },
+    });
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    const effective = await this.permissionsService.getPermissionsForUser(user.id, user.role);
+
+    return {
+      userId: user.id,
+      username: user.username,
+      baseRole: user.role,
+      customRoleId: user.customRoleId,
+      customRoleName: user.customRole?.name ?? null,
+      overrides: user.userPermissions.map((up) => ({
+        permissionKey: up.permission.key,
+        granted: up.granted,
+      })),
+      effectivePermissions: Array.from(effective).sort(),
+    };
+  }
+
+  // Puts a permission back to "inherit from the role" (deletes the override).
+  async removeUserPermission(userId: string, permissionKey: string, actorId?: string) {
+    const permission = await this.prisma.permission.findUnique({ where: { key: permissionKey } });
+    if (!permission) throw new NotFoundException(`Permission ${permissionKey} not found`);
+
+    // The tenant extension scopes UserPermission through its user, so this can
+    // only ever touch users of the admin's own institution.
+    await this.prisma.userPermission.deleteMany({
+      where: { userId, permissionId: permission.id },
+    });
+
+    await this.auditService.log({
+      userId: actorId,
+      action: AuditAction.USER_PERMISSION_OVERRIDE_SET,
+      success: true,
+      metadata: { targetUserId: userId, permissionKey, removed: true },
     });
 
     return true;

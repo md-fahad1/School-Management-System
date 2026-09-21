@@ -2,11 +2,14 @@ import dynamic from "next/dynamic";
 import Announcements from "@/components/Announcements";
 import BigCalendar from "@/components/BigCalender";
 import FormModal from "@/components/FormModal";
+import StudentStatusBadge from "@/components/StudentStatusBadge";
+import StudentStatusButton from "@/components/StudentStatusButton";
 
 const Performance = dynamic(() => import("@/components/Performance"), {
   loading: () => <div className="h-72 bg-gray-100 rounded-2xl animate-pulse" />,
 });
-import { getStudent, getClassSchedule } from "@/lib/graphql/fetchers";
+import { getStudent, getClassSchedule, getExamTitles } from "@/lib/graphql/fetchers";
+import StudentDocuments from "@/components/StudentDocuments";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,6 +25,7 @@ const SingleStudentPage = async ({ params }) => {
   }
 
   const schedule = student.classId ? await getClassSchedule(student.classId) : [];
+  const examTitles = await getExamTitles(student.className !== "-" ? student.className : undefined);
 
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
@@ -40,6 +44,10 @@ const SingleStudentPage = async ({ params }) => {
             <div className="w-full sm:w-2/3 flex flex-col justify-between gap-4">
               <div className="flex items-center gap-4">
                 <h1 className="text-xl font-semibold text-white">{student.name}</h1>
+                <StudentStatusBadge status={student.status} />
+                {role === "admin" && (
+                  <StudentStatusButton id={student.id} name={student.name} status={student.status} pill />
+                )}
                 {role === "admin" && (
                   <FormModal
                     table="student"
@@ -143,6 +151,12 @@ const SingleStudentPage = async ({ params }) => {
           </div>
         </div>
 
+        <StudentDocuments
+          studentId={student.id}
+          studentName={student.name}
+          examTitles={examTitles}
+          canIssueCertificate={role === "admin" || role === "principal"}
+        />
         <Performance />
         <Announcements />
       </div>

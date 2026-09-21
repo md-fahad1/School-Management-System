@@ -2,6 +2,7 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import { getVehicles } from "@/lib/graphql/fetchers";
+import { parsePage, type ListSearchParams } from "@/lib/pagination";
 import { cookies } from "next/headers";
 import VehicleCard from "@/components/VehicleCard";
 type Vehicle = {
@@ -31,10 +32,11 @@ const statusColor: Record<string, string> = {
   INACTIVE: "bg-gray-100 text-gray-700",
 };
 
-const VehicleListPage = async () => {
+const VehicleListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
   const canEdit = role === "admin";
-  const vehicles = await getVehicles();
+  const page = parsePage(searchParams?.page);
+  const { rows: vehicles, hasNextPage } = await getVehicles(page);
 
   const renderRow = (item: Vehicle) => (
     <tr
@@ -65,7 +67,7 @@ const VehicleListPage = async () => {
   );
 
   return (
-    <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
+    <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold text-textPrimary">Vehicles</h1>
         {canEdit && <FormModal table="vehicle" type="create" />}
@@ -76,7 +78,7 @@ const VehicleListPage = async () => {
         renderCard={(item) => <VehicleCard item={item} role={role} />}
         data={vehicles}
       />
-      <Pagination />
+      <Pagination page={page} hasNextPage={hasNextPage} />
     </div>
   );
 };

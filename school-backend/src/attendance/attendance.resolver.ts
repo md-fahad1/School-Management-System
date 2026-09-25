@@ -1,8 +1,9 @@
-import { Resolver, Query, Mutation, Args, ID, ResolveField, Parent } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID, Int, ResolveField, Parent } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { AttendanceService } from './attendance.service';
 import { Attendance } from './entities/attendance.entity';
+import { AttendanceSummary } from './entities/attendance-summary.entity';
 import {
   BulkMarkAttendanceInput,
   CreateAttendanceInput,
@@ -33,6 +34,17 @@ export class AttendanceResolver {
   @Query(() => Attendance)
   attendance(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string; role: Role }) {
     return this.attendanceService.findOne(id, user);
+  }
+
+  @Query(() => [AttendanceSummary])
+  @Roles(Role.ADMIN, Role.TEACHER, Role.PRINCIPAL)
+  @RequirePermissions('attendance:view')
+  classAttendanceReport(
+    @Args('classId', { type: () => ID }) classId: string,
+    @Args('month', { type: () => Int }) month: number,
+    @Args('year', { type: () => Int }) year: number,
+  ) {
+    return this.attendanceService.classMonthlyReport(classId, month, year);
   }
 
   @Mutation(() => Attendance)

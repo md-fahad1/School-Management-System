@@ -24,16 +24,16 @@ type Invoice = {
 };
 
 const columns = [
-  { header: "Student", accessor: "studentName" },
-  { header: "Period", accessor: "period", className: "hidden md:table-cell" },
-  { header: "Amount", accessor: "amount", className: "hidden lg:table-cell" },
-  { header: "Discount", accessor: "discountAmount", className: "hidden lg:table-cell" },
-  { header: "Fine", accessor: "fineAmount", className: "hidden lg:table-cell" },
-  { header: "Paid", accessor: "amountPaid", className: "hidden lg:table-cell" },
-  { header: "Balance", accessor: "balance" },
-  { header: "Due", accessor: "dueDate", className: "hidden lg:table-cell" },
-  { header: "Status", accessor: "status" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "student", accessor: "studentName" },
+  { headerKey: "period", accessor: "period", className: "hidden md:table-cell" },
+  { headerKey: "amount", accessor: "amount", className: "hidden lg:table-cell" },
+  { headerKey: "discount", accessor: "discountAmount", className: "hidden lg:table-cell" },
+  { headerKey: "fine", accessor: "fineAmount", className: "hidden lg:table-cell" },
+  { headerKey: "paid", accessor: "amountPaid", className: "hidden lg:table-cell" },
+  { headerKey: "balance", accessor: "balance" },
+  { headerKey: "due", accessor: "dueDate", className: "hidden lg:table-cell" },
+  { headerKey: "status", accessor: "status" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const statusColor: { [key: string]: string } = {

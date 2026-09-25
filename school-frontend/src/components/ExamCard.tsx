@@ -3,6 +3,7 @@ import FormModal from "./FormModal";
 type Exam = {
   id: string;
   subject: string;
+  examType: string;
   class: string;
   teacher: string;
   date: string;
@@ -14,9 +15,14 @@ const ExamCard = ({ item, role }: { item: Exam; role: string }) => {
   return (
     <div className="bg-cardBg border border-border rounded-2xl p-4 shadow-sm flex flex-col gap-4">
       {/* Header: subject + class */}
-      <div>
-        <h3 className="font-semibold text-textPrimary">{item.subject}</h3>
-        <p className="text-xs text-textMuted">{item.class}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-textPrimary">{item.subject}</h3>
+          <p className="text-xs text-textMuted">{item.class}</p>
+        </div>
+        <span className="text-xs px-2 py-1 rounded-full font-medium shrink-0 bg-accentLight text-accent">
+          {item.examType?.replace("_", " ")}
+        </span>
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm">

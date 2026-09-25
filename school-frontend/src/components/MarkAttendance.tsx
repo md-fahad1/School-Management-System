@@ -26,6 +26,16 @@ type StudentRow = {
   classId?: string | null;
 };
 
+type Status = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "LEAVE";
+
+const STATUS_OPTIONS: { value: Status; label: string; active: string }[] = [
+  { value: "PRESENT", label: "Present", active: "bg-success text-white" },
+  { value: "ABSENT", label: "Absent", active: "bg-danger text-white" },
+  { value: "LATE", label: "Late", active: "bg-yellow-500 text-white" },
+  { value: "EXCUSED", label: "Excused", active: "bg-blue-500 text-white" },
+  { value: "LEAVE", label: "Leave", active: "bg-gray-500 text-white" },
+];
+
 // Local calendar date (not UTC), so late-night / early-morning use picks the right day.
 function todayLocal() {
   const d = new Date();
@@ -47,7 +57,7 @@ export default function MarkAttendance() {
 
   const [lessonId, setLessonId] = useState("");
   const [date, setDate] = useState(todayLocal());
-  const [marks, setMarks] = useState<Record<string, boolean>>({});
+  const [marks, setMarks] = useState<Record<string, Status>>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -80,12 +90,12 @@ export default function MarkAttendance() {
       .sort((a, b) => `${a.name} ${a.surname}`.localeCompare(`${b.name} ${b.surname}`));
   }, [students, lesson]);
 
-  // Everyone starts as present; the teacher only flips the absentees.
-  const isPresent = (id: string) => marks[id] ?? true;
-  const presentCount = classStudents.filter((s) => isPresent(s.id)).length;
+  // Everyone starts as present; the teacher only flips the exceptions.
+  const getStatus = (id: string): Status => marks[id] ?? "PRESENT";
+  const presentCount = classStudents.filter((s) => getStatus(s.id) === "PRESENT").length;
 
-  const setAll = (value: boolean) => {
-    const next: Record<string, boolean> = {};
+  const setAll = (value: Status) => {
+    const next: Record<string, Status> = {};
     classStudents.forEach((s) => (next[s.id] = value));
     setMarks(next);
   };
@@ -104,7 +114,7 @@ export default function MarkAttendance() {
         input: {
           lessonId: lesson.id,
           date: `${date}T00:00:00.000Z`,
-          entries: classStudents.map((s) => ({ studentId: s.id, present: isPresent(s.id) })),
+          entries: classStudents.map((s) => ({ studentId: s.id, status: getStatus(s.id) })),
         },
       });
       toast.success(`Attendance saved for ${classStudents.length} students.`);
@@ -124,8 +134,8 @@ export default function MarkAttendance() {
     <div className="bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       <h1 className="text-lg font-semibold text-textPrimary">Mark class attendance</h1>
       <p className="text-xs text-textMuted mt-1">
-        Everyone starts as present. Mark the absentees, then save. Saving again for the same lesson
-        and date updates the earlier marks.
+        Everyone starts as present. Mark exceptions (absent / late / excused / leave), then save.
+        Saving again for the same lesson and date updates the earlier marks.
       </p>
 
       {loading && <p className="text-sm text-textMuted mt-4">Loading...</p>}
@@ -177,20 +187,20 @@ export default function MarkAttendance() {
                       <span className="font-semibold text-success">{presentCount} present</span>
                       {" · "}
                       <span className="font-semibold text-danger">
-                        {classStudents.length - presentCount} absent
+                        {classStudents.length - presentCount} not present
                       </span>
                     </p>
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => setAll(true)}
+                        onClick={() => setAll("PRESENT")}
                         className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-accentLight"
                       >
                         All present
                       </button>
                       <button
                         type="button"
-                        onClick={() => setAll(false)}
+                        onClick={() => setAll("ABSENT")}
                         className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-accentLight"
                       >
                         All absent
@@ -209,7 +219,7 @@ export default function MarkAttendance() {
                       </thead>
                       <tbody>
                         {classStudents.map((s, i) => {
-                          const present = isPresent(s.id);
+                          const status = getStatus(s.id);
                           return (
                             <tr
                               key={s.id}
@@ -220,25 +230,19 @@ export default function MarkAttendance() {
                                 {s.name} {s.surname}
                               </td>
                               <td className="p-3">
-                                <div className="inline-flex rounded-lg overflow-hidden border border-border text-xs">
-                                  <button
-                                    type="button"
-                                    onClick={() => setMarks((m) => ({ ...m, [s.id]: true }))}
-                                    className={`px-3 py-1.5 ${
-                                      present ? "bg-success text-white" : "bg-bg text-textSecondary"
-                                    }`}
-                                  >
-                                    Present
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setMarks((m) => ({ ...m, [s.id]: false }))}
-                                    className={`px-3 py-1.5 ${
-                                      !present ? "bg-danger text-white" : "bg-bg text-textSecondary"
-                                    }`}
-                                  >
-                                    Absent
-                                  </button>
+                                <div className="inline-flex rounded-lg overflow-hidden border border-border text-xs flex-wrap">
+                                  {STATUS_OPTIONS.map((opt) => (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      onClick={() => setMarks((m) => ({ ...m, [s.id]: opt.value }))}
+                                      className={`px-3 py-1.5 ${
+                                        status === opt.value ? opt.active : "bg-bg text-textSecondary"
+                                      }`}
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
                                 </div>
                               </td>
                             </tr>

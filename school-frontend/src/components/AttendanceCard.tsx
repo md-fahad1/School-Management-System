@@ -3,7 +3,7 @@ import FormModal from "./FormModal";
 type AttendanceRow = {
   id: string;
   date: string;
-  present: boolean;
+  status: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "LEAVE";
   studentId: string;
   lessonId: string;
   student: string;
@@ -12,12 +12,20 @@ type AttendanceRow = {
   teacher: string;
 };
 
+const statusColor: Record<string, string> = {
+  PRESENT: "bg-successLight text-success",
+  ABSENT: "bg-dangerLight text-danger",
+  LATE: "bg-yellow-100 text-yellow-700",
+  EXCUSED: "bg-blue-100 text-blue-700",
+  LEAVE: "bg-gray-100 text-gray-700",
+};
+
 const AttendanceCard = ({ item, role }: { item: AttendanceRow; role: string }) => {
   const canEdit = role === "admin" || role === "teacher";
 
   return (
     <div className="bg-cardBg border border-border rounded-2xl p-4 shadow-sm flex flex-col gap-4">
-      {/* Header: student + subject, present/absent badge */}
+      {/* Header: student + subject, status badge */}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold text-textPrimary">{item.student}</h3>
@@ -25,10 +33,10 @@ const AttendanceCard = ({ item, role }: { item: AttendanceRow; role: string }) =
         </div>
         <span
           className={`text-xs px-2 py-1 rounded-full font-medium shrink-0 ${
-            item.present ? "bg-successLight text-success" : "bg-dangerLight text-danger"
+            statusColor[item.status] ?? "bg-gray-100 text-gray-700"
           }`}
         >
-          {item.present ? "Present" : "Absent"}
+          {item.status}
         </span>
       </div>
 

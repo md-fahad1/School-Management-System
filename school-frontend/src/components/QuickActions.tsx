@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   GraduationCap,
@@ -12,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import FormModal from "./FormModal";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const tileClass =
   "group flex h-full w-full flex-col items-start gap-2 rounded-xl border border-border bg-bg/60 p-3 text-left transition hover:-translate-y-0.5 hover:border-accent/40 hover:bg-accentLight hover:shadow-sm";
@@ -33,6 +36,8 @@ const tileBody = (
 );
 
 const QuickActions = () => {
+  const { t } = useTranslation();
+
   return (
     <section
       aria-labelledby="quick-actions-title"
@@ -41,16 +46,16 @@ const QuickActions = () => {
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 id="quick-actions-title" className="text-base font-semibold text-textPrimary">
-            Quick actions
+            {t("quickActions.title")}
           </h2>
-          <p className="text-xs text-textSecondary">Your most common tasks, one click away.</p>
+          <p className="text-xs text-textSecondary">{t("quickActions.subtitle")}</p>
         </div>
         <Link
           href="/help"
           className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-accent hover:underline"
         >
           <HelpCircle size={14} />
-          Need help?
+          {t("quickActions.needHelp")}
         </Link>
       </div>
 
@@ -59,49 +64,49 @@ const QuickActions = () => {
           table="student"
           type="create"
           triggerClassName={tileClass}
-          trigger={tileBody(GraduationCap, "bg-infoLight text-info", "Add student", "Enrol a new student")}
+          trigger={tileBody(GraduationCap, "bg-infoLight text-info", t("quickActions.addStudent"), t("quickActions.addStudentHint"))}
         />
         <FormModal
           table="teacher"
           type="create"
           triggerClassName={tileClass}
-          trigger={tileBody(Users, "bg-warningLight text-warning", "Add teacher", "Create a teacher account")}
+          trigger={tileBody(Users, "bg-warningLight text-warning", t("quickActions.addTeacher"), t("quickActions.addTeacherHint"))}
         />
         <FormModal
           table="parent"
           type="create"
           triggerClassName={tileClass}
-          trigger={tileBody(UserRound, "bg-successLight text-success", "Add parent", "Needed before adding a student")}
+          trigger={tileBody(UserRound, "bg-successLight text-success", t("quickActions.addParent"), t("quickActions.addParentHint"))}
         />
         <FormModal
           table="announcement"
           type="create"
           triggerClassName={tileClass}
-          trigger={tileBody(Megaphone, "bg-accentLight text-accent", "Post announcement", "Share news with everyone")}
+          trigger={tileBody(Megaphone, "bg-accentLight text-accent", t("quickActions.postAnnouncement"), t("quickActions.postAnnouncementHint"))}
         />
         <FormModal
           table="class"
           type="create"
           triggerClassName={tileClass}
-          trigger={tileBody(School, "bg-infoLight text-info", "Add class", "Like “Class 5-A”")}
+          trigger={tileBody(School, "bg-infoLight text-info", t("quickActions.addClass"), t("quickActions.addClassHint"))}
         />
         <FormModal
           table="event"
           type="create"
           triggerClassName={tileClass}
-          trigger={tileBody(CalendarDays, "bg-warningLight text-warning", "Add event", "Sports day, meetings…")}
+          trigger={tileBody(CalendarDays, "bg-warningLight text-warning", t("quickActions.addEvent"), t("quickActions.addEventHint"))}
         />
         <Link href="/list/attendance" className={tileClass}>
-          {tileBody(CalendarCheck, "bg-successLight text-success", "Attendance", "Mark or view today")}
+          {tileBody(CalendarCheck, "bg-successLight text-success", t("quickActions.attendanceTile"), t("quickActions.attendanceHint"))}
         </Link>
         <Link href="/list/fees" className={tileClass}>
-          {tileBody(Wallet, "bg-accentLight text-accent", "Fees", "Invoices and payments")}
+          {tileBody(Wallet, "bg-accentLight text-accent", t("quickActions.feesTile"), t("quickActions.feesHint"))}
         </Link>
       </div>
 
       <p className="mt-4 flex items-center gap-1 text-xs text-textMuted">
         <ChevronRight size={14} />
-        Tip: add a parent first, then add the student and pick that parent.
+        {t("quickActions.tip")}
       </p>
     </section>
   );

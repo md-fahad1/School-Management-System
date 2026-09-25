@@ -18,26 +18,26 @@ type Parent = {
 
 const columns = [
   {
-    header: "Info",
+    headerKey: "info",
     accessor: "info",
   },
   {
-    header: "Student Names",
+    headerKey: "studentNames",
     accessor: "students",
     className: "hidden md:table-cell",
   },
   {
-    header: "Phone",
+    headerKey: "phone",
     accessor: "phone",
     className: "hidden lg:table-cell",
   },
   {
-    header: "Address",
+    headerKey: "address",
     accessor: "address",
     className: "hidden lg:table-cell",
   },
   {
-    header: "Actions",
+    headerKey: "actions",
     accessor: "action",
   },
 ];

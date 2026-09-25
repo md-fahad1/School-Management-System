@@ -12,6 +12,8 @@ import { GET_ME } from "@/lib/graphql/queries";
 import { performLogout } from "@/lib/auth/logout";
 import { useAppSelector } from "@/redux/hooks";
 import { useSidebar } from "./SidebarContext";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 // Academic year .env theke ashe (NEXT_PUBLIC_ACADEMIC_YEAR="2026").
 // Na thakle current year dekhabe. Code change korte hobe na.
@@ -25,6 +27,7 @@ const Navbar = () => {
   const router = useRouter();
   const user = useAppSelector((state) => state.auth.user);
   const { toggleMobile } = useSidebar();
+  const { t } = useTranslation();
 
   // Both server and the very first client render must produce identical
   // markup — so this starts empty (never reads cookies/redux during
@@ -109,9 +112,11 @@ const Navbar = () => {
       <div className="hidden lg:flex items-center gap-2 text-sm text-textSecondary shrink-0 ml-auto mr-2">
         <Calendar size={16} className="text-textMuted" />
         <span>
-          Academic Year: <span className="font-medium text-textPrimary">{ACADEMIC_YEAR}</span>
+          {t("common.academicYear")}: <span className="font-medium text-textPrimary">{ACADEMIC_YEAR}</span>
         </span>
       </div>
+
+      <LanguageSwitcher />
 
       {/* ICONS AND USER */}
       <div className="flex items-center gap-2 md:gap-4 justify-end shrink-0 lg:ml-0 ml-auto">
@@ -179,7 +184,7 @@ const Navbar = () => {
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-sm text-textSecondary hover:bg-accentLight hover:text-textPrimary"
               >
-                My Profile
+                {t("common.myProfile")}
               </Link>
               <Link
                 href="/settings"
@@ -187,7 +192,7 @@ const Navbar = () => {
                 onClick={() => setMenuOpen(false)}
                 className="block px-4 py-2 text-sm text-textSecondary hover:bg-accentLight hover:text-textPrimary"
               >
-                Settings
+                {t("common.settings")}
               </Link>
               <button
                 type="button"
@@ -198,7 +203,7 @@ const Navbar = () => {
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-dangerLight"
               >
-                Logout
+                {t("common.logout")}
               </button>
             </div>
           )}

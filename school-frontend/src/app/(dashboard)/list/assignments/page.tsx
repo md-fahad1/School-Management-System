@@ -18,25 +18,25 @@ type Assignment = {
 
 const columns = [
   {
-    header: "Subject Name",
+    headerKey: "subjectName",
     accessor: "name",
   },
   {
-    header: "Class",
+    headerKey: "class",
     accessor: "class",
   },
   {
-    header: "Teacher",
+    headerKey: "teacher",
     accessor: "teacher",
     className: "hidden md:table-cell",
   },
   {
-    header: "Due Date",
+    headerKey: "dueDate",
     accessor: "dueDate",
     className: "hidden md:table-cell",
   },
   {
-    header: "Actions",
+    headerKey: "actions",
     accessor: "action",
   },
 ];

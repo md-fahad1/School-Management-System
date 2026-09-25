@@ -11,6 +11,8 @@ type Class = {
   id: string;
   name: string;
   capacity: number;
+  section?: string;
+  room?: string;
   grade: number | string;
   supervisor: string;
   department?: string;
@@ -18,31 +20,41 @@ type Class = {
 
 const columns = [
   {
-    header: "Class Name",
+    headerKey: "classLabel",
     accessor: "name",
   },
   {
-    header: "Capacity",
+    headerKey: "section",
+    accessor: "section",
+    className: "hidden md:table-cell",
+  },
+  {
+    headerKey: "room",
+    accessor: "room",
+    className: "hidden md:table-cell",
+  },
+  {
+    headerKey: "capacity",
     accessor: "capacity",
     className: "hidden md:table-cell",
   },
   {
-    header: "Grade",
+    headerKey: "grade",
     accessor: "grade",
     className: "hidden md:table-cell",
   },
   {
-    header: "Supervisor",
+    headerKey: "supervisor",
     accessor: "supervisor",
     className: "hidden md:table-cell",
   },
     {
-    header: "Department",
+    headerKey: "department",
     accessor: "department",
     className: "hidden md:table-cell",
   },
   {
-    header: "Actions",
+    headerKey: "actions",
     accessor: "action",
   },
 ];
@@ -60,6 +72,8 @@ const ClassListPage = async ({ searchParams }: { searchParams?: ListSearchParams
       className="border-b border-border even:bg-bg/50 text-sm hover:bg-accentLight transition-colors"
     >
       <td className="flex items-center gap-4 p-4">{item.name}</td>
+      <td className="hidden md:table-cell">{item.section ?? "-"}</td>
+      <td className="hidden md:table-cell">{item.room ?? "-"}</td>
       <td className="hidden md:table-cell">{item.capacity}</td>
       <td className="hidden md:table-cell">{item.grade}</td>
       <td className="hidden md:table-cell">{item.supervisor}</td>

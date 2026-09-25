@@ -22,13 +22,13 @@ type Teacher = {
 };
 
 const columns = [
-  { header: "Info", accessor: "info" },
-  { header: "Teacher ID", accessor: "teacherId", className: "hidden md:table-cell" },
-  { header: "Subjects", accessor: "subjects", className: "hidden md:table-cell" },
-  { header: "Classes", accessor: "classes", className: "hidden md:table-cell" },
-  { header: "Phone", accessor: "phone", className: "hidden lg:table-cell" },
-  { header: "Address", accessor: "address", className: "hidden lg:table-cell" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "info", accessor: "info" },
+  { headerKey: "teacherId", accessor: "teacherId", className: "hidden md:table-cell" },
+  { headerKey: "subjects", accessor: "subjects", className: "hidden md:table-cell" },
+  { headerKey: "classes", accessor: "classes", className: "hidden md:table-cell" },
+  { headerKey: "phone", accessor: "phone", className: "hidden lg:table-cell" },
+  { headerKey: "address", accessor: "address", className: "hidden lg:table-cell" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const TeacherListPage = async ({

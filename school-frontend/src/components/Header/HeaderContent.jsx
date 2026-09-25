@@ -12,19 +12,22 @@ import {
   X,
   UserCircle,
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/courses", label: "Courses" },
-  { href: "/events", label: "Events" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contact", label: "Contact" },
+  { href: "/", labelKey: "home" },
+  { href: "/courses", labelKey: "courses" },
+  { href: "/events", labelKey: "events" },
+  { href: "/blog", labelKey: "blog" },
+  { href: "/contact", labelKey: "contact" },
 ];
 
 const HeaderContent = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   const isLoggedIn = false; // Change to true to test
   const user = {
@@ -73,7 +76,7 @@ const HeaderContent = () => {
                     : "text-textSecondary hover:text-textPrimary hover:bg-bg"
                 }`}
               >
-                {link.label}
+                {t(`home.${link.labelKey}`)}
               </Link>
             );
           })}
@@ -81,6 +84,7 @@ const HeaderContent = () => {
 
         {/* Auth Buttons (desktop) */}
         <div className="hidden md:flex items-center gap-2">
+          <LanguageSwitcher />
           {isLoggedIn ? (
             <>
               <div className="flex items-center gap-2 text-sm text-textSecondary">
@@ -92,7 +96,7 @@ const HeaderContent = () => {
                 className="flex items-center gap-1.5 border border-border text-textSecondary hover:text-danger hover:border-danger px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 <LogOut size={16} />
-                Logout
+                {t("common.logout")}
               </button>
             </>
           ) : (
@@ -102,14 +106,14 @@ const HeaderContent = () => {
                 className="flex items-center gap-1.5 border border-border text-textPrimary hover:border-primary px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 <LogIn size={16} />
-                Sign In
+                {t("home.signIn")}
               </Link>
               <Link
                 href="/signup"
                 className="flex items-center gap-1.5 bg-primary hover:bg-primaryDark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
               >
                 <UserPlus size={16} />
-                Register
+                {t("home.register")}
               </Link>
             </>
           )}
@@ -121,7 +125,7 @@ const HeaderContent = () => {
           className="md:hidden flex items-center gap-1 bg-primary hover:bg-primaryDark text-white px-3 py-1.5 rounded-lg text-sm font-medium"
         >
           <UserPlus size={14} />
-          Sign Up
+          {t("home.signUp")}
         </Link>
       </div>
 
@@ -142,7 +146,7 @@ const HeaderContent = () => {
                       : "text-textSecondary hover:bg-bg"
                   }`}
                 >
-                  {link.label}
+                  {t(`home.${link.labelKey}`)}
                 </Link>
               );
             })}
@@ -152,7 +156,7 @@ const HeaderContent = () => {
               className="mt-2 flex items-center justify-center gap-1.5 border border-border text-textPrimary px-4 py-2.5 rounded-lg text-sm font-medium"
             >
               <LogIn size={16} />
-              Sign In
+              {t("home.signIn")}
             </Link>
           </nav>
         </div>

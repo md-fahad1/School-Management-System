@@ -12,7 +12,7 @@ import AttendanceCard from "@/components/AttendanceCard";
 type AttendanceRow = {
   id: string;
   date: string;
-  present: boolean;
+  status: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED" | "LEAVE";
   studentId: string;
   lessonId: string;
   student: string;
@@ -22,38 +22,22 @@ type AttendanceRow = {
 };
 
 const columns = [
-  {
-    header: "Student",
-    accessor: "student",
-  },
-  {
-    header: "Subject",
-    accessor: "subject",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Teacher",
-    accessor: "teacher",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Status",
-    accessor: "present",
-  },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  { headerKey: "student", accessor: "student" },
+  { headerKey: "subject", accessor: "subject" },
+  { headerKey: "class", accessor: "class", className: "hidden md:table-cell" },
+  { headerKey: "teacher", accessor: "teacher", className: "hidden md:table-cell" },
+  { headerKey: "date", accessor: "date", className: "hidden md:table-cell" },
+  { headerKey: "status", accessor: "status" },
+  { headerKey: "actions", accessor: "action" },
 ];
+
+const statusColor: Record<string, string> = {
+  PRESENT: "bg-green-100 text-green-700",
+  ABSENT: "bg-red-100 text-red-700",
+  LATE: "bg-yellow-100 text-yellow-700",
+  EXCUSED: "bg-blue-100 text-blue-700",
+  LEAVE: "bg-gray-100 text-gray-700",
+};
 
 const AttendanceListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {
   const role = cookies().get("role")?.value ?? "admin";
@@ -73,10 +57,10 @@ const AttendanceListPage = async ({ searchParams }: { searchParams?: ListSearchP
       <td>
         <span
           className={`px-2 py-1 rounded-full text-xs ${
-            item.present ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+            statusColor[item.status] ?? "bg-gray-100 text-gray-700"
           }`}
         >
-          {item.present ? "Present" : "Absent"}
+          {item.status}
         </span>
       </td>
       <td>
@@ -113,6 +97,12 @@ const AttendanceListPage = async ({ searchParams }: { searchParams?: ListSearchP
                   className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs hover:bg-primaryDark transition-colors"
                 >
                   Mark class
+                </Link>
+                <Link
+                  href="/list/attendance/report"
+                  className="px-3 py-1.5 rounded-lg border border-border text-textSecondary text-xs hover:bg-accentLight transition-colors"
+                >
+                  Monthly report
                 </Link>
                 <FormModal table="attendance" type="create" />
               </>

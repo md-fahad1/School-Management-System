@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import Cookies from "js-cookie";
 import { store } from "./store";
 import { restoreSession } from "./slices/authSlice";
+import { hydrateLanguage } from "./slices/languageSlice";
 import { isExpired } from "@/lib/jwt";
 import { refreshSession } from "@/lib/graphql/client";
 
@@ -19,6 +20,8 @@ function SessionRehydrator({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (didRun.current) return;
     didRun.current = true;
+
+    store.dispatch(hydrateLanguage());
 
     const token = Cookies.get("token");
     const id = Cookies.get("userId");

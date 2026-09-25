@@ -1,4 +1,5 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
+import { AttendanceStatus } from '@prisma/client';
 
 @ObjectType()
 export class Attendance {
@@ -8,10 +9,10 @@ export class Attendance {
   @Field()
   date!: Date;
 
-  @Field()
-  present!: boolean;
+  @Field(() => AttendanceStatus)
+  status!: AttendanceStatus;
 
- @Field(() => ID)
+  @Field(() => ID)
   studentId!: string;
 
   @Field(() => ID)

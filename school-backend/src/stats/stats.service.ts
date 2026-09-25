@@ -70,7 +70,7 @@ export class StatsService {
 
     const records = await this.prisma.attendance.findMany({
       where: { date: { gte: monday, lte: friday } },
-      select: { date: true, present: true },
+      select: { date: true, status: true },
     });
 
     const buckets: Record<string, { present: number; absent: number }> = {
@@ -84,7 +84,7 @@ export class StatsService {
     for (const r of records) {
       const label = DAY_LABELS[r.date.getDay()];
       if (!buckets[label]) continue; // skip weekend records if any exist
-      if (r.present) buckets[label].present++;
+      if (r.status === 'PRESENT') buckets[label].present++;
       else buckets[label].absent++;
     }
 

@@ -12,18 +12,20 @@ type Vehicle = {
   capacity: number;
   driverName: string;
   route: string;
+  routeId?: string;
+  routeName: string;
   status: string;
   transportStaffName: string;
 };
 
 const columns = [
-  { header: "Vehicle No.", accessor: "vehicleNumber" },
-  { header: "Type", accessor: "type", className: "hidden md:table-cell" },
-  { header: "Capacity", accessor: "capacity", className: "hidden md:table-cell" },
-  { header: "Driver", accessor: "driverName" },
-  { header: "Route", accessor: "route", className: "hidden lg:table-cell" },
-  { header: "Status", accessor: "status" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "vehicleNo", accessor: "vehicleNumber" },
+  { headerKey: "type", accessor: "type", className: "hidden md:table-cell" },
+  { headerKey: "capacity", accessor: "capacity", className: "hidden md:table-cell" },
+  { headerKey: "driver", accessor: "driverName" },
+  { headerKey: "route", accessor: "routeName", className: "hidden lg:table-cell" },
+  { headerKey: "status", accessor: "status" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const statusColor: Record<string, string> = {
@@ -47,7 +49,7 @@ const VehicleListPage = async ({ searchParams }: { searchParams?: ListSearchPara
       <td className="hidden md:table-cell">{item.type}</td>
       <td className="hidden md:table-cell">{item.capacity}</td>
       <td>{item.driverName}</td>
-      <td className="hidden lg:table-cell">{item.route}</td>
+      <td className="hidden lg:table-cell">{item.routeName}</td>
       <td>
         <span className={`px-2 py-1 rounded-full text-xs ${statusColor[item.status] ?? "bg-gray-100 text-gray-700"}`}>
           {item.status}

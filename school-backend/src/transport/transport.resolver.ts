@@ -3,7 +3,9 @@ import { UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { TransportService } from './transport.service';
 import { Vehicle } from './entities/vehicle.entity';
+import { Route, Stop } from './entities/route.entity';
 import { CreateVehicleInput, UpdateVehicleInput } from './dto/vehicle.dto';
+import { CreateRouteInput, UpdateRouteInput, CreateStopInput, UpdateStopInput } from './dto/route.dto';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
@@ -65,5 +67,74 @@ export class TransportResolver {
   transportStaffName(@Parent() vehicle: any) {
     const t = vehicle.transportStaff;
     return t ? `${t.name} ${t.surname}` : undefined;
+  }
+
+  @ResolveField('routeName', () => String, { nullable: true })
+  routeName(@Parent() vehicle: any) {
+    return vehicle.assignedRoute?.name;
+  }
+
+  @Query(() => [Route])
+  @Roles(Role.ADMIN, Role.TRANSPORT_STAFF, Role.PRINCIPAL)
+  @RequirePermissions('transport:view')
+  routes() {
+    return this.transportService.findAllRoutes();
+  }
+
+  @Query(() => Route)
+  @Roles(Role.ADMIN, Role.TRANSPORT_STAFF, Role.PRINCIPAL)
+  @RequirePermissions('transport:view')
+  route(@Args('id', { type: () => ID }) id: string) {
+    return this.transportService.findOneRoute(id);
+  }
+
+  @Mutation(() => Route)
+  @Roles(Role.ADMIN)
+  @RequirePermissions('transport:create')
+  createRoute(@Args('input') input: CreateRouteInput, @CurrentUser() user: { id: string }) {
+    return this.transportService.createRoute(input, user.id);
+  }
+
+  @Mutation(() => Route)
+  @Roles(Role.ADMIN)
+  @RequirePermissions('transport:update')
+  updateRoute(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateRouteInput,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.transportService.updateRoute(id, input, user.id);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(Role.ADMIN)
+  @RequirePermissions('transport:delete')
+  removeRoute(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
+    return this.transportService.removeRoute(id, user.id);
+  }
+
+  @Mutation(() => Stop)
+  @Roles(Role.ADMIN)
+  @RequirePermissions('transport:create')
+  createStop(@Args('input') input: CreateStopInput, @CurrentUser() user: { id: string }) {
+    return this.transportService.createStop(input, user.id);
+  }
+
+  @Mutation(() => Stop)
+  @Roles(Role.ADMIN)
+  @RequirePermissions('transport:update')
+  updateStop(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateStopInput,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.transportService.updateStop(id, input, user.id);
+  }
+
+  @Mutation(() => Boolean)
+  @Roles(Role.ADMIN)
+  @RequirePermissions('transport:delete')
+  removeStop(@Args('id', { type: () => ID }) id: string, @CurrentUser() user: { id: string }) {
+    return this.transportService.removeStop(id, user.id);
   }
 }

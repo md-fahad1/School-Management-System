@@ -20,6 +20,12 @@ export class Vehicle {
   @Field({ nullable: true })
   route?: string;
 
+  @Field(() => ID, { nullable: true })
+  routeId?: string;
+
+  @Field({ nullable: true })
+  routeName?: string;
+
   @Field()
   status!: string;
 

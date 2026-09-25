@@ -38,7 +38,7 @@ const AdminPage = async () => {
   <UserCard type="student" count={counts.studentCount} href="/list/students" />
   <UserCard type="teacher" count={counts.teacherCount} href="/list/teachers" />
   <UserCard type="parent" count={counts.parentCount} href="/list/parents" />
-  <UserCard type="admin" count={counts.adminCount} href="/admin/create-staff" linkLabel="Manage staff" />
+  <UserCard type="admin" count={counts.adminCount} href="/admin/create-staff" manageLink />
 </div>
         {/* MIDDLE CHARTS */}
         <div className="flex gap-4 flex-col lg:flex-row mt-2">

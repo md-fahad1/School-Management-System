@@ -6,11 +6,11 @@ import { cookies } from "next/headers";
 import GradeCard from "@/components/GradeCard";
 const columns = [
   {
-    header: "Grade Level",
+    headerKey: "gradeLevel",
     accessor: "level",
   },
   {
-    header: "Actions",
+    headerKey: "actions",
     accessor: "action",
   },
 ];

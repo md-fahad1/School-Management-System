@@ -3,16 +3,22 @@ import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 @ObjectType()
 export class Class {
   @Field(() => ID)
-  id: string;
+  id!: string;
 
   @Field()
-  name: string;
+  name!: string;
 
   @Field(() => Int)
-  capacity: number;
+  capacity!: number;
+
+  @Field({ nullable: true })
+  section?: string;
+
+  @Field({ nullable: true })
+  room?: string;
 
   @Field(() => ID)
-  gradeId: string;
+  gradeId!: string;
 
   @Field(() => ID, { nullable: true })
   supervisorId?: string;

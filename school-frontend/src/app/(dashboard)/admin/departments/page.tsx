@@ -6,11 +6,11 @@ import { getDepartments } from "@/lib/graphql/fetchers";
 import { DEPARTMENT_TYPE_LABEL, type DepartmentItem } from "@/lib/academic";
 
 const columns = [
-  { header: "Name", accessor: "name" },
-  { header: "Code", accessor: "code", className: "hidden md:table-cell" },
-  { header: "Type", accessor: "type", className: "hidden md:table-cell" },
-  { header: "Classes", accessor: "classCount", className: "hidden md:table-cell" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "name", accessor: "name" },
+  { headerKey: "code", accessor: "code", className: "hidden md:table-cell" },
+  { headerKey: "type", accessor: "type", className: "hidden md:table-cell" },
+  { headerKey: "classes", accessor: "classCount", className: "hidden md:table-cell" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const DepartmentsPage = async ({ searchParams }: { searchParams?: { search?: string } }) => {

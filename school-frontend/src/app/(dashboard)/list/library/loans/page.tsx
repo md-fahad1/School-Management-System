@@ -19,13 +19,13 @@ type Loan = {
 };
 
 const columns = [
-  { header: "Book", accessor: "bookTitle" },
-  { header: "Borrower", accessor: "borrowerName", className: "hidden md:table-cell" },
-  { header: "Borrowed", accessor: "borrowedAt", className: "hidden lg:table-cell" },
-  { header: "Due", accessor: "dueDate", className: "hidden lg:table-cell" },
-  { header: "Status", accessor: "status" },
-  { header: "Fine", accessor: "fineAmount", className: "hidden lg:table-cell" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "book", accessor: "bookTitle" },
+  { headerKey: "borrower", accessor: "borrowerName", className: "hidden md:table-cell" },
+  { headerKey: "borrowed", accessor: "borrowedAt", className: "hidden lg:table-cell" },
+  { headerKey: "due", accessor: "dueDate", className: "hidden lg:table-cell" },
+  { headerKey: "status", accessor: "status" },
+  { headerKey: "fine", accessor: "fineAmount", className: "hidden lg:table-cell" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const statusColor: { [key: string]: string } = {

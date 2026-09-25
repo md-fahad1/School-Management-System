@@ -1,47 +1,50 @@
+"use client";
 
 import React from "react";
 import { Users, BookOpen, Calendar, CheckCircle } from "lucide-react";
-
-const features = [
-  {
-    icon: <Users size={36} className="text-[var(--primary)]" />,
-    title: "Student Management",
-    desc: "Easily add, edit, and track student profiles.",
-  },
-  {
-    icon: <BookOpen size={36} className="text-[var(--primary)]" />,
-    title: "Class Scheduling",
-    desc: "Organize classes and timetable seamlessly.",
-  },
-  {
-    icon: <Calendar size={36} className="text-[var(--primary)]" />,
-    title: "Attendance Tracking",
-    desc: "Monitor attendance and generate reports.",
-  },
-  {
-    icon: <CheckCircle size={36} className="text-[var(--primary)]" />,
-    title: "Exam & Results",
-    desc: "Manage exams and publish results efficiently.",
-  },
-];
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const EventPage = () => {
+  const { t } = useTranslation();
+
+  const features = [
+    {
+      icon: <Users size={36} className="text-[var(--primary)]" />,
+      titleKey: "studentManagementTitle",
+      descKey: "studentManagementDesc",
+    },
+    {
+      icon: <BookOpen size={36} className="text-[var(--primary)]" />,
+      titleKey: "classSchedulingTitle",
+      descKey: "classSchedulingDesc",
+    },
+    {
+      icon: <Calendar size={36} className="text-[var(--primary)]" />,
+      titleKey: "attendanceTrackingTitle",
+      descKey: "attendanceTrackingDesc",
+    },
+    {
+      icon: <CheckCircle size={36} className="text-[var(--primary)]" />,
+      titleKey: "examResultsTitle",
+      descKey: "examResultsDesc",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-pink-white-pink px-4 py-12 flex flex-col items-center">
       {/* Main Card */}
       <div className="bg-white shadow-2xl rounded-3xl p-10 sm:p-14 max-w-4xl w-full text-center">
         {/* Header */}
         <h1 className="text-3xl sm:text-5xl font-bold text-[var(--primary)] mb-4">
-          School Events
+          {t("events.title")}
         </h1>
         <p className="text-gray-700 mb-8 max-w-2xl mx-auto text-base sm:text-lg">
-          Manage students, classes, attendance, and more — all in one place.
-          Simplify your school administration with our intuitive dashboard.
+          {t("events.subtitle")}
         </p>
 
         {/* CTA */}
         <button className="bg-[var(--primary)] hover:bg-[var(--secondary)] text-white px-8 py-3 rounded-full font-semibold transition shadow-lg mb-10">
-          Get Started
+          {t("hero.getStarted")}
         </button>
 
         {/* Features Grid */}
@@ -51,9 +54,9 @@ const EventPage = () => {
               {f.icon}
               <div>
                 <h3 className="text-lg font-semibold text-[var(--text)] mb-1">
-                  {f.title}
+                  {t(`events.${f.titleKey}`)}
                 </h3>
-                <p className="text-gray-600 text-sm">{f.desc}</p>
+                <p className="text-gray-600 text-sm">{t(`events.${f.descKey}`)}</p>
               </div>
             </div>
           ))}

@@ -16,11 +16,11 @@ type Row = {
 };
 
 const columns = [
-  { header: "Staff", accessor: "staff" },
-  { header: "Role", accessor: "role", className: "hidden md:table-cell" },
-  { header: "Date", accessor: "date" },
-  { header: "Status", accessor: "status" },
-  { header: "Remarks", accessor: "remarks", className: "hidden md:table-cell" },
+  { headerKey: "staff", accessor: "staff" },
+  { headerKey: "role", accessor: "role", className: "hidden md:table-cell" },
+  { headerKey: "date", accessor: "date" },
+  { headerKey: "status", accessor: "status" },
+  { headerKey: "remarks", accessor: "remarks", className: "hidden md:table-cell" },
 ];
 
 const statusColor: Record<string, string> = {

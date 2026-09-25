@@ -33,6 +33,11 @@ export class SubjectsService {
     const created = await this.prisma.subject.create({
       data: {
         name: input.name,
+        code: input.code,
+        type: input.type,
+        credit: input.credit,
+        isOptional: input.isOptional,
+        isFourthSubject: input.isFourthSubject,
         institutionId: requireInstitutionId(),
         teachers: input.teacherIds
           ? { connect: input.teacherIds.map((id) => ({ id })) }
@@ -56,6 +61,11 @@ export class SubjectsService {
       where: { id },
       data: {
         name: input.name,
+        code: input.code,
+        type: input.type,
+        credit: input.credit,
+        isOptional: input.isOptional,
+        isFourthSubject: input.isFourthSubject,
         teachers: input.teacherIds
           ? { set: input.teacherIds.map((id) => ({ id })) }
           : undefined,

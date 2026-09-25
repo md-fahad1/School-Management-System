@@ -25,6 +25,11 @@ export class CreateVehicleInput {
   @IsString()
   route?: string;
 
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsString()
+  routeId?: string;
+
   @Field({ nullable: true })
   @IsOptional()
   @IsString()

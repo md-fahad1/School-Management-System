@@ -6,20 +6,23 @@ import { ChevronDown } from "lucide-react";
 import MenuLink, { isPathActive } from "./MenuLink";
 import MenuIcon from "./MenuIcon";
 import { useSidebar } from "./SidebarContext";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
-type MenuItem = { icon: string; label: string; href: string };
+type MenuItem = { icon: string; labelKey: string; href: string };
 
 const MenuGroup = ({
   icon,
-  label,
+  labelKey,
   childrenItems,
 }: {
   icon: string;
-  label: string;
+  labelKey: string;
   childrenItems: MenuItem[];
 }) => {
   const pathname = usePathname();
   const { mobileOpen } = useSidebar();
+  const { t } = useTranslation();
+  const label = t(`menu.${labelKey}`);
   const labelClass = mobileOpen ? "block" : "hidden lg:block";
   const justifyClass = mobileOpen ? "justify-between" : "justify-center lg:justify-between";
   const hasActiveChild = childrenItems.some((c) => isPathActive(pathname, c.href));
@@ -58,7 +61,7 @@ const MenuGroup = ({
           }`}
         >
           {childrenItems.map((child) => (
-            <MenuLink key={child.label} item={child} nested />
+            <MenuLink key={child.labelKey} item={child} nested />
           ))}
         </div>
       )}

@@ -1,8 +1,16 @@
 "use client";
 import React, { useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
-// Blog categories
-const categories = ["All", "Notices", "Events", "Academic", "Sports"];
+// Blog categories — value stays fixed in English (used for filtering &
+// matched against blog.category below); only the displayed label is translated.
+const categories = [
+  { value: "All", labelKey: "categoryAll" },
+  { value: "Notices", labelKey: "categoryNotices" },
+  { value: "Events", labelKey: "categoryEvents" },
+  { value: "Academic", labelKey: "categoryAcademic" },
+  { value: "Sports", labelKey: "categorySports" },
+];
 
 // Dummy blog data
 const blogs = [
@@ -105,6 +113,7 @@ const blogs = [
 ];
 
 const BlogPage = () => {
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -129,10 +138,10 @@ const BlogPage = () => {
       {/* Hero Section */}
       <section className="bg-white text-black py-16 text-center px-4">
         <h1 className="text-4xl md:text-5xl font-bold mb-3">
-          Dream Education Blog
+          {t("blog.pageTitle")}
         </h1>
         <p className="text-lg md:text-xl">
-          Stay informed with updates for Students, Parents, and Teachers
+          {t("blog.pageSubtitle")}
         </p>
       </section>
 
@@ -143,25 +152,25 @@ const BlogPage = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search blog posts..."
+            placeholder={t("blog.searchPlaceholder")}
             className="w-full md:w-1/2 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <button
-                key={cat}
+                key={cat.value}
                 onClick={() => {
-                  setSelectedCategory(cat);
+                  setSelectedCategory(cat.value);
                   setCurrentPage(1);
                 }}
                 className={`px-4 py-1 rounded-full text-sm font-medium border transition ${
-                  selectedCategory === cat
+                  selectedCategory === cat.value
                     ? "bg-blue-600 text-white border-blue-600"
                     : "border-gray-300 text-gray-700 hover:bg-blue-100 hover:text-blue-700"
                 }`}
               >
-                {cat}
+                {t(`blog.${cat.labelKey}`)}
               </button>
             ))}
           </div>
@@ -188,8 +197,7 @@ const BlogPage = () => {
                 </div>
                 <h2 className="text-lg font-semibold mb-1">{blog.title}</h2>
                 <p className="text-sm text-gray-600">
-                  A quick summary of this blog post goes here to give readers a
-                  glimpse of what it's about.
+                  {t("blog.summaryPlaceholder")}
                 </p>
               </div>
             </div>

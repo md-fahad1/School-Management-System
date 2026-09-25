@@ -19,30 +19,30 @@ type Event = {
 
 const columns = [
   {
-    header: "Title",
+    headerKey: "title",
     accessor: "title",
   },
   {
-    header: "Class",
+    headerKey: "class",
     accessor: "class",
   },
   {
-    header: "Date",
+    headerKey: "date",
     accessor: "date",
     className: "hidden md:table-cell",
   },
   {
-    header: "Start Time",
+    headerKey: "startTime",
     accessor: "startTime",
     className: "hidden md:table-cell",
   },
   {
-    header: "End Time",
+    headerKey: "endTime",
     accessor: "endTime",
     className: "hidden md:table-cell",
   },
   {
-    header: "Actions",
+    headerKey: "actions",
     accessor: "action",
   },
 ];

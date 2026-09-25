@@ -131,6 +131,31 @@ export const UPDATE_SUBJECT = gql`
   }
 `;
 
+export const GET_CLASS_OPTIONS = gql`
+  query ClassOptions {
+    classes(take: 200) {
+      id
+      name
+    }
+  }
+`;
+
+export const GET_CLASS_ATTENDANCE_REPORT = gql`
+  query ClassAttendanceReport($classId: ID!, $month: Int!, $year: Int!) {
+    classAttendanceReport(classId: $classId, month: $month, year: $year) {
+      studentId
+      studentName
+      totalDays
+      presentDays
+      absentDays
+      lateDays
+      excusedDays
+      leaveDays
+      percentage
+    }
+  }
+`;
+
 export const GET_TEACHER_OPTIONS = gql`
   query TeacherOptions {
     teachers(take: 200) {
@@ -259,6 +284,8 @@ export const GET_CLASSES = gql`
       id
       name
       capacity
+      section
+      room
       gradeId
       gradeLevel
       supervisorId
@@ -293,6 +320,7 @@ export const GET_EXAMS = gql`
     exams(skip: $skip, take: $take) {
       id
       title
+      examType
       startTime
       endTime
       subjectName
@@ -342,7 +370,7 @@ export const GET_ATTENDANCES = gql`
     attendances(skip: $skip, take: $take) {
       id
      date
-      present
+      status
       studentId
       lessonId
       studentName
@@ -1007,9 +1035,86 @@ export const GET_VEHICLES = gql`
       capacity
       driverName
       route
+      routeId
+      routeName
       status
       transportStaffId
       transportStaffName
+    }
+  }
+`;
+
+export const GET_ROUTE_OPTIONS = gql`
+  query RouteOptions {
+    routes {
+      id
+      name
+    }
+  }
+`;
+
+export const GET_ROUTES = gql`
+  query Routes {
+    routes {
+      id
+      name
+      description
+      stops {
+        id
+        name
+        order
+        time
+        routeId
+      }
+    }
+  }
+`;
+
+export const GET_ROUTE = gql`
+  query RouteDetail($id: ID!) {
+    route(id: $id) {
+      id
+      name
+      description
+      stops {
+        id
+        name
+        order
+        time
+        routeId
+      }
+    }
+  }
+`;
+
+export const CREATE_ROUTE = gql`
+  mutation CreateRoute($input: CreateRouteInput!) {
+    createRoute(input: $input) {
+      id
+    }
+  }
+`;
+
+export const UPDATE_ROUTE = gql`
+  mutation UpdateRoute($id: ID!, $input: UpdateRouteInput!) {
+    updateRoute(id: $id, input: $input) {
+      id
+    }
+  }
+`;
+
+export const CREATE_STOP = gql`
+  mutation CreateStop($input: CreateStopInput!) {
+    createStop(input: $input) {
+      id
+    }
+  }
+`;
+
+export const UPDATE_STOP = gql`
+  mutation UpdateStop($id: ID!, $input: UpdateStopInput!) {
+    updateStop(id: $id, input: $input) {
+      id
     }
   }
 `;
@@ -1361,7 +1466,7 @@ export const BULK_MARK_ATTENDANCE = gql`
   mutation BulkMarkAttendance($input: BulkMarkAttendanceInput!) {
     bulkMarkAttendance(input: $input) {
       id
-      present
+      status
     }
   }
 `;

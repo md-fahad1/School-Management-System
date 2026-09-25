@@ -12,10 +12,10 @@ type FeeStructure = {
 };
 
 const columns = [
-  { header: "Name", accessor: "name" },
-  { header: "Amount", accessor: "amount" },
-  { header: "Frequency", accessor: "frequency", className: "hidden md:table-cell" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "name", accessor: "name" },
+  { headerKey: "amount", accessor: "amount" },
+  { headerKey: "frequency", accessor: "frequency", className: "hidden md:table-cell" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const FeesListPage = async () => {

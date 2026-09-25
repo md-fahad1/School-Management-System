@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import InputField from "../InputField";
 import { getClientGqlClient } from "@/lib/graphql/client";
-import { CREATE_VEHICLE, UPDATE_VEHICLE } from "@/lib/graphql/queries";
+import { CREATE_VEHICLE, UPDATE_VEHICLE, GET_ROUTE_OPTIONS } from "@/lib/graphql/queries";
 import { getErrorMessage } from "@/lib/errors";
 
 const schema = z.object({
@@ -15,6 +15,7 @@ const schema = z.object({
   capacity: z.coerce.number().int().min(1, { message: "Capacity must be at least 1" }),
   driverName: z.string().min(1, { message: "Driver name is required" }),
   route: z.string().optional(),
+  routeId: z.string().optional(),
   status: z.string().optional(),
 });
 
@@ -41,22 +42,39 @@ const VehicleForm = ({
       capacity: data?.capacity ?? undefined,
       driverName: data?.driverName ?? "",
       route: data?.route ?? "",
+      routeId: data?.routeId ?? "",
       status: data?.status ?? "ACTIVE",
     },
   });
 
+  const [routeOptions, setRouteOptions] = useState<{ id: string; name: string }[]>([]);
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const client = await getClientGqlClient();
+        const result = await client.request<{ routes: { id: string; name: string }[] }>(
+          GET_ROUTE_OPTIONS
+        );
+        setRouteOptions(result.routes);
+      } catch (err) {
+        console.error("Failed to load route options:", err);
+      }
+    })();
+  }, []);
 
   const onSubmit = handleSubmit(async (formData) => {
     setSubmitError("");
     setSubmitting(true);
     try {
       const client = await getClientGqlClient();
+      const input = { ...formData, routeId: formData.routeId || undefined };
       if (type === "create") {
-        await client.request(CREATE_VEHICLE, { input: formData });
+        await client.request(CREATE_VEHICLE, { input });
       } else {
-        await client.request(UPDATE_VEHICLE, { id: data.id, input: formData });
+        await client.request(UPDATE_VEHICLE, { id: data.id, input });
       }
       onSuccess();
     } catch (err: any) {
@@ -79,7 +97,18 @@ const VehicleForm = ({
         <InputField label="Type (Bus / Van)" name="type" register={register} error={errors.type} />
         <InputField label="Capacity" name="capacity" type="number" register={register} error={errors.capacity} />
         <InputField label="Driver name" name="driverName" register={register} error={errors.driverName} />
-        <InputField label="Route" name="route" register={register} error={errors.route} />
+
+        <div className="flex flex-col gap-1.5 w-full">
+          <label className="text-xs text-textMuted">Route</label>
+          <select {...register("routeId")} className="field">
+            <option value="">No route assigned</option>
+            {routeOptions.map((r) => (
+              <option value={r.id} key={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Status</label>

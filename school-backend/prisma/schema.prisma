@@ -284,6 +284,8 @@ model Vehicle {
 
   transportStaffId String?
   transportStaff   TransportStaff? @relation(fields: [transportStaffId], references: [id])
+  routeId          String?
+  assignedRoute    Route?          @relation(fields: [routeId], references: [id])
   institutionId    String
   institution      Institution     @relation(fields: [institutionId], references: [id])
   createdAt        DateTime        @default(now())
@@ -292,7 +294,38 @@ model Vehicle {
   @@unique([institutionId, vehicleNumber])
   @@index([institutionId])
   @@index([transportStaffId])
+  @@index([routeId])
   @@map("vehicles")
+}
+
+model Route {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  vehicles      Vehicle[]
+  stops         Stop[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([institutionId, name])
+  @@index([institutionId])
+  @@map("routes")
+}
+
+model Stop {
+  id        String   @id @default(uuid())
+  name      String
+  order     Int      @default(0)
+  time      String?
+  routeId   String
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([routeId])
+  @@map("stops")
 }
 
 model Teacher {
@@ -408,6 +441,8 @@ model Class {
   id           String      @id @default(uuid())
   name         String
   capacity     Int
+  section      String?
+  room         String?
 
   gradeId String
   grade   Grade  @relation(fields: [gradeId], references: [id])
@@ -430,9 +465,20 @@ model Class {
   @@map("classes")
 }
 
+enum SubjectType {
+  THEORY
+  PRACTICAL
+  LAB
+}
+
 model Subject {
-  id   String @id @default(uuid())
-  name String
+  id               String      @id @default(uuid())
+  name             String
+  code             String?
+  type             SubjectType @default(THEORY)
+  credit           Float?
+  isOptional       Boolean     @default(false)
+  isFourthSubject  Boolean     @default(false)
 
   teachers      Teacher[]
   lessons       Lesson[]
@@ -470,9 +516,18 @@ model Lesson {
   @@map("lessons")
 }
 
+enum ExamType {
+  CLASS_TEST
+  QUIZ
+  ASSIGNMENT_TEST
+  MIDTERM
+  FINAL
+}
+
 model Exam {
   id        String   @id @default(uuid())
   title     String
+  examType  ExamType @default(CLASS_TEST)
   fullMarks Int      @default(100)
   passMarks Int      @default(33)
   startTime DateTime
@@ -523,10 +578,18 @@ model Result {
   @@map("results")
 }
 
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+  LEAVE
+}
+
 model Attendance {
-  id      String   @id @default(uuid())
-  date    DateTime
-  present Boolean
+  id     String           @id @default(uuid())
+  date   DateTime
+  status AttendanceStatus @default(PRESENT)
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -886,6 +949,7 @@ model Institution {
   academicYears AcademicYear[]
    departments   Department[]
   customRoles   CustomRole[]
+  routes        Route[]
 
   @@map("institutions")
 }

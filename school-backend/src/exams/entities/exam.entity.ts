@@ -1,4 +1,5 @@
 import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
+import { ExamType } from '@prisma/client';
 
 @ObjectType()
 export class Exam {
@@ -7,6 +8,9 @@ export class Exam {
 
   @Field()
   title!: string;
+
+  @Field(() => ExamType)
+  examType!: ExamType;
 
   @Field(() => Int)
   fullMarks!: number;

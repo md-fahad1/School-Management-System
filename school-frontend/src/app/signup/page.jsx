@@ -9,10 +9,12 @@ import { roleHome } from "@/lib/roleHome";
 import { useAppDispatch } from "@/redux/hooks";
 import { setCredentials } from "@/redux/slices/authSlice";
 import { getErrorMessage } from "@/lib/errors";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const SignUp = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   const [form, setForm] = useState({
     username: "",
@@ -42,7 +44,7 @@ const SignUp = () => {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Sign up failed");
+      if (!res.ok) throw new Error(data.error || t("auth.signUpFailed"));
 
       const { accessToken, id, username, role } = data;
 
@@ -56,7 +58,7 @@ const SignUp = () => {
       router.push(roleHome(role));
     } catch (err) {
       setError(
-        getErrorMessage(err, "Something went wrong. Please try again.")
+        getErrorMessage(err, t("auth.signUpError"))
       );
     } finally {
       setLoading(false);
@@ -75,11 +77,10 @@ const SignUp = () => {
           </div>
           <img src="/img/img3.svg" alt="Illustration" className="w-full h-auto max-w-xs mx-auto" />
           <h2 className="text-2xl font-bold mt-6 text-white">
-            Welcome to Dream Edu
+            {t("auth.welcomeTitle")}
           </h2>
           <p className="mt-2 text-primaryLight text-sm">
-            Platform designed to help organizations, educators, and learners
-            manage, deliver, and track learning and training activities.
+            {t("auth.platformDescription")}
           </p>
         </div>
       </div>
@@ -90,10 +91,10 @@ const SignUp = () => {
             <GraduationCap className="text-white" size={24} />
           </div>
           <h2 className="text-2xl font-bold text-center text-textPrimary mb-1">
-            Create an Account
+            {t("auth.createAccount")}
           </h2>
           <p className="text-center text-sm text-textMuted mb-6">
-            Fill in your details to get started
+            {t("auth.createAccountSubtitle")}
           </p>
 
           {/* Student accounts are created by an admin, not self-signup,
@@ -101,13 +102,13 @@ const SignUp = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block mb-1.5 text-textSecondary text-sm">First Name</label>
+                <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.firstName")}</label>
                 <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                   <User className="text-textMuted mr-2" size={16} />
                   <input
                     type="text"
                     name="name"
-                    placeholder="First name"
+                    placeholder={t("auth.firstNamePlaceholder")}
                     className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                     value={form.name}
                     onChange={handleChange}
@@ -116,12 +117,12 @@ const SignUp = () => {
                 </div>
               </div>
               <div>
-                <label className="block mb-1.5 text-textSecondary text-sm">Last Name</label>
+                <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.lastName")}</label>
                 <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                   <input
                     type="text"
                     name="surname"
-                    placeholder="Last name"
+                    placeholder={t("auth.lastNamePlaceholder")}
                     className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                     value={form.surname}
                     onChange={handleChange}
@@ -132,13 +133,13 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-textSecondary text-sm">Username</label>
+              <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.username")}</label>
               <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                 <User className="text-textMuted mr-2" size={16} />
                 <input
                   type="text"
                   name="username"
-                  placeholder="Choose a username"
+                  placeholder={t("auth.usernamePlaceholder")}
                   className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                   value={form.username}
                   onChange={handleChange}
@@ -148,13 +149,13 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-textSecondary text-sm">Email</label>
+              <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.email")}</label>
               <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                 <Mail className="text-textMuted mr-2" size={16} />
                 <input
                   type="email"
                   name="email"
-                  placeholder="Enter your email"
+                  placeholder={t("auth.emailPlaceholder")}
                   className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                   value={form.email}
                   onChange={handleChange}
@@ -164,13 +165,13 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-textSecondary text-sm">Password</label>
+              <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.passwordLabel")}</label>
               <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                 <Lock className="text-textMuted mr-2" size={16} />
                 <input
                   type="password"
                   name="password"
-                  placeholder="At least 6 characters, letters + numbers"
+                  placeholder={t("auth.passwordHint")}
                   className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                   value={form.password}
                   onChange={handleChange}
@@ -180,18 +181,18 @@ const SignUp = () => {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-textSecondary text-sm">Institution code</label>
+              <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.institutionCode")}</label>
               <input
                 type="text"
                 name="institutionSlug"
-                placeholder="e.g. demo-school"
+                placeholder={t("auth.institutionCodePlaceholder")}
                 className="w-full px-3 py-2.5 bg-bg border border-border rounded-lg outline-none text-sm focus:border-accent focus:ring-2 focus:ring-accentLight transition-colors"
                 value={form.institutionSlug}
                 onChange={handleChange}
                 required
               />
               <p className="mt-1 text-xs text-textMuted">
-                Ask your school for its code. Sign-up here is for parents; teachers and staff get accounts from their admin.
+                {t("auth.institutionCodeHint")}
               </p>
             </div>
 
@@ -202,14 +203,14 @@ const SignUp = () => {
               className="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primaryDark transition-colors shadow-sm disabled:opacity-60"
               disabled={loading}
             >
-              {loading ? "Creating account..." : "Sign Up"}
+              {loading ? t("auth.creatingAccount") : t("auth.signUpButton") /* fallback below */}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-textMuted">
-            Already have an account?{" "}
+            {t("auth.alreadyHaveAccount")}{" "}
             <Link href="/signin" className="text-accent hover:underline font-medium">
-              Sign In
+              {t("auth.signInLink")}
             </Link>
           </p>
         </div>

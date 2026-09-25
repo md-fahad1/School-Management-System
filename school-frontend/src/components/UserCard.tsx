@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { GraduationCap, Users, UserRound, ShieldCheck, ChevronRight } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const iconMap: { [key: string]: React.ElementType } = {
   student: GraduationCap,
@@ -15,18 +18,29 @@ const badgeMap: { [key: string]: string } = {
   admin: "bg-accentLight text-accent",
 };
 
+// type -> translation key under the "dashboard" namespace, for the "Total ..." line.
+const totalKeyMap: { [key: string]: string } = {
+  student: "totalStudents",
+  teacher: "totalTeachers",
+  parent: "totalParents",
+  admin: "totalAdmins",
+};
+
 type Props = {
   type: string;
   count?: number;
   /** Dile poura card ta click-able hoy. Na dile ager moto sadharon card. */
   href?: string;
-  /** Card er niche ja lekha dekhabe (default: "View all"). */
-  linkLabel?: string;
+  /** true dile "Manage staff" dekhabe, na dile default "View all". */
+  manageLink?: boolean;
 };
 
-const UserCard = ({ type, count = 0, href, linkLabel = "View all" }: Props) => {
+const UserCard = ({ type, count = 0, href, manageLink = false }: Props) => {
+  const { t } = useTranslation();
   const Icon = iconMap[type] ?? GraduationCap;
   const badgeClass = badgeMap[type] ?? "bg-infoLight text-info";
+  const totalLabel = t(`dashboard.${totalKeyMap[type] ?? "totalStudents"}`);
+  const linkLabel = manageLink ? t("dashboard.manageStaff") : t("dashboard.viewAll");
   const base =
     "rounded-2xl bg-cardBg border border-border p-4 flex-1 min-w-[150px] shadow-sm";
 
@@ -47,7 +61,7 @@ const UserCard = ({ type, count = 0, href, linkLabel = "View all" }: Props) => {
       <h1 className="text-2xl font-semibold mt-3 text-textPrimary">
         {count.toLocaleString()}
       </h1>
-      <h2 className="capitalize text-sm text-textSecondary mt-0.5">Total {type}s</h2>
+      <h2 className="capitalize text-sm text-textSecondary mt-0.5">{totalLabel}</h2>
       {href && <p className="text-xs font-medium text-accent mt-2">{linkLabel}</p>}
     </>
   );

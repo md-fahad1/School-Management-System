@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { GET_ME } from "@/lib/graphql/queries";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const WelcomeCard = () => {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [avatarImg, setAvatarImg] = useState(null);
@@ -36,7 +38,7 @@ const WelcomeCard = () => {
         className="rounded-full ring-2 ring-primaryLight w-14 h-14 object-cover shrink-0"
       />
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-textMuted">Welcome back!</p>
+        <p className="text-xs text-textMuted">{t("dashboard.welcomeBack")}</p>
         <h2 className="text-base font-semibold text-textPrimary truncate">
           {name || "..."}
         </h2>
@@ -46,7 +48,7 @@ const WelcomeCard = () => {
         href="/profile"
         className="hidden sm:inline-flex items-center text-xs font-medium text-white bg-primary hover:bg-primaryDark px-3 py-2 rounded-lg transition-colors shrink-0"
       >
-        View Profile
+        {t("dashboard.viewProfile")}
       </Link>
     </div>
   );

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { performLogout } from "@/lib/auth/logout";
 import { useSidebar } from "./SidebarContext";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import MenuIcon from "./MenuIcon";
 
 type MenuItem = {
   icon: string; // icon name, see MenuIcon.tsx
-  label: string;
+  labelKey: string; // translation key under the "menu" namespace
   href: string;
   action?: string;
   exact?: boolean; // true = highlight only on this exact URL (used by Dashboard)
@@ -21,6 +22,8 @@ const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }
   const pathname = usePathname();
   const router = useRouter();
   const { mobileOpen, closeMobile } = useSidebar();
+  const { t } = useTranslation();
+  const label = t(`menu.${item.labelKey}`);
   const labelClass = mobileOpen ? "block" : "hidden lg:block";
   const justifyClass = mobileOpen ? "justify-start" : "justify-center lg:justify-start";
   const isActive = isPathActive(pathname, item.href, item.exact);
@@ -30,7 +33,7 @@ const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }
     return (
       <button
         type="button"
-        title={item.label}
+        title={label}
         onClick={async () => {
           closeMobile();
           await performLogout();
@@ -39,7 +42,7 @@ const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }
         className={`flex items-center ${justifyClass} gap-4 py-2.5 px-3 rounded-lg transition-colors text-sidebarText hover:bg-sidebarBgHover hover:text-sidebarTextActive w-full`}
       >
         <MenuIcon name={item.icon} size={iconSize} />
-        <span className={labelClass}>{item.label}</span>
+        <span className={labelClass}>{label}</span>
       </button>
     );
   }
@@ -47,7 +50,7 @@ const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }
   return (
     <Link
       href={item.href}
-      title={item.label}
+      title={label}
       aria-current={isActive ? "page" : undefined}
       onClick={closeMobile}
       className={`flex items-center ${justifyClass} gap-4 rounded-lg transition-colors ${
@@ -59,7 +62,7 @@ const MenuLink = ({ item, nested = false }: { item: MenuItem; nested?: boolean }
       }`}
     >
       <MenuIcon name={item.icon} size={iconSize} />
-      <span className={labelClass}>{item.label}</span>
+      <span className={labelClass}>{label}</span>
     </Link>
   );
 };

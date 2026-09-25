@@ -7,11 +7,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { RESET_PASSWORD } from "@/lib/graphql/queries";
 import PasswordInput from "@/components/PasswordInput";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const ResetPasswordForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const { t } = useTranslation();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,7 +26,7 @@ const ResetPasswordForm = () => {
     setError("");
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords don't match.");
+      setError(t("auth.passwordsDontMatch"));
       return;
     }
 
@@ -39,8 +41,7 @@ const ResetPasswordForm = () => {
       setTimeout(() => router.push("/signin"), 2500);
     } catch (err) {
       setError(
-        err?.response?.errors?.[0]?.message ??
-          "This reset link is invalid or has expired. Please request a new one."
+        err?.response?.errors?.[0]?.message ?? t("auth.resetLinkInvalid")
       );
     } finally {
       setLoading(false);
@@ -51,12 +52,12 @@ const ResetPasswordForm = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg p-6">
         <div className="text-center max-w-md bg-cardBg rounded-2xl shadow-sm border border-border p-8">
-          <h2 className="text-2xl font-bold text-textPrimary mb-2">Invalid Link</h2>
+          <h2 className="text-2xl font-bold text-textPrimary mb-2">{t("auth.invalidLinkTitle")}</h2>
           <p className="text-textMuted mb-6">
-            This password reset link is missing its token. Please request a new one.
+            {t("auth.invalidLinkBody")}
           </p>
           <Link href="/forgot-password" className="text-accent hover:underline font-medium">
-            Request a new reset link
+            {t("auth.requestNewLink")}
           </Link>
         </div>
       </div>
@@ -75,10 +76,10 @@ const ResetPasswordForm = () => {
           </div>
           <img src="/img/img3.svg" alt="Illustration" className="w-full h-auto max-w-xs mx-auto" />
           <h2 className="text-2xl font-bold mt-6 text-white">
-            Choose a new password
+            {t("auth.chooseNewPasswordTitle")}
           </h2>
           <p className="mt-2 text-primaryLight text-sm">
-            Make it something you haven&apos;t used before.
+            {t("auth.chooseNewPasswordSubtitle")}
           </p>
         </div>
       </div>
@@ -89,26 +90,25 @@ const ResetPasswordForm = () => {
             <GraduationCap className="text-white" size={24} />
           </div>
           <h2 className="text-2xl font-bold text-center text-textPrimary mb-6">
-            Reset Password
+            {t("auth.resetPasswordTitle")}
           </h2>
 
           {success ? (
             <div className="text-center space-y-4">
               <p className="text-textSecondary">
-                Your password has been reset. All existing sessions have been signed out for
-                security. Redirecting you to sign in...
+                {t("auth.resetSuccessMessage")}
               </p>
             </div>
           ) : (
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div>
-                <label className="block mb-1.5 text-textSecondary text-sm">New Password</label>
+                <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.newPasswordLabel")}</label>
                 <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                   <Lock className="text-textMuted mr-2" size={18} />
                  <PasswordInput
   autoComplete="new-password"
   name="password"
-                    placeholder="At least 6 characters, letters + numbers"
+                    placeholder={t("auth.passwordHint")}
                     className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -118,12 +118,12 @@ const ResetPasswordForm = () => {
               </div>
 
               <div>
-                <label className="block mb-1.5 text-textSecondary text-sm">Confirm Password</label>
+                <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.confirmPasswordLabel")}</label>
                 <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                   <Lock className="text-textMuted mr-2" size={18} />
                   <input
                     type="password"
-                    placeholder="Re-enter your new password"
+                    placeholder={t("auth.confirmPasswordPlaceholder")}
                     className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -139,14 +139,14 @@ const ResetPasswordForm = () => {
                 disabled={loading}
                 className="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primaryDark transition-colors shadow-sm disabled:opacity-60"
               >
-                {loading ? "Resetting..." : "Reset Password"}
+                {loading ? t("auth.resetting") : t("auth.resetPasswordButton")}
               </button>
             </form>
           )}
 
           <p className="mt-6 text-center text-textMuted text-sm">
             <Link href="/signin" className="text-accent hover:underline font-medium">
-              Back to Sign In
+              {t("auth.backToSignIn")}
             </Link>
           </p>
         </div>

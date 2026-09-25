@@ -28,6 +28,7 @@ const UPDATE_EXAM = gql`
 
 const schema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
+  examType: z.enum(["CLASS_TEST", "QUIZ", "ASSIGNMENT_TEST", "MIDTERM", "FINAL"]).optional(),
   startTime: z.string().min(1, { message: "Start time is required" }),
   endTime: z.string().min(1, { message: "End time is required" }),
   lessonId: z.string().min(1, { message: "Lesson is required" }),
@@ -58,7 +59,8 @@ const ExamForm = ({
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
     defaultValues: {
-      title: data?.subject ?? "",
+      title: data?.title ?? data?.subject ?? "",
+      examType: data?.examType ?? "CLASS_TEST",
     },
   });
 
@@ -111,6 +113,17 @@ const ExamForm = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="Title" name="title" register={register} error={errors.title} />
+
+        <div className="flex flex-col gap-1.5 w-full">
+          <label className="text-xs text-textMuted">Exam type</label>
+          <select {...register("examType")} className="field">
+            <option value="CLASS_TEST">Class Test</option>
+            <option value="QUIZ">Quiz</option>
+            <option value="ASSIGNMENT_TEST">Assignment Test</option>
+            <option value="MIDTERM">Midterm</option>
+            <option value="FINAL">Final</option>
+          </select>
+        </div>
         <InputField
           label="Start time"
           name="startTime"

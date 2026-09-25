@@ -1,4 +1,7 @@
+"use client";
+
 import { MoreVertical } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type AnnouncementItem = {
   id: string | number;
@@ -10,17 +13,18 @@ type AnnouncementItem = {
 const toneClass = ["bg-infoLight", "bg-accentLight", "bg-warningLight"];
 
 const Announcements = ({ items = [] }: { items?: AnnouncementItem[] }) => {
+  const { t } = useTranslation();
   return (
     <div className="bg-cardBg border border-border shadow-sm rounded-2xl p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-textPrimary">Notice Board</h1>
+        <h1 className="text-lg font-semibold text-textPrimary">{t("dashboard.noticeBoard")}</h1>
         <button type="button" className="text-textMuted hover:text-textSecondary" aria-label="More options">
           <MoreVertical size={18} />
         </button>
       </div>
       <div className="flex flex-col gap-3 mt-4">
         {items.length === 0 ? (
-          <p className="text-sm text-textMuted py-2">No announcements yet.</p>
+          <p className="text-sm text-textMuted py-2">{t("dashboard.noAnnouncementsYet")}</p>
         ) : (
           items.map((item, i) => (
             <div key={item.id} className={`${toneClass[i % toneClass.length]} rounded-xl p-4`}>

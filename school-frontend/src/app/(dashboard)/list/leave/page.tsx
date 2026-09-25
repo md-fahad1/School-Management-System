@@ -18,13 +18,13 @@ type Row = {
 };
 
 const columns = [
-  { header: "Applicant", accessor: "applicant" },
-  { header: "Type", accessor: "leaveType" },
-  { header: "From", accessor: "startDate" },
-  { header: "To", accessor: "endDate" },
-  { header: "Reason", accessor: "reason", className: "hidden md:table-cell" },
-  { header: "Status", accessor: "status" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "applicant", accessor: "applicant" },
+  { headerKey: "type", accessor: "leaveType" },
+  { headerKey: "from", accessor: "startDate" },
+  { headerKey: "to", accessor: "endDate" },
+  { headerKey: "reason", accessor: "reason", className: "hidden md:table-cell" },
+  { headerKey: "status", accessor: "status" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const statusColor: Record<string, string> = {

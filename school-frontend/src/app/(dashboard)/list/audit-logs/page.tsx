@@ -7,11 +7,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 const columns = [
-  { header: "Time", accessor: "createdAt" },
-  { header: "Action", accessor: "action" },
-  { header: "Status", accessor: "success" },
-  { header: "Details", accessor: "metadata" },
-  { header: "User ID", accessor: "userId", className: "hidden lg:table-cell" },
+  { headerKey: "time", accessor: "createdAt" },
+  { headerKey: "action", accessor: "action" },
+  { headerKey: "status", accessor: "success" },
+  { headerKey: "details", accessor: "metadata" },
+  { headerKey: "userId", accessor: "userId", className: "hidden lg:table-cell" },
 ];
 
 function formatTime(value: string) {

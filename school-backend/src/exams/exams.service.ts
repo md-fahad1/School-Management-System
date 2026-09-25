@@ -44,6 +44,7 @@ export class ExamsService {
     const created = await this.prisma.exam.create({
       data: {
         title: input.title,
+        examType: input.examType ?? 'CLASS_TEST',
         fullMarks: input.fullMarks ?? 100,
         passMarks: input.passMarks ?? 33,
         startTime: input.startTime,

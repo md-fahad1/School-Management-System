@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { useSidebar } from "./SidebarContext";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 // `menu` is passed in as a prop (not imported directly) because Menu.jsx
 // is a Server Component (reads cookies()) — passing it as a node lets it
@@ -18,6 +19,7 @@ type SidebarProps = {
 
 const Sidebar = ({ menu, institutionName, institutionLogo, institutionType }: SidebarProps) => {
   const { mobileOpen, closeMobile } = useSidebar();
+  const { t } = useTranslation();
 
   return (
     <>
@@ -60,7 +62,7 @@ const Sidebar = ({ menu, institutionName, institutionLogo, institutionType }: Si
         >
           <span className="w-2 h-2 rounded-full bg-success shrink-0" />
           <span className="text-sm text-sidebarTextActive truncate capitalize">
-            {institutionType ? institutionType.replace(/_/g, " ").toLowerCase() : "platform"}
+            {institutionType ? institutionType.replace(/_/g, " ").toLowerCase() : t("common.platform")}
           </span>
         </div>
 

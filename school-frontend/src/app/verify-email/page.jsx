@@ -6,11 +6,13 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { VERIFY_EMAIL } from "@/lib/graphql/queries";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const VerifyEmailContent = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const didRun = useRef(false);
+  const { t } = useTranslation();
 
   const [status, setStatus] = useState("verifying"); // "verifying" | "success" | "error"
   const [error, setError] = useState("");
@@ -21,7 +23,7 @@ const VerifyEmailContent = () => {
 
     if (!token) {
       setStatus("error");
-      setError("This verification link is missing its token.");
+      setError(t("auth.verifyMissingToken"));
       return;
     }
 
@@ -33,8 +35,7 @@ const VerifyEmailContent = () => {
       } catch (err) {
         setStatus("error");
         setError(
-          err?.response?.errors?.[0]?.message ??
-            "This verification link is invalid or has expired."
+          err?.response?.errors?.[0]?.message ?? t("auth.verifyInvalid")
         );
       }
     })();
@@ -46,23 +47,23 @@ const VerifyEmailContent = () => {
         {status === "verifying" && (
           <>
             <Loader2 className="mx-auto animate-spin text-accent mb-4" size={40} />
-            <h2 className="text-2xl font-bold text-textPrimary">Verifying your email...</h2>
-            <p className="text-textMuted mt-2">Just a moment.</p>
+            <h2 className="text-2xl font-bold text-textPrimary">{t("auth.verifying")}</h2>
+            <p className="text-textMuted mt-2">{t("auth.verifyingSubtitle")}</p>
           </>
         )}
 
         {status === "success" && (
           <>
             <CheckCircle className="mx-auto text-success mb-4" size={40} />
-            <h2 className="text-2xl font-bold text-textPrimary">Email verified!</h2>
+            <h2 className="text-2xl font-bold text-textPrimary">{t("auth.verifiedTitle")}</h2>
             <p className="text-textMuted mt-2 mb-6">
-              Your email address has been confirmed. You&apos;re all set.
+              {t("auth.verifiedBody")}
             </p>
             <Link
               href="/signin"
               className="inline-block bg-primary text-white px-6 py-2.5 rounded-lg hover:bg-primaryDark transition-colors shadow-sm"
             >
-              Continue to Sign In
+              {t("auth.continueToSignIn")}
             </Link>
           </>
         )}
@@ -70,10 +71,10 @@ const VerifyEmailContent = () => {
         {status === "error" && (
           <>
             <XCircle className="mx-auto text-danger mb-4" size={40} />
-            <h2 className="text-2xl font-bold text-textPrimary">Verification failed</h2>
+            <h2 className="text-2xl font-bold text-textPrimary">{t("auth.verifyFailedTitle")}</h2>
             <p className="text-textMuted mt-2 mb-6">{error}</p>
             <Link href="/signin" className="text-accent hover:underline text-sm font-medium">
-              Back to Sign In
+              {t("auth.backToSignIn")}
             </Link>
           </>
         )}

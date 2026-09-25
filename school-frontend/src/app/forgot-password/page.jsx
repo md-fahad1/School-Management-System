@@ -6,8 +6,10 @@ import Link from "next/link";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { REQUEST_PASSWORD_RESET } from "@/lib/graphql/queries";
 import { getErrorMessage } from "@/lib/errors";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const ForgotPassword = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +30,7 @@ const ForgotPassword = () => {
       await client.request(REQUEST_PASSWORD_RESET, { input: { email } });
       setSubmitted(true);
     } catch (err) {
-      setError(getErrorMessage(err, "Something went wrong. Please try again."));
+      setError(getErrorMessage(err, t("auth.signUpError")));
     } finally {
       setLoading(false);
     }
@@ -46,10 +48,10 @@ const ForgotPassword = () => {
           </div>
           <img src="/img/img3.svg" alt="Illustration" className="w-full h-auto max-w-xs mx-auto" />
           <h2 className="text-2xl font-bold mt-6 text-white">
-            Forgot your password?
+            {t("auth.forgotTitle")}
           </h2>
           <p className="mt-2 text-primaryLight text-sm">
-            No worries — enter your email and we&apos;ll send you a link to reset it.
+            {t("auth.forgotSubtitle")}
           </p>
         </div>
       </div>
@@ -60,29 +62,29 @@ const ForgotPassword = () => {
             <GraduationCap className="text-white" size={24} />
           </div>
           <h2 className="text-2xl font-bold text-center text-textPrimary mb-6">
-            Reset Password
+            {t("auth.resetPasswordTitle")}
           </h2>
 
           {submitted ? (
             <div className="text-center space-y-4">
               <p className="text-textSecondary">
-                If an account exists for <span className="font-medium text-textPrimary">{email}</span>, we&apos;ve
-                sent a password reset link to it. Check your inbox (and spam folder).
+                {t("auth.resetSentPrefix")} <span className="font-medium text-textPrimary">{email}</span>,{" "}
+                {t("auth.resetSentSuffix")}
               </p>
               <Link href="/signin" className="text-accent hover:underline text-sm font-medium">
-                Back to Sign In
+                {t("auth.backToSignIn")}
               </Link>
             </div>
           ) : (
             <>
               <form className="space-y-5" onSubmit={handleSubmit}>
                 <div>
-                  <label className="block mb-1.5 text-textSecondary text-sm">Email Address</label>
+                  <label className="block mb-1.5 text-textSecondary text-sm">{t("auth.emailAddressLabel")}</label>
                   <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                     <Mail className="text-textMuted mr-2" size={18} />
                     <input
                       type="email"
-                      placeholder="Enter your account email"
+                      placeholder={t("auth.emailAddressPlaceholder")}
                       className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -98,14 +100,14 @@ const ForgotPassword = () => {
                   disabled={loading}
                   className="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primaryDark transition-colors shadow-sm disabled:opacity-60"
                 >
-                  {loading ? "Sending..." : "Send Reset Link"}
+                  {loading ? t("auth.sending") : t("auth.sendResetLink")}
                 </button>
               </form>
 
               <p className="mt-6 text-center text-textMuted text-sm">
-                Remembered your password?{" "}
+                {t("auth.rememberedPassword")}{" "}
                 <Link href="/signin" className="text-accent hover:underline font-medium">
-                  Sign In
+                  {t("auth.signInLink")}
                 </Link>
               </p>
             </>

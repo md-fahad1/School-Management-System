@@ -35,6 +35,8 @@ import {
   GET_MY_CHILDREN,
     GET_VEHICLES,
   GET_MY_VEHICLES,
+  GET_ROUTES,
+  GET_ROUTE,
   ME_QUERY,
   MY_PERMISSIONS,
   GET_MY_INSTITUTION,
@@ -295,6 +297,8 @@ export async function getClasses(search?: string, page = 1) {
         id: x.id,
         name: x.name,
         capacity: x.capacity,
+        section: x.section ?? "-",
+        room: x.room ?? "-",
         gradeId: x.gradeId,
         grade: x.gradeLevel ?? "-",
         supervisorId: x.supervisorId ?? null,
@@ -339,6 +343,7 @@ export async function getExams(page = 1) {
       data.exams.map((x) => (({
         id: x.id,
         subject: x.subjectName ?? "-",
+        examType: x.examType ?? "CLASS_TEST",
         class: x.className ?? "-",
         teacher: x.teacherName ?? "-",
         date: fmtDate(x.startTime),
@@ -405,7 +410,7 @@ export async function getAttendances(page = 1) {
       data.attendances.map((x) => (({
         id: x.id,
         date: fmtDate(x.date),
-        present: x.present,
+        status: x.status,
         studentId: x.studentId,
         lessonId: x.lessonId,
         student: x.studentName ?? "-",
@@ -857,6 +862,8 @@ export async function getVehicles(page = 1) {
         capacity: x.capacity,
         driverName: x.driverName,
         route: x.route ?? "-",
+        routeId: x.routeId,
+        routeName: x.routeName ?? "-",
         status: x.status,
         transportStaffId: x.transportStaffId,
         transportStaffName: x.transportStaffName ?? "Unassigned",
@@ -866,6 +873,28 @@ export async function getVehicles(page = 1) {
   } catch (err) {
     console.error("getVehicles failed:", err);
     return emptyPage();
+  }
+}
+
+export async function getRoutes() {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ routes: any[] }>(GET_ROUTES);
+    return data.routes;
+  } catch (err) {
+    console.error("getRoutes failed:", err);
+    return [];
+  }
+}
+
+export async function getRoute(id: string) {
+  try {
+    const client = getServerClient();
+    const data = await client.request<{ route: any }>(GET_ROUTE, { id });
+    return data.route;
+  } catch (err) {
+    console.error("getRoute failed:", err);
+    return null;
   }
 }
 

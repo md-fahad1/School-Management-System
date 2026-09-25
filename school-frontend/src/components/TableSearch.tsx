@@ -3,11 +3,13 @@
 import { Search } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const TableSearch = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const [value, setValue] = useState(searchParams.get("search") ?? "");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -56,7 +58,7 @@ const TableSearch = () => {
         type="text"
         value={value}
         onChange={handleChange}
-        placeholder="Search..."
+        placeholder={t("common.search")}
         className="w-full md:w-[200px] p-2.5 bg-transparent border-0 rounded-full outline-none focus:outline-none focus:ring-0 focus:shadow-none appearance-none [-webkit-appearance:none] [-webkit-tap-highlight-color:transparent] text-base md:text-sm placeholder:text-textMuted"
       />
     </form>

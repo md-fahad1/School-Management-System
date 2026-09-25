@@ -1,12 +1,16 @@
+"use client";
+
 import React from "react";
 import EmptyState from "./EmptyState";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+
 const Table = ({
   columns,
   renderRow,
   renderCard,
   data,
 }: {
-  columns: { header: string; accessor: string; className?: string }[];
+  columns: { headerKey: string; accessor: string; className?: string }[];
   renderRow: (item: any) => React.ReactNode;
   // Optional: a page can supply its own polished mobile card design.
   // If omitted, Table builds a generic label:value card automatically
@@ -14,6 +18,7 @@ const Table = ({
   renderCard?: (item: any) => React.ReactNode;
   data: any[];
 }) => {
+  const { t } = useTranslation();
   const actionIndex = columns.findIndex((c) => c.accessor === "action");
 
   return (
@@ -25,7 +30,7 @@ const Table = ({
             <tr className="text-left text-textSecondary text-xs uppercase tracking-wide border-b border-border">
               {columns.map((col) => (
                 <th key={col.accessor} className={`py-3 ${col.className ?? ""}`}>
-                  {col.header}
+                  {t(`table.${col.headerKey}`)}
                 </th>
               ))}
             </tr>
@@ -75,7 +80,7 @@ const Table = ({
                     return (
                       <div key={col.accessor} className="flex items-center justify-between gap-3">
                         <span className="text-textMuted text-xs uppercase tracking-wide shrink-0">
-                          {col.header}
+                          {t(`table.${col.headerKey}`)}
                         </span>
                         <span className="text-textPrimary text-right truncate">
                           {cells[i]?.props?.children}

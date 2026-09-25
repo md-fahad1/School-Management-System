@@ -20,35 +20,35 @@ type Result = {
 
 const columns = [
   {
-    header: "Subject Name",
+    headerKey: "subjectName",
     accessor: "name",
   },
   {
-    header: "Student",
+    headerKey: "student",
     accessor: "student",
   },
   {
-    header: "Score",
+    headerKey: "score",
     accessor: "score",
     className: "hidden md:table-cell",
   },
   {
-    header: "Teacher",
+    headerKey: "teacher",
     accessor: "teacher",
     className: "hidden md:table-cell",
   },
   {
-    header: "Class",
+    headerKey: "class",
     accessor: "class",
     className: "hidden md:table-cell",
   },
   {
-    header: "Date",
+    headerKey: "date",
     accessor: "date",
     className: "hidden md:table-cell",
   },
   {
-    header: "Actions",
+    headerKey: "actions",
     accessor: "action",
   },
 ];

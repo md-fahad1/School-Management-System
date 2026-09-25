@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getClientGqlClient } from "@/lib/graphql/client";
 import { GLOBAL_SEARCH } from "@/lib/graphql/queries";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type Result = { type: string; id: string; title: string; subtitle?: string; url: string };
 
@@ -18,6 +19,7 @@ const typeLabel: Record<string, string> = {
 
 const GlobalSearch = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [open, setOpen] = useState(false);
@@ -73,7 +75,7 @@ const GlobalSearch = () => {
         <Search size={14} className="opacity-50" />
         <input
           type="text"
-          placeholder="Find anything..."
+          placeholder={t("common.findAnything")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
@@ -83,9 +85,9 @@ const GlobalSearch = () => {
 
       {open && (
         <div className="absolute top-full left-0 mt-2 w-full min-w-[280px] bg-cardBg rounded-xl shadow-lg ring-1 ring-border max-h-[360px] overflow-y-auto z-50">
-          {loading && <div className="p-3 text-xs text-textMuted">Searching...</div>}
+          {loading && <div className="p-3 text-xs text-textMuted">{t("common.searching")}</div>}
           {!loading && results.length === 0 && (
-            <div className="p-3 text-xs text-textMuted">No results.</div>
+            <div className="p-3 text-xs text-textMuted">{t("common.noResults")}</div>
           )}
           {!loading &&
             results.map((r) => (

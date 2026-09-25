@@ -5,16 +5,26 @@ import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 export class CreateClassInput {
   @Field()
   @IsString()
-  name: string;
+  name!: string;
 
   @Field(() => Int)
   @IsInt()
   @Min(1)
-  capacity: number;
+  capacity!: number;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  section?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  room?: string;
 
   @Field(() => ID)
   @IsUUID()
-  gradeId: string;
+  gradeId!: string;
 
   @Field(() => ID, { nullable: true })
   @IsOptional()

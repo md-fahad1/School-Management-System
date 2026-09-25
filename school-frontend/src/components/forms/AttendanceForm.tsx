@@ -28,7 +28,7 @@ const UPDATE_ATTENDANCE = gql`
 
 const schema = z.object({
   date: z.string().min(1, { message: "Date is required" }),
-  present: z.enum(["true", "false"]),
+  status: z.enum(["PRESENT", "ABSENT", "LATE", "EXCUSED", "LEAVE"]),
   studentId: z.string().min(1, { message: "Student is required" }),
   lessonId: z.string().min(1, { message: "Lesson is required" }),
 });
@@ -58,7 +58,7 @@ const AttendanceForm = ({
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
     defaultValues: {
-      present: data?.present === false ? "false" : "true",
+      status: data?.status ?? "PRESENT",
       studentId: data?.studentId ?? "",
       lessonId: data?.lessonId ?? "",
     },
@@ -92,7 +92,6 @@ const AttendanceForm = ({
       const client = await getClientGqlClient();
       const input = {
         ...formData,
-        present: formData.present === "true",
         date: new Date(formData.date).toISOString(),
       };
       if (type === "create") {
@@ -128,11 +127,14 @@ const AttendanceForm = ({
         <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Status</label>
           <select
-            {...register("present")}
+            {...register("status")}
             className="field"
           >
-            <option value="true">Present</option>
-            <option value="false">Absent</option>
+            <option value="PRESENT">Present</option>
+            <option value="ABSENT">Absent</option>
+            <option value="LATE">Late</option>
+            <option value="EXCUSED">Excused</option>
+            <option value="LEAVE">Leave</option>
           </select>
         </div>
 

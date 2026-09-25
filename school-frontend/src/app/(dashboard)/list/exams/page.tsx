@@ -11,6 +11,7 @@ import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 type Exam = {
   id: string;
   subject: string;
+  examType: string;
   class: string;
   teacher: string;
   date: string;
@@ -18,25 +19,30 @@ type Exam = {
 
 const columns = [
   {
-    header: "Subject Name",
+    headerKey: "subjectName",
     accessor: "name",
   },
   {
-    header: "Class",
+    headerKey: "type",
+    accessor: "examType",
+    className: "hidden md:table-cell",
+  },
+  {
+    headerKey: "class",
     accessor: "class",
   },
   {
-    header: "Teacher",
+    headerKey: "teacher",
     accessor: "teacher",
     className: "hidden md:table-cell",
   },
   {
-    header: "Date",
+    headerKey: "date",
     accessor: "date",
     className: "hidden md:table-cell",
   },
   {
-    header: "Actions",
+    headerKey: "actions",
     accessor: "action",
   },
 ];
@@ -53,6 +59,7 @@ const ExamListPage = async ({ searchParams }: { searchParams?: ListSearchParams 
       className="border-b border-border even:bg-bg/50 text-sm hover:bg-accentLight transition-colors"
     >
       <td className="flex items-center gap-4 p-4">{item.subject}</td>
+      <td className="hidden md:table-cell">{item.examType.replace("_", " ")}</td>
       <td>{item.class}</td>
       <td className="hidden md:table-cell">{item.teacher}</td>
       <td className="hidden md:table-cell">{item.date}</td>

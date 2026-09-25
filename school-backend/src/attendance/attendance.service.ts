@@ -61,7 +61,7 @@ export class AttendanceService {
     }
 
     // Every student must belong to the lesson's class; a repeated student is ignored.
-    const byStudent = new Map(input.entries.map((e) => [e.studentId, e.present]));
+    const byStudent = new Map(input.entries.map((e) => [e.studentId, e.status]));
     const studentIds = Array.from(byStudent.keys());
     const inClass = await this.prisma.student.count({
       where: { id: { in: studentIds }, classId: lesson.classId },
@@ -88,12 +88,12 @@ export class AttendanceService {
 
     return this.prisma.$transaction(
       studentIds.map((studentId) => {
-        const present = byStudent.get(studentId) as boolean;
+        const status = byStudent.get(studentId)!;
         const existingId = existingByStudent.get(studentId);
         return existingId
-          ? this.prisma.attendance.update({ where: { id: existingId }, data: { present } })
+          ? this.prisma.attendance.update({ where: { id: existingId }, data: { status } })
           : this.prisma.attendance.create({
-              data: { date: dayStart, present, studentId, lessonId: input.lessonId },
+              data: { date: dayStart, status, studentId, lessonId: input.lessonId },
             });
       }),
     );
@@ -108,6 +108,51 @@ export class AttendanceService {
     await this.findOne(id);
     await this.prisma.attendance.delete({ where: { id } });
     return true;
+  }
+
+  // Monthly attendance % report for every student in a class. `month` is
+  // 1-12. Present + Late count toward the percentage; Excused/Leave don't
+  // count as absent but also don't count as attended.
+  async classMonthlyReport(classId: string, month: number, year: number) {
+    const start = new Date(Date.UTC(year, month - 1, 1));
+    const end = new Date(Date.UTC(year, month, 1));
+
+    const students = await this.prisma.student.findMany({
+      where: { classId },
+      select: { id: true, name: true, surname: true },
+      orderBy: { name: 'asc' },
+    });
+
+    const records = await this.prisma.attendance.findMany({
+      where: { lesson: { classId }, date: { gte: start, lt: end } },
+      select: { studentId: true, status: true },
+    });
+
+    const byStudent = new Map<string, Record<string, number>>();
+    for (const s of students) {
+      byStudent.set(s.id, { PRESENT: 0, ABSENT: 0, LATE: 0, EXCUSED: 0, LEAVE: 0 });
+    }
+    for (const r of records) {
+      const counts = byStudent.get(r.studentId);
+      if (counts) counts[r.status] = (counts[r.status] ?? 0) + 1;
+    }
+
+    return students.map((s) => {
+      const c = byStudent.get(s.id)!;
+      const totalDays = c.PRESENT + c.ABSENT + c.LATE + c.EXCUSED + c.LEAVE;
+      const percentage = totalDays > 0 ? Math.round(((c.PRESENT + c.LATE) / totalDays) * 1000) / 10 : 0;
+      return {
+        studentId: s.id,
+        studentName: `${s.name} ${s.surname}`,
+        totalDays,
+        presentDays: c.PRESENT,
+        absentDays: c.ABSENT,
+        lateDays: c.LATE,
+        excusedDays: c.EXCUSED,
+        leaveDays: c.LEAVE,
+        percentage,
+      };
+    });
   }
 
   private async visibilityFilter(user: RequestUser) {

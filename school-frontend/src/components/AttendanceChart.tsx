@@ -10,6 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type DayAttendance = {
   day: string;
@@ -18,10 +19,11 @@ type DayAttendance = {
 };
 
 const AttendanceChart = ({ data }: { data: DayAttendance[] }) => {
+  const { t } = useTranslation();
   return (
     <div className="bg-cardBg rounded-2xl border border-border shadow-sm p-4 h-full">
       <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold text-textPrimary">Attendance</h1>
+        <h1 className="text-lg font-semibold text-textPrimary">{t("dashboard.attendanceChartTitle")}</h1>
         <button type="button" className="text-textMuted hover:text-textSecondary" aria-label="More options">
           <MoreVertical size={18} />
         </button>
@@ -46,12 +48,14 @@ const AttendanceChart = ({ data }: { data: DayAttendance[] }) => {
           />
           <Bar
             dataKey="present"
+            name={t("dashboard.present")}
             fill="#17255A"
             legendType="circle"
             radius={[10, 10, 0, 0]}
           />
           <Bar
             dataKey="absent"
+            name={t("dashboard.absent")}
             fill="#B7CDF0"
             legendType="circle"
             radius={[10, 10, 0, 0]}

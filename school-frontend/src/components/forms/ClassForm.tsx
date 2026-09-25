@@ -29,6 +29,8 @@ const UPDATE_CLASS = gql`
 const schema = z.object({
   name: z.string().min(1, { message: "Class name is required" }),
   capacity: z.coerce.number().min(1, { message: "Capacity must be at least 1" }),
+  section: z.string().optional(),
+  room: z.string().optional(),
   gradeId: z.string().min(1, { message: "Grade is required" }),
   supervisorId: z.string().optional(),
   departmentId: z.string().optional(),
@@ -55,6 +57,8 @@ const ClassForm = ({
     defaultValues: {
       name: data?.name ?? "",
       capacity: data?.capacity ?? undefined,
+      section: data?.section && data.section !== "-" ? data.section : "",
+      room: data?.room && data.room !== "-" ? data.room : "",
       gradeId: "",
       supervisorId: "",
       departmentId: "",
@@ -129,6 +133,8 @@ const ClassForm = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InputField label="Class name" name="name" register={register} error={errors.name} />
         <InputField label="Capacity" name="capacity" type="number" register={register} error={errors.capacity} />
+        <InputField label="Section (optional)" name="section" register={register} error={(errors as any).section} />
+        <InputField label="Room (optional)" name="room" register={register} error={(errors as any).room} />
 
         <div className="flex flex-col gap-1.5 w-full">
           <label className="text-xs text-textMuted">Grade</label>

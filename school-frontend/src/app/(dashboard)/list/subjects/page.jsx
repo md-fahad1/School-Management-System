@@ -10,31 +10,31 @@ import SubjectCard from "@/components/SubjectCard";
 import { parsePage } from "@/lib/pagination";
 const columns = [
   {
-    header: "Subject Name",
+    headerKey: "subjectName",
     accessor: "name",
   },
   {
-    header: "Code",
+    headerKey: "code",
     accessor: "code",
     className: "hidden md:table-cell",
   },
   {
-    header: "Type",
+    headerKey: "type",
     accessor: "type",
     className: "hidden md:table-cell",
   },
   {
-    header: "Credit",
+    headerKey: "credit",
     accessor: "credit",
     className: "hidden md:table-cell",
   },
   {
-    header: "Teachers",
+    headerKey: "teachers",
     accessor: "teachers",
     className: "hidden md:table-cell",
   },
   {
-    header: "Actions",
+    headerKey: "actions",
     accessor: "action",
   },
 ];

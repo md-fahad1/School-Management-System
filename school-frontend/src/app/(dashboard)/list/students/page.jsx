@@ -3,6 +3,7 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
+import TranslatedText from "@/components/TranslatedText";
 import { getStudents } from "@/lib/graphql/fetchers";
 import { cookies } from "next/headers";
 import Image from "next/image";
@@ -15,13 +16,13 @@ import StudentStatusBadge from "@/components/StudentStatusBadge";
 import StudentStatusButton from "@/components/StudentStatusButton";
 import StudentStatusFilter from "@/components/StudentStatusFilter";
 const columns = [
-  { header: "Info", accessor: "info" },
-  { header: "Student ID", accessor: "studentId", className: "hidden md:table-cell" },
-  { header: "Grade", accessor: "grade", className: "hidden md:table-cell" },
-  { header: "Status", accessor: "status" },
-  { header: "Phone", accessor: "phone", className: "hidden lg:table-cell" },
-  { header: "Address", accessor: "address", className: "hidden lg:table-cell" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "info", accessor: "info" },
+  { headerKey: "studentId", accessor: "studentId", className: "hidden md:table-cell" },
+  { headerKey: "grade", accessor: "grade", className: "hidden md:table-cell" },
+  { headerKey: "status", accessor: "status" },
+  { headerKey: "phone", accessor: "phone", className: "hidden lg:table-cell" },
+  { headerKey: "address", accessor: "address", className: "hidden lg:table-cell" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const StudentListPage = async ({ searchParams }) => {
@@ -92,7 +93,7 @@ const StudentListPage = async ({ searchParams }) => {
   return (
     <div className="	bg-cardBg border border-border shadow-sm p-4 rounded-2xl flex-1 m-4 mt-0">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <h1 className="hidden md:block text-lg font-semibold text-textPrimary">All Students</h1>
+        <TranslatedText as="h1" className="hidden md:block text-lg font-semibold text-textPrimary" tKey="students.allStudents" />
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <StudentStatusFilter />

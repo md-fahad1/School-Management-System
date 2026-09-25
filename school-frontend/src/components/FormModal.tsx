@@ -32,6 +32,8 @@ const VehicleForm = dynamic(() => import("./forms/VehicleForm"), { loading });
 const AcademicYearForm = dynamic(() => import("./forms/AcademicYearForm"), { loading });
 const TermForm = dynamic(() => import("./forms/TermForm"), { loading });
 const DepartmentForm = dynamic(() => import("./forms/DepartmentForm"), { loading });
+const RouteForm = dynamic(() => import("./forms/RouteForm"), { loading });
+const StopForm = dynamic(() => import("./forms/StopForm"), { loading });
 
 const forms: {
   [key: string]: (type: "create" | "update", data: any, onSuccess: () => void) => JSX.Element;
@@ -55,6 +57,8 @@ const forms: {
     academicYear: (type, data, onSuccess) => <AcademicYearForm type={type} data={data} onSuccess={onSuccess} />,
   term: (type, data, onSuccess) => <TermForm type={type} data={data} onSuccess={onSuccess} />,
   department: (type, data, onSuccess) => <DepartmentForm type={type} data={data} onSuccess={onSuccess} />,
+  route: (type, data, onSuccess) => <RouteForm type={type} data={data} onSuccess={onSuccess} />,
+  stop: (type, data, onSuccess) => <StopForm type={type} data={data} routeId={data?.routeId} onSuccess={onSuccess} />,
 };
 
 // One remove mutation per table, all following the same
@@ -81,6 +85,8 @@ const REMOVE_MUTATIONS: { [key: string]: string } = {
     academicYear: `mutation($id: ID!) { removeAcademicYear(id: $id) }`,
   term: `mutation($id: ID!) { removeTerm(id: $id) }`,
   department: `mutation($id: ID!) { removeDepartment(id: $id) }`,
+  route: `mutation($id: ID!) { removeRoute(id: $id) }`,
+  stop: `mutation($id: ID!) { removeStop(id: $id) }`,
 };
 
 // Button, title ar message e je nam dekhabe (camelCase table name er bodole).
@@ -118,7 +124,9 @@ const FormModal = ({
     | "vehicle"
     | "academicYear"
     | "term"
-    | "department";
+    | "department"
+    | "route"
+    | "stop";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;

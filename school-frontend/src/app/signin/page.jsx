@@ -12,10 +12,13 @@ import { setCredentials } from "@/redux/slices/authSlice";
 import { getErrorMessage } from "@/lib/errors";
 import PasswordInput from "@/components/PasswordInput";
 import { roleHome } from "@/lib/roleHome";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+
 const SignInForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   // Backend logs in by username, not email — the form still labels
   // the field "Email Address" to match the original design, and
@@ -39,7 +42,7 @@ const SignInForm = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Invalid username or password");
+        throw new Error(data.error || t("auth.invalidCredentials"));
       }
 
       const { accessToken, id, username: uname, role } = data;
@@ -61,7 +64,7 @@ const SignInForm = () => {
       router.push(from || roleHome(role));
     } catch (err) {
       setError(
-        getErrorMessage(err, "Invalid username or password")
+        getErrorMessage(err, t("auth.invalidCredentials"))
       );
     } finally {
       setLoading(false);
@@ -85,11 +88,10 @@ const SignInForm = () => {
             className="w-full h-auto max-w-xs mx-auto"
           />
           <h2 className="text-2xl font-bold mt-6 text-white">
-            Welcome to Dream Edu
+            {t("auth.welcomeTitle")}
           </h2>
           <p className="mt-2 text-primaryLight text-sm">
-            Sign in to access your dashboard, manage your profile, and track
-            your learning progress.
+            {t("auth.welcomeSubtitle")}
           </p>
         </div>
       </div>
@@ -101,22 +103,22 @@ const SignInForm = () => {
             <GraduationCap className="text-white" size={24} />
           </div>
           <h2 className="text-2xl font-bold text-center text-textPrimary mb-1">
-            Sign In
+            {t("auth.signInTitle")}
           </h2>
           <p className="text-center text-sm text-textMuted mb-6">
-            Enter your details to access your account
+            {t("auth.signInSubtitle")}
           </p>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block mb-1.5 text-sm text-textSecondary">
-                Email / Phone / Username
+                {t("auth.identifierLabel")}
               </label>
               <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                 <Mail className="text-textMuted mr-2" size={18} />
                 <input
                   type="text"
-                  placeholder="Enter email, phone or username"
+                  placeholder={t("auth.identifierPlaceholder")}
                   className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
@@ -127,12 +129,12 @@ const SignInForm = () => {
 
             <div>
               <label className="block mb-1.5 text-sm text-textSecondary">
-                Password
+                {t("auth.passwordLabel")}
               </label>
               <div className="flex items-center border border-border rounded-lg px-3 py-2.5 bg-bg focus-within:border-accent focus-within:ring-2 focus-within:ring-accentLight transition-colors">
                 <Lock className="text-textMuted mr-2" size={18} />
                 <PasswordInput
-  placeholder="Enter your password"
+  placeholder={t("auth.passwordPlaceholder")}
   autoComplete="current-password"
   className="w-full bg-transparent outline-none text-sm placeholder:text-textMuted"
   value={password}
@@ -142,7 +144,7 @@ const SignInForm = () => {
               </div>
               <div className="text-right mt-1.5">
                 <Link href="/forgot-password" className="text-xs text-accent hover:underline">
-                  Forgot password?
+                  {t("auth.forgotPassword")}
                 </Link>
               </div>
             </div>
@@ -158,14 +160,14 @@ const SignInForm = () => {
               disabled={loading}
               className="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primaryDark transition-colors shadow-sm disabled:opacity-60"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? t("auth.signingIn") : t("auth.signInButton")}
             </button>
           </form>
 
           <p className="mt-6 text-center text-textMuted text-sm">
-            Don&apos;t have an account?{" "}
+            {t("auth.noAccount")}{" "}
             <Link href="/signup" className="text-accent hover:underline font-medium">
-              Sign Up
+              {t("auth.signUpLink")}
             </Link>
           </p>
         </div>

@@ -5,6 +5,8 @@ type Class = {
   id: string;
   name: string;
   capacity: number;
+  section?: string;
+  room?: string;
   grade: number | string;
   supervisor: string;
   department?: string;
@@ -29,6 +31,14 @@ const ClassCard = ({ item, role }: { item: Class; role: string }) => {
         <div>
           <p className="text-textMuted text-xs uppercase tracking-wide mb-1">Grade</p>
           <p className="text-textPrimary font-medium">{item.grade}</p>
+        </div>
+        <div>
+          <p className="text-textMuted text-xs uppercase tracking-wide mb-1">Section</p>
+          <p className="text-textPrimary font-medium">{item.section || "-"}</p>
+        </div>
+        <div>
+          <p className="text-textMuted text-xs uppercase tracking-wide mb-1">Room</p>
+          <p className="text-textPrimary font-medium">{item.room || "-"}</p>
         </div>
       </div>
 

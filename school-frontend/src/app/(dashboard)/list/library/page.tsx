@@ -18,12 +18,12 @@ type Book = {
 };
 
 const columns = [
-  { header: "Title", accessor: "title" },
-  { header: "Author", accessor: "author", className: "hidden md:table-cell" },
-  { header: "ISBN", accessor: "isbn", className: "hidden md:table-cell" },
-  { header: "Category", accessor: "category", className: "hidden lg:table-cell" },
-  { header: "Copies", accessor: "copies", className: "hidden lg:table-cell" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "title", accessor: "title" },
+  { headerKey: "author", accessor: "author", className: "hidden md:table-cell" },
+  { headerKey: "isbn", accessor: "isbn", className: "hidden md:table-cell" },
+  { headerKey: "category", accessor: "category", className: "hidden lg:table-cell" },
+  { headerKey: "copies", accessor: "copies", className: "hidden lg:table-cell" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const LibraryListPage = async ({ searchParams }: { searchParams?: ListSearchParams }) => {

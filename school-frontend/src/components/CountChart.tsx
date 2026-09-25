@@ -1,6 +1,7 @@
 "use client";
 import { MoreVertical } from "lucide-react";
 import Image from "next/image";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
   RadialBarChart,
   RadialBar,
@@ -8,6 +9,7 @@ import {
 } from "recharts";
 
 const CountChart = ({ boys = 0, girls = 0 }: { boys?: number; girls?: number }) => {
+  const { t } = useTranslation();
   const total = boys + girls;
   const boysPct = total > 0 ? Math.round((boys / total) * 100) : 0;
   const girlsPct = total > 0 ? Math.round((girls / total) * 100) : 0;
@@ -22,7 +24,7 @@ const CountChart = ({ boys = 0, girls = 0 }: { boys?: number; girls?: number }) 
     <div className="bg-cardBg rounded-2xl border border-border shadow-sm w-full h-full p-4">
       {/* TITLE */}
       <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold text-textPrimary">Students</h1>
+        <h1 className="text-lg font-semibold text-textPrimary">{t("dashboard.studentsChartTitle")}</h1>
         <button type="button" className="text-textMuted hover:text-textSecondary" aria-label="More options">
           <MoreVertical size={18} />
         </button>
@@ -54,12 +56,12 @@ const CountChart = ({ boys = 0, girls = 0 }: { boys?: number; girls?: number }) 
         <div className="flex flex-col gap-1">
           <div className="w-5 h-5 bg-info rounded-full" />
           <h1 className="font-bold text-textPrimary">{boys.toLocaleString()}</h1>
-          <h2 className="text-xs text-textMuted">Boys ({boysPct}%)</h2>
+          <h2 className="text-xs text-textMuted">{t("dashboard.boys")} ({boysPct}%)</h2>
         </div>
         <div className="flex flex-col gap-1">
           <div className="w-5 h-5 bg-warning rounded-full" />
           <h1 className="font-bold text-textPrimary">{girls.toLocaleString()}</h1>
-          <h2 className="text-xs text-textMuted">Girls ({girlsPct}%)</h2>
+          <h2 className="text-xs text-textMuted">{t("dashboard.girls")} ({girlsPct}%)</h2>
         </div>
       </div>
     </div>

@@ -17,13 +17,13 @@ type Scholarship = {
 };
 
 const columns = [
-  { header: "Student", accessor: "studentName" },
-  { header: "Scholarship", accessor: "name" },
-  { header: "Type", accessor: "type", className: "hidden md:table-cell" },
-  { header: "Value", accessor: "value" },
-  { header: "Period", accessor: "period", className: "hidden lg:table-cell" },
-  { header: "Status", accessor: "active" },
-  { header: "Actions", accessor: "action" },
+  { headerKey: "student", accessor: "studentName" },
+  { headerKey: "scholarship", accessor: "name" },
+  { headerKey: "type", accessor: "type", className: "hidden md:table-cell" },
+  { headerKey: "value", accessor: "value" },
+  { headerKey: "period", accessor: "period", className: "hidden lg:table-cell" },
+  { headerKey: "status", accessor: "active" },
+  { headerKey: "actions", accessor: "action" },
 ];
 
 const ScholarshipsPage = async () => {

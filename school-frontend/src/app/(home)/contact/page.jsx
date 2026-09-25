@@ -1,7 +1,9 @@
 "use client";
 import React, { useState } from "react";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 const ContactPage = () => {
+  const { t } = useTranslation();
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -24,9 +26,9 @@ const ContactPage = () => {
     <div className="text-[var(--text)] bg-[var(--bg)]">
       {/* Hero Section */}
       <section className="bg-[var(--primary)] text-white py-16 text-center">
-        <h1 className="text-4xl font-bold mb-2">Contact Us</h1>
+        <h1 className="text-4xl font-bold mb-2">{t("contact.title")}</h1>
         <p className="text-lg">
-          We’re here to help students, parents, and teachers
+          {t("contact.subtitle")}
         </p>
       </section>
 
@@ -36,37 +38,39 @@ const ContactPage = () => {
           {/* Contact Info */}
           <div>
             <h2 className="text-2xl font-semibold text-[var(--primary)] mb-4">
-              Get in Touch
+              {t("contact.getInTouch")}
             </h2>
-            <p className="mb-4">Reach out for any questions or support.</p>
+            <p className="mb-4">{t("contact.reachOut")}</p>
             <ul className="space-y-2 text-sm">
               <li>
-                <strong>📞 Phone:</strong> +880 1234-567890
+                <strong>📞 {t("contact.phoneLabel")}</strong> +880 1234-567890
               </li>
               <li>
-                <strong>📧 Email:</strong> info@school.edu.bd
+                <strong>📧 {t("contact.emailLabel")}</strong> info@school.edu.bd
               </li>
               <li>
-                <strong>🏫 Address:</strong> 123 School Road, Dhaka, Bangladesh
+                <strong>🏫 {t("contact.addressLabel")}</strong> 123 School Road, Dhaka, Bangladesh
               </li>
               <li className="mt-4 flex gap-4">
                 <a
                   href="https://facebook.com"
                   target="_blank"
+                  rel="noreferrer"
                   className="text-[var(--secondary)] hover:text-[var(--primary)]"
                 >
-                  Facebook
+                  {t("contact.facebook")}
                 </a>
                 <a
                   href="https://linkedin.com"
                   target="_blank"
+                  rel="noreferrer"
                   className="text-[var(--secondary)] hover:text-[var(--primary)]"
                 >
-                  LinkedIn
+                  {t("contact.linkedin")}
                 </a>
               </li>
               <li>
-                <strong>🕒 Office Hours:</strong> Sun - Thu: 9 AM – 5 PM
+                <strong>🕒 {t("contact.officeHoursLabel")}</strong> {t("contact.officeHoursValue")}
               </li>
             </ul>
 
@@ -84,18 +88,18 @@ const ContactPage = () => {
           {/* Contact Form */}
           <div>
             <h2 className="text-2xl font-semibold text-[var(--primary)] mb-4">
-              Send a Message
+              {t("contact.sendMessageTitle")}
             </h2>
             {submitted ? (
               <div className="p-6 bg-green-100 text-green-800 rounded-md shadow">
-                ✅ Thank you for your message. We'll get back to you soon!
+                ✅ {t("contact.thankYou")}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <input
                   type="text"
                   name="name"
-                  placeholder="Your Name"
+                  placeholder={t("contact.namePlaceholder")}
                   value={formData.name}
                   onChange={handleChange}
                   required
@@ -104,7 +108,7 @@ const ContactPage = () => {
                 <input
                   type="email"
                   name="email"
-                  placeholder="Your Email"
+                  placeholder={t("contact.emailPlaceholder")}
                   value={formData.email}
                   onChange={handleChange}
                   required
@@ -112,7 +116,7 @@ const ContactPage = () => {
                 />
                 <textarea
                   name="message"
-                  placeholder="Your Message"
+                  placeholder={t("contact.messagePlaceholder")}
                   rows={5}
                   value={formData.message}
                   onChange={handleChange}
@@ -123,7 +127,7 @@ const ContactPage = () => {
                   type="submit"
                   className="bg-[var(--primary)] text-white px-6 py-2 rounded-md hover:bg-[var(--secondary)] transition"
                 >
-                  Send Message
+                  {t("contact.sendMessageButton")}
                 </button>
               </form>
             )}

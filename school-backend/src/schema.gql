@@ -63,11 +63,31 @@ type Attendance {
   date: DateTime!
   id: ID!
   lessonId: ID!
-  present: Boolean!
+  status: AttendanceStatus!
   studentId: ID!
   studentName: String
   subjectName: String
   teacherName: String
+}
+
+enum AttendanceStatus {
+  ABSENT
+  EXCUSED
+  LATE
+  LEAVE
+  PRESENT
+}
+
+type AttendanceSummary {
+  absentDays: Int!
+  excusedDays: Int!
+  lateDays: Int!
+  leaveDays: Int!
+  percentage: Float!
+  presentDays: Int!
+  studentId: ID!
+  studentName: String!
+  totalDays: Int!
 }
 
 type AuditLog {
@@ -158,6 +178,8 @@ type Class {
   gradeLevel: Float
   id: ID!
   name: String!
+  room: String
+  section: String
   supervisorId: ID
   supervisorName: String
 }
@@ -187,7 +209,7 @@ input CreateAssignmentInput {
 input CreateAttendanceInput {
   date: String!
   lessonId: ID!
-  present: Boolean!
+  status: AttendanceStatus!
   studentId: ID!
 }
 
@@ -205,6 +227,8 @@ input CreateClassInput {
   departmentId: ID
   gradeId: ID!
   name: String!
+  room: String
+  section: String
   supervisorId: ID
 }
 
@@ -231,6 +255,7 @@ input CreateEventInput {
 
 input CreateExamInput {
   endTime: String!
+  examType: ExamType
   fullMarks: Int
   lessonId: ID!
   passMarks: Int
@@ -291,6 +316,11 @@ input CreateResultInput {
   studentId: ID!
 }
 
+input CreateRouteInput {
+  description: String
+  name: String!
+}
+
 input CreateScholarshipInput {
   endDate: String
   name: String!
@@ -299,6 +329,13 @@ input CreateScholarshipInput {
   studentId: ID!
   type: DiscountType!
   value: Float!
+}
+
+input CreateStopInput {
+  name: String!
+  order: Int
+  routeId: ID!
+  time: String
 }
 
 input CreateStudentInput {
@@ -324,8 +361,13 @@ input CreateStudentInput {
 }
 
 input CreateSubjectInput {
+  code: String
+  credit: Float
+  isFourthSubject: Boolean
+  isOptional: Boolean
   name: String!
   teacherIds: [String!]
+  type: SubjectType
 }
 
 input CreateTeacherInput {
@@ -355,6 +397,7 @@ input CreateVehicleInput {
   capacity: Int!
   driverName: String!
   route: String
+  routeId: ID
   status: String
   transportStaffId: ID
   type: String!
@@ -443,6 +486,7 @@ type Event {
 type Exam {
   className: String
   endTime: DateTime!
+  examType: ExamType!
   fullMarks: Int!
   id: ID!
   lessonId: ID!
@@ -451,6 +495,14 @@ type Exam {
   subjectName: String
   teacherName: String
   title: String!
+}
+
+enum ExamType {
+  ASSIGNMENT_TEST
+  CLASS_TEST
+  FINAL
+  MIDTERM
+  QUIZ
 }
 
 type FeeCollectionSummary {
@@ -647,7 +699,7 @@ input LogoutInput {
 }
 
 input MarkAttendanceEntry {
-  present: Boolean!
+  status: AttendanceStatus!
   studentId: ID!
 }
 
@@ -719,8 +771,10 @@ type Mutation {
   createLesson(input: CreateLessonInput!): Lesson!
   createParent(input: CreateParentInput!): Parent!
   createResult(input: CreateResultInput!): Result!
+  createRoute(input: CreateRouteInput!): Route!
   createScholarship(input: CreateScholarshipInput!): Scholarship!
   createStaffAccount(input: RegisterInput!): AuthPayload!
+  createStop(input: CreateStopInput!): Stop!
   createStudent(input: CreateStudentInput!): Student!
   createSubject(input: CreateSubjectInput!): Subject!
   createTeacher(input: CreateTeacherInput!): Teacher!
@@ -755,7 +809,9 @@ type Mutation {
   removeMessage(id: ID!): Boolean!
   removeParent(id: ID!): Boolean!
   removeResult(id: ID!): Boolean!
+  removeRoute(id: ID!): Boolean!
   removeScholarship(id: ID!): Boolean!
+  removeStop(id: ID!): Boolean!
   removeStudent(id: ID!): Boolean!
   removeSubject(id: ID!): Boolean!
   removeTeacher(id: ID!): Boolean!
@@ -789,7 +845,9 @@ type Mutation {
   updateParent(id: ID!, input: UpdateParentInput!): Parent!
   updateProfile(input: UpdateProfileInput!): Me!
   updateResult(id: ID!, input: UpdateResultInput!): Result!
+  updateRoute(id: ID!, input: UpdateRouteInput!): Route!
   updateScholarship(id: ID!, input: UpdateScholarshipInput!): Scholarship!
+  updateStop(id: ID!, input: UpdateStopInput!): Stop!
   updateStudent(id: ID!, input: UpdateStudentInput!): Student!
   updateStudentStatus(id: ID!, input: UpdateStudentStatusInput!): Student!
   updateSubject(id: ID!, input: UpdateSubjectInput!): Subject!
@@ -864,6 +922,7 @@ type Query {
   bookLoans(skip: Int, status: LoanStatus, take: Int): [BookLoan!]!
   books(search: String, skip: Int, take: Int): [Book!]!
   class(id: ID!): Class!
+  classAttendanceReport(classId: ID!, month: Int!, year: Int!): [AttendanceSummary!]!
   classes(search: String, skip: Float, take: Float): [Class!]!
   conversation(skip: Float, take: Float, userId: ID!): [Message!]!
   currentAcademicYear: AcademicYear
@@ -901,6 +960,8 @@ type Query {
   permissions: [Permission!]!
   result(id: ID!): Result!
   results(skip: Float, take: Float): [Result!]!
+  route(id: ID!): Route!
+  routes: [Route!]!
   scholarships(studentId: ID): [Scholarship!]!
   staffAttendances(date: String, skip: Float, take: Float, userId: ID): [StaffAttendance!]!
   student(id: ID!): Student!
@@ -988,6 +1049,15 @@ enum Role {
   TRANSPORT_STAFF
 }
 
+type Route {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  name: String!
+  stops: [Stop!]
+  updatedAt: DateTime!
+}
+
 type Scholarship {
   active: Boolean!
   createdAt: DateTime!
@@ -1039,6 +1109,14 @@ type StaffAttendance {
   userId: ID!
 }
 
+type Stop {
+  id: ID!
+  name: String!
+  order: Int!
+  routeId: ID!
+  time: String
+}
+
 type Student {
   address: String
   admissionNumber: String
@@ -1076,9 +1154,20 @@ enum StudentStatus {
 }
 
 type Subject {
+  code: String
+  credit: Float
   id: ID!
+  isFourthSubject: Boolean
+  isOptional: Boolean
   name: String!
   teachers: [String!]
+  type: SubjectType
+}
+
+enum SubjectType {
+  LAB
+  PRACTICAL
+  THEORY
 }
 
 type Teacher {
@@ -1148,7 +1237,7 @@ input UpdateAssignmentInput {
 input UpdateAttendanceInput {
   date: String
   lessonId: ID
-  present: Boolean
+  status: AttendanceStatus
   studentId: ID
 }
 
@@ -1170,6 +1259,8 @@ input UpdateClassInput {
   departmentId: ID
   gradeId: ID
   name: String
+  room: String
+  section: String
   supervisorId: ID
 }
 
@@ -1196,6 +1287,7 @@ input UpdateEventInput {
 
 input UpdateExamInput {
   endTime: String
+  examType: ExamType
   fullMarks: Int
   lessonId: ID
   passMarks: Int
@@ -1266,6 +1358,11 @@ input UpdateResultInput {
   studentId: ID
 }
 
+input UpdateRouteInput {
+  description: String
+  name: String
+}
+
 input UpdateScholarshipInput {
   active: Boolean
   endDate: String
@@ -1274,6 +1371,13 @@ input UpdateScholarshipInput {
   startDate: String
   type: DiscountType
   value: Float
+}
+
+input UpdateStopInput {
+  name: String
+  order: Int
+  routeId: ID
+  time: String
 }
 
 input UpdateStudentInput {
@@ -1304,8 +1408,13 @@ input UpdateStudentStatusInput {
 }
 
 input UpdateSubjectInput {
+  code: String
+  credit: Float
+  isFourthSubject: Boolean
+  isOptional: Boolean
   name: String
   teacherIds: [String!]
+  type: SubjectType
 }
 
 input UpdateTeacherInput {
@@ -1327,6 +1436,7 @@ input UpdateVehicleInput {
   capacity: Int
   driverName: String
   route: String
+  routeId: ID
   status: String
   transportStaffId: ID
   type: String
@@ -1363,6 +1473,8 @@ type Vehicle {
   driverName: String!
   id: ID!
   route: String
+  routeId: ID
+  routeName: String
   status: String!
   transportStaffId: ID
   transportStaffName: String

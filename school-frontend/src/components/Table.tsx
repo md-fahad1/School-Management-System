@@ -1,8 +1,6 @@
-"use client";
-
 import React from "react";
 import EmptyState from "./EmptyState";
-import { useTranslation } from "@/lib/i18n/useTranslation";
+import TranslatedText from "./TranslatedText";
 
 const Table = ({
   columns,
@@ -18,7 +16,6 @@ const Table = ({
   renderCard?: (item: any) => React.ReactNode;
   data: any[];
 }) => {
-  const { t } = useTranslation();
   const actionIndex = columns.findIndex((c) => c.accessor === "action");
 
   return (
@@ -30,7 +27,7 @@ const Table = ({
             <tr className="text-left text-textSecondary text-xs uppercase tracking-wide border-b border-border">
               {columns.map((col) => (
                 <th key={col.accessor} className={`py-3 ${col.className ?? ""}`}>
-                  {t(`table.${col.headerKey}`)}
+                  <TranslatedText tKey={`table.${col.headerKey}`} />
                 </th>
               ))}
             </tr>
@@ -80,7 +77,7 @@ const Table = ({
                     return (
                       <div key={col.accessor} className="flex items-center justify-between gap-3">
                         <span className="text-textMuted text-xs uppercase tracking-wide shrink-0">
-                          {t(`table.${col.headerKey}`)}
+                          <TranslatedText tKey={`table.${col.headerKey}`} />
                         </span>
                         <span className="text-textPrimary text-right truncate">
                           {cells[i]?.props?.children}

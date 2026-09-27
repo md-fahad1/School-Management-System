@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Day, LoanStatus, FeeFrequency, PaymentStatus, PaymentMethod } from '@prisma/client';
+import { PrismaClient, Role, Day, LoanStatus, FeeFrequency, PaymentStatus, PaymentMethod, AttendanceStatus, DepartmentType, TermType, DiscountType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { tenantExtension } from '../src/tenant/tenant-extension';
 import { tenantStorage } from '../src/tenant/tenant-context';
@@ -101,7 +101,7 @@ async function seedDemoSchool(institutionId: string) {
   await seedPermissions();
 
   // --- Admin ---
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminPassword = await bcrypt.hash('admin', 10);
   const adminUser = await prisma.user.upsert({
     where: { username: 'admin' },
     update: {},
@@ -110,7 +110,7 @@ async function seedDemoSchool(institutionId: string) {
       email: 'admin@gmail.com',
       password: adminPassword,
       role: Role.ADMIN,
-      admin: { create: { name: 'Super', surname: 'Admin' } },
+      admin: { create: { name: 'Md. Abdullah', surname: 'Al Mamun' } },
     },
   });
 
@@ -163,18 +163,65 @@ async function seedDemoSchool(institutionId: string) {
     });
   }
 
+  // --- Departments & Groups: school groups (Science/Humanities/Business Studies) + one college-style department ---
+  const departmentDefs = [
+    { name: 'Science', code: 'SCI', type: DepartmentType.GROUP, description: 'Science group — Physics, Chemistry, Biology and Higher Math.' },
+    { name: 'Humanities', code: 'HUM', type: DepartmentType.GROUP, description: 'Humanities group — History, Geography, Civics and Social Science.' },
+    { name: 'Business Studies', code: 'BUS', type: DepartmentType.GROUP, description: 'Business Studies group — Accounting, Business Organization and Economics.' },
+    { name: 'Computer Science & Engineering', code: 'CSE', type: DepartmentType.DEPARTMENT, description: 'College-level department for CSE students.' },
+  ];
+  const departments: Record<string, { id: string }> = {};
+  for (const d of departmentDefs) {
+    departments[d.name] = await prisma.department.upsert({
+      where: { institutionId_name: { institutionId, name: d.name } },
+      update: {},
+      create: { name: d.name, code: d.code, type: d.type, description: d.description, institutionId },
+    });
+  }
+
+  // Assign a couple of upper classes to a group, just so the assignment shows up in the UI.
+  await prisma.class.update({ where: { institutionId_name: { institutionId, name: '7A' } }, data: { departmentId: departments['Science'].id } });
+  await prisma.class.update({ where: { institutionId_name: { institutionId, name: '8A' } }, data: { departmentId: departments['Humanities'].id } });
+
+  // --- Academic Year + Terms ---
+  const currentYear = new Date().getFullYear();
+  const academicYear = await prisma.academicYear.upsert({
+    where: { institutionId_name: { institutionId, name: `${currentYear}` } },
+    update: {},
+    create: {
+      institutionId,
+      name: `${currentYear}`,
+      startDate: new Date(currentYear, 0, 1),
+      endDate: new Date(currentYear, 11, 31),
+      isCurrent: true,
+    },
+  });
+  const termDefs = [
+    { name: '1st Term', type: TermType.TERM, startDate: new Date(currentYear, 0, 1), endDate: new Date(currentYear, 3, 30) },
+    { name: '2nd Term', type: TermType.TERM, startDate: new Date(currentYear, 4, 1), endDate: new Date(currentYear, 7, 31) },
+    { name: '3rd Term', type: TermType.TERM, startDate: new Date(currentYear, 8, 1), endDate: new Date(currentYear, 11, 31) },
+  ];
+  for (const t of termDefs) {
+    const existing = await prisma.term.findFirst({ where: { academicYearId: academicYear.id, name: t.name } });
+    if (!existing) {
+      await prisma.term.create({
+        data: { name: t.name, type: t.type, startDate: t.startDate, endDate: t.endDate, academicYearId: academicYear.id },
+      });
+    }
+  }
+
   // --- Teachers (10, spread across subjects, one per class as supervisor) ---
   const teacherDefs = [
-    { username: 'teacher.jane', email: 'jane.teacher@school.local', name: 'Jane', surname: 'Smith', subjectNames: ['Math', 'Physics'], phone: '555-0101', address: '12 Oak St', sex: 'FEMALE' as const, bloodType: 'O+' },
-    { username: 'teacher.mark', email: 'mark.teacher@school.local', name: 'Mark', surname: 'Johnson', subjectNames: ['English', 'History'], phone: '555-0102', address: '45 Elm St', sex: 'MALE' as const, bloodType: 'A+' },
-    { username: 'teacher.lisa', email: 'lisa.teacher@school.local', name: 'Lisa', surname: 'Brown', subjectNames: ['Science', 'Chemistry'], phone: '555-0103', address: '78 Pine St', sex: 'FEMALE' as const, bloodType: 'B+' },
-    { username: 'teacher.sam', email: 'sam.teacher@school.local', name: 'Samuel', surname: 'Green', subjectNames: ['Geography', 'Social Studies'], phone: '555-0104', address: '9 Cedar Rd', sex: 'MALE' as const, bloodType: 'AB+' },
-    { username: 'teacher.nora', email: 'nora.teacher@school.local', name: 'Nora', surname: 'White', subjectNames: ['Art', 'Music'], phone: '555-0105', address: '33 Birch Rd', sex: 'FEMALE' as const, bloodType: 'O-' },
-    { username: 'teacher.paul', email: 'paul.teacher@school.local', name: 'Paul', surname: 'Adams', subjectNames: ['Biology', 'Chemistry'], phone: '555-0106', address: '61 Willow Rd', sex: 'MALE' as const, bloodType: 'A-' },
-    { username: 'teacher.grace', email: 'grace.teacher@school.local', name: 'Grace', surname: 'Kim', subjectNames: ['Computer Science', 'Math'], phone: '555-0107', address: '5 Aspen Rd', sex: 'FEMALE' as const, bloodType: 'B-' },
-    { username: 'teacher.leo', email: 'leo.teacher@school.local', name: 'Leo', surname: 'Turner', subjectNames: ['Physical Education'], phone: '555-0108', address: '88 Cherry Rd', sex: 'MALE' as const, bloodType: 'O+' },
-    { username: 'teacher.amy', email: 'amy.teacher@school.local', name: 'Amy', surname: 'Clark', subjectNames: ['English', 'Art'], phone: '555-0109', address: '14 Poplar Rd', sex: 'FEMALE' as const, bloodType: 'A+' },
-    { username: 'teacher.omar', email: 'omar.teacher@school.local', name: 'Omar', surname: 'Hassan', subjectNames: ['History', 'Geography'], phone: '555-0110', address: '27 Spruce Rd', sex: 'MALE' as const, bloodType: 'AB-' },
+    { username: 'teacher.rahim', email: 'rahim.teacher@school.local', name: 'Md. Abdur', surname: 'Rahim', subjectNames: ['Math', 'Physics'], phone: '+8801711001101', address: 'Dhanmondi, Dhaka', sex: 'MALE' as const, bloodType: 'O+' },
+    { username: 'teacher.karim', email: 'karim.teacher@school.local', name: 'Abdul', surname: 'Karim', subjectNames: ['English', 'History'], phone: '+8801711001102', address: 'Mirpur, Dhaka', sex: 'MALE' as const, bloodType: 'A+' },
+    { username: 'teacher.fatema', email: 'fatema.teacher@school.local', name: 'Fatema', surname: 'Begum', subjectNames: ['Science', 'Chemistry'], phone: '+8801711001103', address: 'Uttara, Dhaka', sex: 'FEMALE' as const, bloodType: 'B+' },
+    { username: 'teacher.jasim', email: 'jasim.teacher@school.local', name: 'Jasim', surname: 'Uddin', subjectNames: ['Geography', 'Social Studies'], phone: '+8801711001104', address: 'Mohammadpur, Dhaka', sex: 'MALE' as const, bloodType: 'AB+' },
+    { username: 'teacher.nasrin', email: 'nasrin.teacher@school.local', name: 'Nasrin', surname: 'Akter', subjectNames: ['Art', 'Music'], phone: '+8801711001105', address: 'Banani, Dhaka', sex: 'FEMALE' as const, bloodType: 'O-' },
+    { username: 'teacher.mizan', email: 'mizan.teacher@school.local', name: 'Mizanur', surname: 'Rahman', subjectNames: ['Biology', 'Chemistry'], phone: '+8801711001106', address: 'Bashundhara, Dhaka', sex: 'MALE' as const, bloodType: 'A-' },
+    { username: 'teacher.shirin', email: 'shirin.teacher@school.local', name: 'Shirin', surname: 'Sultana', subjectNames: ['Computer Science', 'Math'], phone: '+8801711001107', address: 'Rampura, Dhaka', sex: 'FEMALE' as const, bloodType: 'B-' },
+    { username: 'teacher.kamal', email: 'kamal.teacher@school.local', name: 'Kamal', surname: 'Hossain', subjectNames: ['Physical Education'], phone: '+8801711001108', address: 'Farmgate, Dhaka', sex: 'MALE' as const, bloodType: 'O+' },
+    { username: 'teacher.ruma', email: 'ruma.teacher@school.local', name: 'Rumana', surname: 'Islam', subjectNames: ['English', 'Art'], phone: '+8801711001109', address: 'Lalbagh, Dhaka', sex: 'FEMALE' as const, bloodType: 'A+' },
+    { username: 'teacher.selim', email: 'selim.teacher@school.local', name: 'Selim', surname: 'Reza', subjectNames: ['History', 'Geography'], phone: '+8801711001110', address: 'Khilgaon, Dhaka', sex: 'MALE' as const, bloodType: 'AB-' },
   ];
   const teacherPassword = await bcrypt.hash('teacher123', 10);
   const teachers: Record<string, { id: string }> = {};
@@ -207,9 +254,9 @@ async function seedDemoSchool(institutionId: string) {
 
   // Assign a supervisor to each class now that teachers exist.
   const supervisorAssignments: [string, string][] = [
-    ['1A', 'teacher.jane'], ['1B', 'teacher.mark'], ['2A', 'teacher.lisa'], ['2B', 'teacher.sam'],
-    ['3A', 'teacher.nora'], ['3B', 'teacher.paul'], ['4A', 'teacher.grace'], ['5A', 'teacher.leo'],
-    ['6A', 'teacher.amy'], ['7A', 'teacher.omar'], ['8A', 'teacher.jane'],
+    ['1A', 'teacher.rahim'], ['1B', 'teacher.karim'], ['2A', 'teacher.fatema'], ['2B', 'teacher.jasim'],
+    ['3A', 'teacher.nasrin'], ['3B', 'teacher.mizan'], ['4A', 'teacher.shirin'], ['5A', 'teacher.kamal'],
+    ['6A', 'teacher.ruma'], ['7A', 'teacher.selim'], ['8A', 'teacher.rahim'],
   ];
   for (const [className, teacherUsername] of supervisorAssignments) {
     await prisma.class.update({
@@ -221,42 +268,114 @@ async function seedDemoSchool(institutionId: string) {
   // --- Staff: Accountant, Librarian, Principal ---
   const accountantPassword = await bcrypt.hash('accountant123', 10);
   const accountantUser = await prisma.user.upsert({
-    where: { username: 'accountant.maria' },
+    where: { username: 'accountant.nasima' },
     update: {},
     create: {
-      username: 'accountant.maria',
-      email: 'maria.accountant@school.local',
+      username: 'accountant.nasima',
+      email: 'nasima.accountant@school.local',
       password: accountantPassword,
       role: Role.ACCOUNTANT,
-      accountant: { create: { name: 'Maria', surname: 'Santos' } },
+      accountant: { create: { name: 'Nasima', surname: 'Khatun' } },
     },
   });
 
   const librarianPassword = await bcrypt.hash('librarian123', 10);
   const librarianUser = await prisma.user.upsert({
-    where: { username: 'librarian.tom' },
+    where: { username: 'librarian.jahid' },
     update: {},
     create: {
-      username: 'librarian.tom',
-      email: 'tom.librarian@school.local',
+      username: 'librarian.jahid',
+      email: 'jahid.librarian@school.local',
       password: librarianPassword,
       role: Role.LIBRARIAN,
-      librarian: { create: { name: 'Tom', surname: 'Reid' } },
+      librarian: { create: { name: 'Jahidul', surname: 'Islam' } },
     },
   });
 
   const principalPassword = await bcrypt.hash('principal123', 10);
   const principalUser = await prisma.user.upsert({
-    where: { username: 'principal.helen' },
+    where: { username: 'principal.rowshan' },
     update: {},
     create: {
-      username: 'principal.helen',
-      email: 'helen.principal@school.local',
+      username: 'principal.rowshan',
+      email: 'rowshan.principal@school.local',
       password: principalPassword,
       role: Role.PRINCIPAL,
-      principal: { create: { name: 'Helen', surname: 'Carter' } },
+      principal: { create: { name: 'Rowshan', surname: 'Ara' } },
     },
   });
+
+  // --- Transport: staff, routes with stops, vehicles ---
+  const transportPassword = await bcrypt.hash('transport123', 10);
+  const transportStaffUser = await prisma.user.upsert({
+    where: { username: 'transport.jalal' },
+    update: {},
+    create: {
+      username: 'transport.jalal',
+      email: 'jalal.transport@school.local',
+      password: transportPassword,
+      role: Role.TRANSPORT_STAFF,
+      transportStaff: { create: { name: 'Jalal', surname: 'Uddin' } },
+    },
+    include: { transportStaff: true },
+  });
+
+  const routeDefs = [
+    {
+      name: 'Mirpur - Dhanmondi Route',
+      description: 'Covers Mirpur, Mohammadpur and Dhanmondi.',
+      stops: [
+        { name: 'Mirpur 10', order: 1, time: '7:00 AM' },
+        { name: 'Mohammadpur Bus Stand', order: 2, time: '7:20 AM' },
+        { name: 'Dhanmondi 27', order: 3, time: '7:40 AM' },
+      ],
+    },
+    {
+      name: 'Uttara - Banani Route',
+      description: 'Covers Uttara, Airport and Banani.',
+      stops: [
+        { name: 'Uttara Sector 7', order: 1, time: '7:00 AM' },
+        { name: 'Airport', order: 2, time: '7:25 AM' },
+        { name: 'Banani 11', order: 3, time: '7:45 AM' },
+      ],
+    },
+  ];
+  const routes: Record<string, { id: string }> = {};
+  for (const r of routeDefs) {
+    const route = await prisma.route.upsert({
+      where: { institutionId_name: { institutionId, name: r.name } },
+      update: {},
+      create: { name: r.name, description: r.description, institutionId },
+    });
+    routes[r.name] = { id: route.id };
+    for (const s of r.stops) {
+      const existingStop = await prisma.stop.findFirst({ where: { routeId: route.id, name: s.name } });
+      if (!existingStop) {
+        await prisma.stop.create({ data: { name: s.name, order: s.order, time: s.time, routeId: route.id } });
+      }
+    }
+  }
+
+  const vehicleDefs = [
+    { vehicleNumber: 'DHAKA-METRO-GA-11-1234', type: 'Bus', capacity: 40, driverName: 'Jalal Uddin', route: 'Mirpur - Dhanmondi Route' },
+    { vehicleNumber: 'DHAKA-METRO-GA-11-5678', type: 'Microbus', capacity: 15, driverName: 'Karim Mia', route: 'Uttara - Banani Route' },
+  ];
+  for (const v of vehicleDefs) {
+    await prisma.vehicle.upsert({
+      where: { institutionId_vehicleNumber: { institutionId, vehicleNumber: v.vehicleNumber } },
+      update: {},
+      create: {
+        vehicleNumber: v.vehicleNumber,
+        type: v.type,
+        capacity: v.capacity,
+        driverName: v.driverName,
+        route: v.route,
+        routeId: routes[v.route].id,
+        transportStaffId: transportStaffUser.transportStaff!.id,
+        institutionId,
+      },
+    });
+  }
 
   // --- Teacher Attendance: Mon-Fri of the current week, every teacher ---
   const attendanceWeekdays = [0, 1, 2, 3, 4]; // Mon..Fri offsets
@@ -283,9 +402,9 @@ async function seedDemoSchool(institutionId: string) {
 
   // --- Staff Attendance: Mon-Fri, for accountant/librarian/principal ---
   const staffUsers = [
-    { id: accountantUser.id, name: 'accountant.maria' },
-    { id: librarianUser.id, name: 'librarian.tom' },
-    { id: principalUser.id, name: 'principal.helen' },
+    { id: accountantUser.id, name: 'accountant.nasima' },
+    { id: librarianUser.id, name: 'librarian.jahid' },
+    { id: principalUser.id, name: 'principal.rowshan' },
   ];
   let staffIdx = 0;
   for (const staff of staffUsers) {
@@ -308,16 +427,16 @@ async function seedDemoSchool(institutionId: string) {
   }
 
   // --- Leave Applications: a spread of types + statuses ---
-  const teacherPaulUser = await prisma.user.findUnique({ where: { username: 'teacher.paul' } });
-  const teacherAmyUser = await prisma.user.findUnique({ where: { username: 'teacher.amy' } });
-  const teacherOmarUser = await prisma.user.findUnique({ where: { username: 'teacher.omar' } });
+  const teacherMizanUser = await prisma.user.findUnique({ where: { username: 'teacher.mizan' } });
+  const teacherRumaUser = await prisma.user.findUnique({ where: { username: 'teacher.ruma' } });
+  const teacherSelimUser = await prisma.user.findUnique({ where: { username: 'teacher.selim' } });
 
   const leaveDefs = [
-    { applicantId: teacherPaulUser?.id, leaveType: 'SICK', reason: 'Fever and needs rest', status: 'PENDING', startOffset: 1, endOffset: 2 },
-    { applicantId: teacherAmyUser?.id, leaveType: 'CASUAL', reason: 'Family function', status: 'APPROVED', startOffset: -5, endOffset: -4, approvedById: adminUser.id },
+    { applicantId: teacherMizanUser?.id, leaveType: 'SICK', reason: 'Fever and needs rest', status: 'PENDING', startOffset: 1, endOffset: 2 },
+    { applicantId: teacherRumaUser?.id, leaveType: 'CASUAL', reason: 'Family function', status: 'APPROVED', startOffset: -5, endOffset: -4, approvedById: adminUser.id },
     { applicantId: librarianUser.id, leaveType: 'EARNED', reason: 'Planned vacation', status: 'REJECTED', startOffset: 10, endOffset: 15, approvedById: adminUser.id, remarks: 'Too many staff already on leave that week' },
     { applicantId: accountantUser.id, leaveType: 'MATERNITY', reason: 'Maternity leave', status: 'APPROVED', startOffset: -20, endOffset: 40, approvedById: adminUser.id },
-    { applicantId: teacherOmarUser?.id, leaveType: 'OTHER', reason: 'Personal emergency', status: 'CANCELLED', startOffset: -2, endOffset: -1 },
+    { applicantId: teacherSelimUser?.id, leaveType: 'OTHER', reason: 'Personal emergency', status: 'CANCELLED', startOffset: -2, endOffset: -1 },
   ];
   for (const l of leaveDefs) {
     if (!l.applicantId) continue;
@@ -341,16 +460,19 @@ async function seedDemoSchool(institutionId: string) {
 
   // --- Parents (8, several with more than one child) ---
   const parentDefs = [
-    { username: 'parent.davis', email: 'davis.parent@example.com', name: 'Robert', surname: 'Davis', phone: '555-0201', address: '10 Maple Ave' },
-    { username: 'parent.wilson', email: 'wilson.parent@example.com', name: 'Emily', surname: 'Wilson', phone: '555-0202', address: '22 Birch Ave' },
-    { username: 'parent.khan', email: 'khan.parent@example.com', name: 'Imran', surname: 'Khan', phone: '555-0203', address: '5 Cypress Ave' },
-    { username: 'parent.lopez', email: 'lopez.parent@example.com', name: 'Maria', surname: 'Lopez', phone: '555-0204', address: '19 Palm Ave' },
-    { username: 'parent.chen', email: 'chen.parent@example.com', name: 'Wei', surname: 'Chen', phone: '555-0205', address: '31 Magnolia Ave' },
-    { username: 'parent.osei', email: 'osei.parent@example.com', name: 'Kwame', surname: 'Osei', phone: '555-0206', address: '8 Fir Ave' },
-    { username: 'parent.rossi', email: 'rossi.parent@example.com', name: 'Giulia', surname: 'Rossi', phone: '555-0207', address: '44 Larch Ave' },
-    { username: 'parent.singh', email: 'singh.parent@example.com', name: 'Priya', surname: 'Singh', phone: '555-0208', address: '2 Juniper Ave' },
+    { username: 'parent.hossain', email: 'hossain.parent@example.com', name: 'Abdul', surname: 'Hossain', phone: '+8801811002101', address: 'Dhanmondi, Dhaka' },
+    { username: 'parent.rahman', email: 'rahman.parent@example.com', name: 'Habibur', surname: 'Rahman', phone: '+8801811002102', address: 'Mirpur, Dhaka' },
+    { username: 'parent.islam', email: 'islam.parent@example.com', name: 'Nurul', surname: 'Islam', phone: '+8801811002103', address: 'Uttara, Dhaka' },
+    { username: 'parent.akter', email: 'akter.parent@example.com', name: 'Salma', surname: 'Akter', phone: '+8801811002104', address: 'Mohammadpur, Dhaka' },
+    { username: 'parent.chowdhury', email: 'chowdhury.parent@example.com', name: 'Farhana', surname: 'Chowdhury', phone: '+8801811002105', address: 'Banani, Dhaka' },
+    { username: 'parent.sarker', email: 'sarker.parent@example.com', name: 'Kamrul', surname: 'Sarker', phone: '+8801811002106', address: 'Bashundhara, Dhaka' },
+    { username: 'parent.molla', email: 'molla.parent@example.com', name: 'Aynal', surname: 'Molla', phone: '+8801811002107', address: 'Rampura, Dhaka' },
+    { username: 'parent.talukder', email: 'talukder.parent@example.com', name: 'Roksana', surname: 'Talukder', phone: '+8801811002108', address: 'Farmgate, Dhaka' },
+    // Fixed test account: parent / parent
+    { username: 'parent', email: 'parent.test@example.com', name: 'Kamrul', surname: 'Hasan', phone: '+8801700000000', address: 'Dhaka, Bangladesh' },
   ];
   const parentPassword = await bcrypt.hash('parent123', 10);
+  const testParentPassword = await bcrypt.hash('parent', 10);
   const parents: Record<string, { id: string }> = {};
   for (const p of parentDefs) {
     const user = await prisma.user.upsert({
@@ -359,7 +481,7 @@ async function seedDemoSchool(institutionId: string) {
       create: {
         username: p.username,
         email: p.email,
-        password: parentPassword,
+        password: p.username === 'parent' ? testParentPassword : parentPassword,
         role: Role.PARENT,
         parent: { create: { name: p.name, surname: p.surname, phone: p.phone, address: p.address } },
       },
@@ -370,28 +492,31 @@ async function seedDemoSchool(institutionId: string) {
 
   // --- Students (20, spread across every class, varied sex for dashboard charts) ---
   const studentDefs = [
-    { username: 'student.alex', email: 'alex.student@example.com', name: 'Alex', surname: 'Davis', className: '1A', gradeLevel: 1, parentUsername: 'parent.davis', sex: 'MALE' as const },
-    { username: 'student.mia', email: 'mia.student@example.com', name: 'Mia', surname: 'Davis', className: '1A', gradeLevel: 1, parentUsername: 'parent.davis', sex: 'FEMALE' as const },
-    { username: 'student.zoe', email: 'zoe.student@example.com', name: 'Zoe', surname: 'Khan', className: '1B', gradeLevel: 1, parentUsername: 'parent.khan', sex: 'FEMALE' as const },
-    { username: 'student.noah', email: 'noah.student@example.com', name: 'Noah', surname: 'Wilson', className: '2A', gradeLevel: 2, parentUsername: 'parent.wilson', sex: 'MALE' as const },
-    { username: 'student.liam', email: 'liam.student@example.com', name: 'Liam', surname: 'Lopez', className: '2A', gradeLevel: 2, parentUsername: 'parent.lopez', sex: 'MALE' as const },
-    { username: 'student.ava', email: 'ava.student@example.com', name: 'Ava', surname: 'Chen', className: '2B', gradeLevel: 2, parentUsername: 'parent.chen', sex: 'FEMALE' as const },
-    { username: 'student.emma', email: 'emma.student@example.com', name: 'Emma', surname: 'Wilson', className: '3A', gradeLevel: 3, parentUsername: 'parent.wilson', sex: 'FEMALE' as const },
-    { username: 'student.kofi', email: 'kofi.student@example.com', name: 'Kofi', surname: 'Osei', className: '3A', gradeLevel: 3, parentUsername: 'parent.osei', sex: 'MALE' as const },
-    { username: 'student.giulia', email: 'giulia.student@example.com', name: 'Giulia', surname: 'Rossi', className: '3B', gradeLevel: 3, parentUsername: 'parent.rossi', sex: 'FEMALE' as const },
-    { username: 'student.arjun', email: 'arjun.student@example.com', name: 'Arjun', surname: 'Singh', className: '4A', gradeLevel: 4, parentUsername: 'parent.singh', sex: 'MALE' as const },
-    { username: 'student.lily', email: 'lily.student@example.com', name: 'Lily', surname: 'Khan', className: '4A', gradeLevel: 4, parentUsername: 'parent.khan', sex: 'FEMALE' as const },
-    { username: 'student.ben', email: 'ben.student@example.com', name: 'Ben', surname: 'Davis', className: '5A', gradeLevel: 5, parentUsername: 'parent.davis', sex: 'MALE' as const },
-    { username: 'student.sofia', email: 'sofia.student@example.com', name: 'Sofia', surname: 'Lopez', className: '5A', gradeLevel: 5, parentUsername: 'parent.lopez', sex: 'FEMALE' as const },
-    { username: 'student.ethan', email: 'ethan.student@example.com', name: 'Ethan', surname: 'Chen', className: '6A', gradeLevel: 6, parentUsername: 'parent.chen', sex: 'MALE' as const },
-    { username: 'student.grace2', email: 'grace2.student@example.com', name: 'Grace', surname: 'Osei', className: '6A', gradeLevel: 6, parentUsername: 'parent.osei', sex: 'FEMALE' as const },
-    { username: 'student.marco', email: 'marco.student@example.com', name: 'Marco', surname: 'Rossi', className: '7A', gradeLevel: 7, parentUsername: 'parent.rossi', sex: 'MALE' as const },
-    { username: 'student.anika', email: 'anika.student@example.com', name: 'Anika', surname: 'Singh', className: '7A', gradeLevel: 7, parentUsername: 'parent.singh', sex: 'FEMALE' as const },
-    { username: 'student.jordan', email: 'jordan.student@example.com', name: 'Jordan', surname: 'Wilson', className: '8A', gradeLevel: 8, parentUsername: 'parent.wilson', sex: 'MALE' as const },
-    { username: 'student.chloe', email: 'chloe.student@example.com', name: 'Chloe', surname: 'Davis', className: '8A', gradeLevel: 8, parentUsername: 'parent.davis', sex: 'FEMALE' as const },
-    { username: 'student.yusuf', email: 'yusuf.student@example.com', name: 'Yusuf', surname: 'Khan', className: '8A', gradeLevel: 8, parentUsername: 'parent.khan', sex: 'MALE' as const },
+    { username: 'student.arif', email: 'arif.student@example.com', name: 'Arif', surname: 'Hossain', className: '1A', gradeLevel: 1, parentUsername: 'parent.hossain', sex: 'MALE' as const },
+    { username: 'student.nusrat', email: 'nusrat.student@example.com', name: 'Nusrat', surname: 'Hossain', className: '1A', gradeLevel: 1, parentUsername: 'parent.hossain', sex: 'FEMALE' as const },
+    { username: 'student.tania', email: 'tania.student@example.com', name: 'Tania', surname: 'Islam', className: '1B', gradeLevel: 1, parentUsername: 'parent.islam', sex: 'FEMALE' as const },
+    { username: 'student.rafiq', email: 'rafiq.student@example.com', name: 'Rafiq', surname: 'Rahman', className: '2A', gradeLevel: 2, parentUsername: 'parent.rahman', sex: 'MALE' as const },
+    { username: 'student.rakib', email: 'rakib.student@example.com', name: 'Rakib', surname: 'Akter', className: '2A', gradeLevel: 2, parentUsername: 'parent.akter', sex: 'MALE' as const },
+    { username: 'student.nabila', email: 'nabila.student@example.com', name: 'Nabila', surname: 'Chowdhury', className: '2B', gradeLevel: 2, parentUsername: 'parent.chowdhury', sex: 'FEMALE' as const },
+    { username: 'student.sumaiya', email: 'sumaiya.student@example.com', name: 'Sumaiya', surname: 'Rahman', className: '3A', gradeLevel: 3, parentUsername: 'parent.rahman', sex: 'FEMALE' as const },
+    { username: 'student.sabbir', email: 'sabbir.student@example.com', name: 'Sabbir', surname: 'Sarker', className: '3A', gradeLevel: 3, parentUsername: 'parent.sarker', sex: 'MALE' as const },
+    { username: 'student.nishat', email: 'nishat.student@example.com', name: 'Nishat', surname: 'Molla', className: '3B', gradeLevel: 3, parentUsername: 'parent.molla', sex: 'FEMALE' as const },
+    { username: 'student.arman', email: 'arman.student@example.com', name: 'Arman', surname: 'Talukder', className: '4A', gradeLevel: 4, parentUsername: 'parent.talukder', sex: 'MALE' as const },
+    { username: 'student.lamia', email: 'lamia.student@example.com', name: 'Lamia', surname: 'Islam', className: '4A', gradeLevel: 4, parentUsername: 'parent.islam', sex: 'FEMALE' as const },
+    { username: 'student.rahat', email: 'rahat.student@example.com', name: 'Rahat', surname: 'Hossain', className: '5A', gradeLevel: 5, parentUsername: 'parent.hossain', sex: 'MALE' as const },
+    { username: 'student.sadia', email: 'sadia.student@example.com', name: 'Sadia', surname: 'Akter', className: '5A', gradeLevel: 5, parentUsername: 'parent.akter', sex: 'FEMALE' as const },
+    { username: 'student.imran', email: 'imran.student@example.com', name: 'Imran', surname: 'Chowdhury', className: '6A', gradeLevel: 6, parentUsername: 'parent.chowdhury', sex: 'MALE' as const },
+    { username: 'student.shathi', email: 'shathi.student@example.com', name: 'Shathi', surname: 'Sarker', className: '6A', gradeLevel: 6, parentUsername: 'parent.sarker', sex: 'FEMALE' as const },
+    { username: 'student.shanto', email: 'shanto.student@example.com', name: 'Shanto', surname: 'Molla', className: '7A', gradeLevel: 7, parentUsername: 'parent.molla', sex: 'MALE' as const },
+    { username: 'student.anika', email: 'anika.student@example.com', name: 'Anika', surname: 'Talukder', className: '7A', gradeLevel: 7, parentUsername: 'parent.talukder', sex: 'FEMALE' as const },
+    { username: 'student.tanvir', email: 'tanvir.student@example.com', name: 'Tanvir', surname: 'Rahman', className: '8A', gradeLevel: 8, parentUsername: 'parent.rahman', sex: 'MALE' as const },
+    { username: 'student.moushumi', email: 'moushumi.student@example.com', name: 'Moushumi', surname: 'Hossain', className: '8A', gradeLevel: 8, parentUsername: 'parent.hossain', sex: 'FEMALE' as const },
+    { username: 'student.yeasin', email: 'yeasin.student@example.com', name: 'Yeasin', surname: 'Islam', className: '8A', gradeLevel: 8, parentUsername: 'parent.islam', sex: 'MALE' as const },
+    // Fixed test account: student / student
+    { username: 'student', email: 'student.test@example.com', name: 'Nayeem', surname: 'Hasan', className: '1A', gradeLevel: 1, parentUsername: 'parent', sex: 'MALE' as const },
   ];
   const studentPassword = await bcrypt.hash('student123', 10);
+  const testStudentPassword = await bcrypt.hash('student', 10);
   const students: Record<string, { id: string; classId: string; gradeLevel: number }> = {};
   for (const s of studentDefs) {
     const user = await prisma.user.upsert({
@@ -400,7 +525,7 @@ async function seedDemoSchool(institutionId: string) {
       create: {
         username: s.username,
         email: s.email,
-        password: studentPassword,
+        password: s.username === 'student' ? testStudentPassword : studentPassword,
         role: Role.STUDENT,
         student: {
           create: {
@@ -455,6 +580,10 @@ async function seedDemoSchool(institutionId: string) {
 
   // --- Attendance: Mon-Fri of the current week, every student, every lesson for their class ---
   const monday = getMonday(new Date());
+  const attendanceStatusCycle: AttendanceStatus[] = [
+    AttendanceStatus.PRESENT, AttendanceStatus.PRESENT, AttendanceStatus.PRESENT, AttendanceStatus.PRESENT,
+    AttendanceStatus.LATE, AttendanceStatus.ABSENT, AttendanceStatus.EXCUSED, AttendanceStatus.LEAVE,
+  ];
   for (const s of studentDefs) {
     const lessons = classLessons[s.className];
     for (let i = 0; i < lessons.length; i++) {
@@ -462,14 +591,14 @@ async function seedDemoSchool(institutionId: string) {
       date.setDate(monday.getDate() + i);
       // Deterministic-but-varied pattern per student/day so the weekly
       // chart shows a realistic mix instead of all-present or all-absent.
-      const present = (s.username.length + i) % 4 !== 0;
+      const status = attendanceStatusCycle[(s.username.length + i) % attendanceStatusCycle.length];
 
       const existing = await prisma.attendance.findFirst({
         where: { studentId: students[s.username].id, lessonId: lessons[i].id, date },
       });
       if (!existing) {
         await prisma.attendance.create({
-          data: { date, present, studentId: students[s.username].id, lessonId: lessons[i].id },
+          data: { date, status, studentId: students[s.username].id, lessonId: lessons[i].id },
         });
       }
     }
@@ -563,11 +692,11 @@ async function seedDemoSchool(institutionId: string) {
   }
 
   // --- Messages (a few teacher <-> parent threads) ---
-  const janeUser = await prisma.user.findUnique({ where: { username: 'teacher.jane' } });
-  const davisUser = await prisma.user.findUnique({ where: { username: 'parent.davis' } });
+  const rahimUser = await prisma.user.findUnique({ where: { username: 'teacher.rahim' } });
+  const hossainUser = await prisma.user.findUnique({ where: { username: 'parent.hossain' } });
   const messageDefs = [
-    { senderId: davisUser?.id, receiverId: janeUser?.id, content: 'Hi, how is Alex doing in Math this term?', read: true },
-    { senderId: janeUser?.id, receiverId: davisUser?.id, content: 'Alex is doing well, especially in the recent homework.', read: false },
+    { senderId: hossainUser?.id, receiverId: rahimUser?.id, content: 'Hi, how is Arif doing in Math this term?', read: true },
+    { senderId: rahimUser?.id, receiverId: hossainUser?.id, content: 'Arif is doing well, especially in the recent homework.', read: false },
   ];
   for (const m of messageDefs) {
     if (!m.senderId || !m.receiverId) continue;
@@ -599,11 +728,11 @@ async function seedDemoSchool(institutionId: string) {
   }
 
   const loanDefs = [
-    { isbn: '978-0156012195', borrower: 'student.alex', status: LoanStatus.BORROWED, daysAgo: 3, dueInDays: 4 },
-    { isbn: '978-0064400558', borrower: 'student.mia', status: LoanStatus.BORROWED, daysAgo: 10, dueInDays: -3 }, // overdue
-    { isbn: '978-0553380163', borrower: 'student.marco', status: LoanStatus.RETURNED, daysAgo: 20, dueInDays: -13, returnedDaysAgo: 12 },
-    { isbn: '978-0262033848', borrower: 'student.jordan', status: LoanStatus.BORROWED, daysAgo: 1, dueInDays: 13 },
-    { isbn: '978-1426217968', borrower: 'student.kofi', status: LoanStatus.OVERDUE, daysAgo: 15, dueInDays: -1 },
+    { isbn: '978-0156012195', borrower: 'student.arif', status: LoanStatus.BORROWED, daysAgo: 3, dueInDays: 4 },
+    { isbn: '978-0064400558', borrower: 'student.nusrat', status: LoanStatus.BORROWED, daysAgo: 10, dueInDays: -3 }, // overdue
+    { isbn: '978-0553380163', borrower: 'student.shanto', status: LoanStatus.RETURNED, daysAgo: 20, dueInDays: -13, returnedDaysAgo: 12 },
+    { isbn: '978-0262033848', borrower: 'student.tanvir', status: LoanStatus.BORROWED, daysAgo: 1, dueInDays: 13 },
+    { isbn: '978-1426217968', borrower: 'student.sabbir', status: LoanStatus.OVERDUE, daysAgo: 15, dueInDays: -1 },
   ];
   for (const l of loanDefs) {
     const borrowerUser = await prisma.user.findUnique({ where: { username: l.borrower } });
@@ -700,19 +829,41 @@ async function seedDemoSchool(institutionId: string) {
     }
   }
 
+  // --- Scholarships: a merit one and a need-based one, plus one on the test student for demo ---
+  const scholarshipDefs = [
+    { studentUsername: 'student.arif', name: 'Merit Scholarship', type: DiscountType.PERCENTAGE, value: 20, notes: 'Awarded for top exam performance.' },
+    { studentUsername: 'student.nishat', name: 'Need-Based Scholarship', type: DiscountType.FIXED, value: 1000, notes: 'Financial hardship support.' },
+    { studentUsername: 'student', name: 'Merit Scholarship', type: DiscountType.PERCENTAGE, value: 15, notes: 'Test account demo scholarship.' },
+  ];
+  for (const sc of scholarshipDefs) {
+    const studentId = students[sc.studentUsername]?.id;
+    if (!studentId) continue;
+    const existing = await prisma.scholarship.findFirst({ where: { studentId, name: sc.name } });
+    if (!existing) {
+      await prisma.scholarship.create({
+        data: { name: sc.name, type: sc.type, value: sc.value, notes: sc.notes, studentId },
+      });
+    }
+  }
+
   console.log('✅ Seed complete.');
   console.log('   SuperAdmin: superadmin / superadmin  (no institution)');
-  console.log('   Admin:      admin / admin123');
-  console.log('   Teachers:   teacher.jane / .mark / .lisa / .sam / .nora / .paul / .grace / .leo / .amy / .omar — password: teacher123');
-  console.log('   Parents:    parent.davis / .wilson / .khan / .lopez / .chen / .osei / .rossi / .singh — password: parent123');
-  console.log('   Students:   20 students across classes 1A-8A — password: student123');
-  console.log('   Accountant: accountant.maria — password: accountant123');
-  console.log('   Librarian:  librarian.tom — password: librarian123');
-  console.log('   Principal:  principal.helen — password: principal123');
-  console.log('   + 8 grades, 13 subjects, 11 classes, 55 lessons, 100 attendance rows, 11 exams, 11 assignments, 40 results,');
+  console.log('   Admin:      admin / admin');
+  console.log('   Test Student: student / student   (Nayeem Hasan, class 1A)');
+  console.log('   Test Parent:  parent / parent      (Kamrul Hasan, parent of the test student)');
+  console.log('   Teachers:   teacher.rahim / .karim / .fatema / .jasim / .nasrin / .mizan / .shirin / .kamal / .ruma / .selim — password: teacher123');
+  console.log('   Parents:    parent.hossain / .rahman / .islam / .akter / .chowdhury / .sarker / .molla / .talukder — password: parent123');
+  console.log('   Students:   20 students across classes 1A-8A — password: student123 (+ 1 test student above)');
+  console.log('   Accountant: accountant.nasima — password: accountant123');
+  console.log('   Librarian:  librarian.jahid — password: librarian123');
+  console.log('   Principal:  principal.rowshan — password: principal123');
+  console.log('   Transport:  transport.jalal — password: transport123');
+  console.log('   + 8 grades, 13 subjects, 11 classes, 4 departments/groups (2 classes assigned), 1 academic year + 3 terms,');
+  console.log('     55 lessons, 100 attendance rows (present/absent/late/excused/leave mix), 11 exams, 11 assignments, 40 results,');
   console.log('     5 events, 4 announcements, 2 messages, 6 library books with 5 loans (active/returned/overdue),');
-  console.log('     16 fee structures, 20 invoices spread across PENDING/PARTIAL/PAID/OVERDUE with matching payments,');
-  console.log('     50 teacher-attendance rows, 15 staff-attendance rows, 5 leave applications (all statuses).');
+  console.log('     16 fee structures, 20 invoices spread across PENDING/PARTIAL/PAID/OVERDUE with matching payments, 3 scholarships,');
+  console.log('     2 transport routes with 3 stops each + 2 vehicles, 50 teacher-attendance rows, 15 staff-attendance rows,');
+  console.log('     5 leave applications (all statuses).');
 }
 
 // Neon can drop long-lived connections (P1017). The seed is idempotent,
@@ -744,4 +895,4 @@ runWithRetry()
 // Fresh setup:
 //   npx prisma migrate reset --skip-seed
 //   npm run prisma:seed
-//   npm run start:dev
+//   npm run start:devimport { PrismaClient, Role, Day, LoanStatus, FeeFrequency, PaymentStatus, PaymentMethod } from '@prisma/client';

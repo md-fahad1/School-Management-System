@@ -7,10 +7,12 @@ const prisma = new PrismaClient();
 // Fixed accounts -> the password the seed documents for them.
 const FIXED: Record<string, string> = {
   superadmin: 'superadmin',
-  admin: 'admin123',
-  'accountant.maria': 'accountant123',
-  'librarian.tom': 'librarian123',
-  'principal.helen': 'principal123',
+  admin: 'admin',
+  student: 'student',
+  parent: 'parent',
+  'accountant.nasima': 'accountant123',
+  'librarian.jahid': 'librarian123',
+  'principal.rowshan': 'principal123',
 };
 
 // Groups of accounts that share one seed password.
